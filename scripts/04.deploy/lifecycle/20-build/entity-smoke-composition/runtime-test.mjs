@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-22"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -34,6 +34,7 @@ for (const [entry, exported] of [["kanbien-entity-smoke.main", "runEntitySmokeMa
 const shared = require("@kanbien/core/shared");
 const persistence = require("@kanbien/core/persistence");
 const target = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.js"));
+const targetRuntime = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.js"));
 const config = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.js"));
 const { startPlatformServerProcess } = require("@kanbien/platform-server/main");
 const certificate = readFileSync("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt", "utf8");
@@ -65,8 +66,21 @@ assert(!JSON.stringify(failedRead.error).includes(canary));
 const forbiddenToken = config.entitySmokeDatabaseSettings({ ...environment, NODE_ENV: "production" }, "runtime", () => certificate);
 assert.equal(forbiddenToken.ok, false); assert.equal(forbiddenToken.error.diagnosticRecord.detail.field, "identity");
 const manifest = target.entitySmokeMigrationManifest();
+assert.deepEqual(target.entitySmokeMigrationManifest("baseline").migrations, manifest.migrations.slice(0, 4), "the existing source maintenance manifest remains unchanged");
+assert.deepEqual(target.entitySmokeMigrationManifest("scheduling"), manifest);
+{
+  const migrationEntry = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/migrations.js"));
+  const originalError = console.error, originalExit = process.exitCode, output = [];
+  console.error = line => output.push(JSON.parse(line));
+  try {
+    await migrationEntry.runEntitySmokeMigration({ ENTITY_SMOKE_MIGRATION_OPERATION: "apply", PERSISTENCE_MIGRATION_PROFILE: "PRIVATE-profile-canary" });
+    assert.equal(process.exitCode, 1);
+    assert(JSON.stringify(output).includes("kanbien-core-server.migration-profile-invalid"));
+    assert(!JSON.stringify(output).includes("PRIVATE-profile-canary"));
+  } finally { console.error = originalError; process.exitCode = originalExit; }
+}
 assert.equal(manifest.schema, "entity_smoke"); assert.equal(manifest.schemaPreprovisioned, true);
-assert.equal(manifest.migrations.length, 4); assert.deepEqual(manifest.migrations.map(migration => migration.id), ["v0003_entity_smoke_test_entity", "v0004_entity_smoke_platform_schedule", "v0005_entity_smoke_platform_outbox_foundation", "v0006_entity_smoke_platform_schedule_handoff"]);
+assert.equal(manifest.migrations.length, 7); assert.deepEqual(manifest.migrations.map(migration => migration.id), ["v0003_entity_smoke_test_entity", "v0004_entity_smoke_platform_schedule", "v0005_entity_smoke_platform_outbox_foundation", "v0006_entity_smoke_platform_schedule_handoff", "v0007_entity_smoke_schedule_subject", "v0008_entity_smoke_processing_retry", "v0009_entity_smoke_schedule_control"]);
 assert(manifest.migrations[0].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke".test_entity')));
 assert(manifest.migrations[0].statements[1].text.includes("test_entity_status_created_at_idx"));
 assert(manifest.migrations[1].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke"."platform_schedule"')));
@@ -75,6 +89,35 @@ assert(manifest.migrations[2].statements.some(statement => statement.text.includ
 assert(manifest.migrations[3].statements.every(statement => !statement.text.includes("__SCHEMA__") && statement.text.includes('"entity_smoke"."platform_schedule"')));
 assert(manifest.migrations[3].statements.some(statement => statement.text.includes('platform_schedule_outbox_entry_id_fkey')));
 for (const migration of manifest.migrations) assert.equal(migration.checksum, createHash("sha256").update(migration.statements.map(statement => statement.text).join("\n")).digest("hex"));
+
+// The worker mounts the public app with the selected metadata readers. Invalid
+// delivery stops before entity SQL, and its shared runtime owns pool closure.
+{
+  let selectedJob, outboxReads = 0, closes = 0;
+  const workerApp = targetRuntime.createEntitySmokeSchedulingApp({
+    pool: { query: async () => { throw new Error("Unexpected entity SQL."); },
+      connect: async () => { throw new Error("Unexpected worker transaction."); },
+      end: async () => { throw new Error("The shared runtime owns pool closure."); } },
+    clock: shared.fixedClock(new Date("2026-11-22T12:05:00.001Z")),
+    close: async () => { closes++; },
+    outbox: { get: async () => { outboxReads++; return null; } },
+    schedules: { get: async () => { throw new Error("Missing outbox cannot reach schedules."); } },
+  });
+  workerApp.mount({ registerDiagnosticCatalog: () => shared.ok(undefined), registerObservabilityProfile: () => shared.ok(undefined),
+    registerHealthCheck: () => shared.ok(undefined), registerRoute: () => shared.ok(undefined),
+    registerJob: job => { selectedJob = job; return shared.ok(undefined); } });
+  assert.equal(selectedJob.name, app.entitySmokeExpiredPurgeJobName);
+  await assert.rejects(() => selectedJob.handler.handle({ id: "worker-scope-fixture", type: app.entitySmokeExpiredPurgeMessageType,
+    enqueuedAt: "2026-11-22T12:05:00.001Z", idempotencyKey: "worker-scope-fixture", version: 1,
+    payload: { outboxEntryId: "worker-scope-fixture" } }), error => {
+    assert.equal(error.diagnosticRecord.code, "persistence.schedule-delivery-reference-rejected");
+    assert.deepEqual(error.diagnosticRecord.detail, { field: "outbox", reason: "not-found", effect: "application-work-not-invoked" });
+    return true;
+  });
+  assert.equal(outboxReads, 1);
+  await workerApp.lifecycle.beforeStop();
+  assert.equal(closes, 1);
+}
 
 // The separate administrative observer reads one snapshot under the adapter's
 // real migration lock. None of these injected results is database proof.
@@ -264,6 +307,112 @@ const providerFailure = tlsFailure;
 const input = { integerValue: 7, uuidValue: "b0b1c2d3-e4f5-4a67-8b90-123456789abc", occurredAt: now.toISOString(),
   label: canary, status: "draft", enabled: false, categories: ["alpha"], notes: [canary], description: null, reviewedAt: null, secondaryCategories: null };
 const syntheticEntity = { ...input, id, visibility: "active", lifecycle: { state: "active" }, createdAt: now.toISOString(), updatedAt: now.toISOString() };
+
+// Actual administration dispatch and public relational mapping, with controlled
+// SQL transport only. A 404 through the app is not evidence of physical absence.
+{
+  const connection = require(join(compiled, "platform/adapters/aws/persistence/postgresql/src/connection.js"));
+  const configuration = require(join(compiled, "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js"));
+  const originalPool = connection.createNodePostgreSqlConnectionPool, originalAuthority = configuration.persistenceCertificateAuthorityResult;
+  const originalLog = console.log, originalError = console.error, originalExit = process.exitCode;
+  try {
+    configuration.persistenceCertificateAuthorityResult = () => ({ ok: true, value: "controlled-certificate" });
+    for (const present of [true, false]) for (const cleanupFails of [false, true]) {
+      const output = [], statements = []; let releases = 0;
+      const dueAt = new Date(now.getTime() + 300001).toISOString();
+      const lifecycle = { state: "deleted", deletedAt: now.toISOString(), restoreEligibleUntil: new Date(now.getTime() + 60000).toISOString(), retentionPolicy: "entity-smoke.retention" };
+      const client = { release() { releases++; }, async query(statement) {
+        statements.push(statement);
+        if (/^(BEGIN|SET LOCAL|COMMIT|ROLLBACK)/.test(statement.text)) return { rows: [] };
+        if (statement.text.startsWith('SELECT id FROM "entity_smoke".platform_schedule')) {
+          assert.deepEqual(statement.values, ["entity-smoke.test-entity", id, dueAt]); assert(statement.text.endsWith("LIMIT 2")); return { rows: [] };
+        }
+        if (statement.text === "SELECT clock_timestamp() AS observed_at") return { rows: [{ observed_at: now }] };
+        assert(statement.text.endsWith('FROM "entity_smoke".test_entity WHERE id = $1')); assert.deepEqual(statement.values, [id]);
+        return { rows: present ? [{ id, integer_value: input.integerValue, uuid_value: input.uuidValue, occurred_at: input.occurredAt, label: input.label,
+          status: input.status, enabled: input.enabled, categories: input.categories, notes: input.notes, description: null, reviewed_at: null, secondary_categories: null,
+          visibility: "archived", lifecycle, created_at: now.toISOString(), updated_at: now.toISOString() }] : [] };
+      } };
+      connection.createNodePostgreSqlConnectionPool = () => ({ query() { assert.fail("observer must keep one checked-out snapshot"); }, async connect() { return client; },
+        async end() { statements.push({ text: "end" }); if (cleanupFails) throw new Error(canary); } });
+      console.log = console.error = line => { statements.push({ text: "output" }); output.push(JSON.parse(line)); }; process.exitCode = undefined;
+      await administration.runEntitySmokeAdministration({ ...environment, ENTITY_SMOKE_ADMINISTRATION_OPERATION: "observe-scheduling-proof",
+        PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID: id, PERSISTENCE_SCHEDULING_PROOF_DUE_AT: dueAt,
+        PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-administrator",
+        PERSISTENCE_ADMINISTRATOR_CREDENTIALS: JSON.stringify({ username: "fixture_administrator", password: "controlled-password" }) });
+      assert.equal(releases, 1); assert(!statements.some(({ text }) => /^(INSERT|UPDATE|DELETE|CREATE|ALTER|GRANT)/.test(text)));
+      if (cleanupFails) { assert.equal(process.exitCode, 1); assert(!output.some(result => result.verdict === "passed")); }
+      else {
+        assert.equal(output.length, 1); assert.equal(output[0].code, "PERSISTENCE_SCHEDULING_PROOF_OBSERVED");
+        assert.deepEqual(output[0].scheduling_observation.application, present ? { kind: "entity", present: true, visibility: "archived", lifecycle_state: "deleted",
+          deleted_at: lifecycle.deletedAt, restore_eligible_until: lifecycle.restoreEligibleUntil } : { kind: "entity", present: false });
+        assert(statements.findIndex(({ text }) => text === "end") < statements.findIndex(({ text }) => text === "output"));
+      }
+      assert(!JSON.stringify(output).includes(canary), "private app facts must never enter the narrow snapshot or its failure report");
+    }
+  } finally { connection.createNodePostgreSqlConnectionPool = originalPool; configuration.persistenceCertificateAuthorityResult = originalAuthority;
+    console.log = originalLog; console.error = originalError; process.exitCode = originalExit; }
+}
+
+// The genuine deletion service must lock/read, save its reminder, and save the
+// entity using the same connected client. This controlled protocol proves the
+// composition and rollback choices; the separate PostgreSQL proof owns durability.
+for (const rejectedAt of [undefined, "schedule", "entity", "conflict"]) {
+  const statements = []; let releases = 0, committedEntity = { ...syntheticEntity, visibility: "archived" }, committedSchedules = [];
+  let stagedEntity, stagedSchedules;
+  const columns = ["id", "integer_value", "uuid_value", "occurred_at", "label", "status", "enabled", "categories", "notes", "description", "reviewed_at", "secondary_categories", "visibility", "lifecycle", "created_at", "updated_at"];
+  const row = entity => Object.fromEntries(columns.map((name, index) => [name, [entity.id, entity.integerValue, entity.uuidValue,
+    entity.occurredAt, entity.label, entity.status, entity.enabled, entity.categories, entity.notes, entity.description,
+    entity.reviewedAt, entity.secondaryCategories, entity.visibility, entity.lifecycle, entity.createdAt, entity.updatedAt][index]]));
+  const native = Object.assign(new Error(canary), { code: "42501", diagnosticRecord: tlsFailure.diagnosticRecord,
+    relatedDiagnosticRecords: tlsFailure.relatedDiagnosticRecords });
+  const client = { release: () => { releases++; }, query: async statement => {
+    statements.push(statement);
+    if (statement.text === "BEGIN") { stagedEntity = structuredClone(committedEntity); stagedSchedules = []; return { rows: [], rowCount: 0 }; }
+    if (statement.text === "COMMIT") { committedEntity = stagedEntity; committedSchedules = stagedSchedules; return { rows: [], rowCount: 0 }; }
+    if (statement.text === "ROLLBACK") return { rows: [], rowCount: 0 };
+    if (statement.text.startsWith("SELECT ")) {
+      assert(statement.text.endsWith('FROM "entity_smoke".test_entity WHERE id = $1 FOR UPDATE'));
+      return { rows: [row(stagedEntity)], rowCount: 1 };
+    }
+    if (statement.text.startsWith('INSERT INTO "entity_smoke"."platform_schedule"')) {
+      if (rejectedAt === "schedule") throw native;
+      const [scheduleId, jobName, dueAt, state, subjectKind, subjectId] = statement.values;
+      const schedule = { id: scheduleId, job_name: jobName, due_at: new Date(dueAt), state, outbox_entry_id: null,
+        subject_kind: subjectKind, subject_id: subjectId };
+      stagedSchedules.push(schedule); return { rows: [schedule], rowCount: 1 };
+    }
+    assert(statement.text.startsWith('UPDATE "entity_smoke".test_entity SET '));
+    if (rejectedAt === "entity") throw native;
+    if (rejectedAt === "conflict") return { rows: [], rowCount: 0 };
+    stagedEntity = { ...stagedEntity, lifecycle: JSON.parse(statement.values[13]), updatedAt: statement.values[14] };
+    return { rows: [row(stagedEntity)], rowCount: 1 };
+  } };
+  const pool = { connect: async () => client, query: async () => assert.fail("atomic deletion cannot use pool.query outside its client"), end: async () => {} };
+  const atomic = target.createEntitySmokePostgreSqlRuntime(pool, valid.value.configuration);
+  const result = await app.deleteTestEntityService(id, { repository: atomic.repository, deletionTransaction: atomic.deletionTransaction,
+    clock: shared.fixedClock(now), uuidGenerator: { generate: () => shared.uuid("b0b1c2d3-e4f5-4a67-8b90-123456789abc") }, lifecyclePolicy: policy.value,
+    expiredPurgeReminder: { jobName: app.entitySmokeExpiredPurgeJobName, store: { create: async () => assert.fail("transaction must replace outer reminder writer") } } });
+  assert.equal(releases, 1); assert.equal(statements[0].text, "BEGIN");
+  if (rejectedAt === undefined) {
+    assert.equal(result.ok, true); assert.equal(statements.at(-1).text, "COMMIT"); assert.equal(statements.length, 5);
+    assert.equal(committedEntity.lifecycle.state, "deleted"); assert.equal(committedSchedules.length, 1);
+    assert.equal(committedSchedules[0].subject_kind, "entity-smoke.test-entity"); assert.equal(committedSchedules[0].subject_id, id);
+    assert.equal(committedSchedules[0].due_at.toISOString(), "2026-11-07T12:05:00.001Z");
+  } else {
+    assert.equal(result.ok, false); assert.equal(statements.at(-1).text, "ROLLBACK"); assert(!statements.some(statement => statement.text === "COMMIT"));
+    assert.equal(committedEntity.lifecycle.state, "active"); assert.deepEqual(committedSchedules, []);
+    if (rejectedAt === "conflict") {
+      assert.equal(result.error.code, "TEST_ENTITY_WRITE_CONFLICT");
+      assert.deepEqual(result.error.diagnosticRecord.detail, { condition: "changed-or-missing", effect: "not-saved" });
+    } else {
+      assert.deepEqual(result.error.diagnosticRecord, tlsFailure.diagnosticRecord);
+      assert.deepEqual(result.error.relatedDiagnosticRecords, tlsFailure.relatedDiagnosticRecords);
+    }
+    assert(!JSON.stringify(result).includes(canary));
+    assert.equal(statements.filter(statement => statement.text.startsWith("UPDATE ")).length, rejectedAt === "schedule" ? 0 : 1);
+  }
+}
 const companion = tlsFailure.relatedDiagnosticRecords[0];
 providerError = Object.assign(new Error(canary), { code: "23505", diagnosticRecord: tlsFailure.diagnosticRecord, relatedDiagnosticRecords: [companion] });
 const beforeCollision = calls.length;
@@ -273,14 +422,14 @@ assert.deepEqual(collision.error.diagnosticRecord, tlsFailure.diagnosticRecord, 
 assert.deepEqual(collision.error.relatedDiagnosticRecords, [companion]);
 assert.equal(calls.length, beforeCollision + 1, "a collision must not be retried");
 assert(!JSON.stringify(collision).includes(canary));
-const updateConflict = await failing.repository.save(syntheticEntity);
+const updateConflict = await failing.repository.save(syntheticEntity, syntheticEntity);
 assert.equal(updateConflict.ok, false); assert.notEqual(updateConflict.error.code, "TEST_ENTITY_ID_CONFLICT", "an update conflict is not a generated-ID collision");
 providerError = Object.assign(new Error(canary), { code: "23503" });
 const constraintFailure = await failing.repository.create(syntheticEntity);
 assert.equal(constraintFailure.ok, false); assert.notEqual(constraintFailure.error.code, "TEST_ENTITY_ID_CONFLICT", "other constraint failures cannot be labelled duplicate IDs");
 const services = { repository: { get: key => memory.get(key), listByStatus: status => memory.listByStatus(status),
     create: entity => { saves++; return failWrite ? Promise.resolve({ ok: false, error: providerFailure }) : memory.create(entity); },
-    save: entity => { saves++; return failWrite ? Promise.resolve({ ok: false, error: providerFailure }) : memory.save(entity); } },
+    save: (entity, expected) => { saves++; return failWrite ? Promise.resolve({ ok: false, error: providerFailure }) : memory.save(entity, expected); } },
   clock: { now: () => new Date(now) }, uuidGenerator: { generate: () => shared.uuid(generated++ === 0 ? id : "a0b1c2d3-e4f5-4a67-8b90-" + generated.toString(16).padStart(12, "0")) }, lifecyclePolicy: policy.value };
 const logs = [];
 const feature = app.createEntitySmokePersistenceApp({ services, readiness: async () => unavailable ? readiness : { readiness: "ready" }, close: async () => {} });
@@ -335,7 +484,12 @@ assert.equal(observedFailure.observability.diagnosticRecord, providerFailure.dia
 // The same deployed verifier consumes real HTTP here. Only release metadata
 // and the timer are controlled; this is not image/source-custody evidence.
 failWrite = false; unavailable = false;
-const { verifyEntitySmokeFeature } = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/verification.js"));
+const { verifyEntitySmokeFeature, entitySmokeProofDiagnostic, entitySmokeSchedulingProofDiagnostic } = require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/verification.js"));
+const diagnosticCore = require("@kanbien/core/diagnostics");
+const schedulingDetail = { operation: "scheduling-delete", step: "configuration", condition: "invalid-input", effect: "not-started" };
+assert.equal(entitySmokeProofDiagnostic.version, 1);
+assert.equal(diagnosticCore.createDiagnosticRecord(entitySmokeProofDiagnostic, schedulingDetail).ok, false, "historical v1 cannot acquire new operations");
+assert.equal(diagnosticCore.createDiagnosticRecord(entitySmokeSchedulingProofDiagnostic, schedulingDetail).ok, true);
 const proofServer = await startPlatformServerProcess({ apps: [feature], host: "127.0.0.1", port: 0, installSignalHandlers: false,
   env: { NODE_ENV: "test", PLATFORM_DEPLOYMENT_EXPOSURE: "private" },
   diagnosticCatalogs: require(join(compiled, "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js")).entitySmokeServerDiagnosticCatalogs,
@@ -375,6 +529,39 @@ try {
     assert.equal(error.diagnosticRecord.detail.condition, "digest-mismatch"); return true;
   });
   assert.equal(saves, beforeMissing, "read proofs never recreate missing or mismatched facts");
+  const schedulingOptions = { ...proofOptions, label: "entity-smoke-" + "d".repeat(24) };
+  const scheduled = await verifyEntitySmokeFeature({ ...schedulingOptions, operation: "scheduling-create" });
+  assert.equal(scheduled.code, "ENTITY_SMOKE_SCHEDULING_RECORD_CREATED"); assert.equal(shared.uuid(scheduled.record_id).ok, true);
+  const schedulingSaved = saves;
+  const reconciledScheduled = await verifyEntitySmokeFeature({ ...schedulingOptions, operation: "scheduling-observe-create" });
+  assert.equal(reconciledScheduled.record_id, scheduled.record_id); assert.equal(reconciledScheduled.record_digest, scheduled.record_digest); assert.equal(saves, schedulingSaved);
+  for (const expectedId of [undefined, id]) {
+    await assert.rejects(() => verifyEntitySmokeFeature({ ...schedulingOptions, operation: "scheduling-delete", expectedDigest: scheduled.record_digest, expectedId }),
+      error => error.diagnosticRecord.definitionVersion === 2 && error.diagnosticRecord.detail.effect !== "unknown");
+  }
+  assert.equal(saves, schedulingSaved, "missing or substituted original ID cannot archive or delete anything");
+  const deletion = await verifyEntitySmokeFeature({ ...schedulingOptions, operation: "scheduling-delete", expectedDigest: scheduled.record_digest, expectedId: scheduled.record_id });
+  assert.equal(deletion.record_id, scheduled.record_id); assert.equal(deletion.record_digest, scheduled.record_digest);
+  assert.equal(deletion.code, "ENTITY_SMOKE_SCHEDULING_RECORD_DELETED");
+  assert.equal(Date.parse(deletion.restore_eligible_until) - Date.parse(deletion.deleted_at), 60000);
+  assert.equal(Date.parse(deletion.due_at) - Date.parse(deletion.deleted_at), 300001);
+  assert.deepEqual(deletion.steps, ["release", "liveness", "readiness", "read", "archive", "delete"]);
+  const retained = await services.repository.get(scheduled.record_id);
+  assert.equal(retained.visibility, "archived"); assert.equal(retained.lifecycle.state, "deleted");
+  assert.equal(saves, schedulingSaved + 2, "proof performs one archive and one logical delete; no SQL purge or retry");
+  await assert.rejects(() => verifyEntitySmokeFeature({ ...schedulingOptions, operation: "scheduling-observe-create" }), error => error.diagnosticRecord.detail.condition === "missing-record");
+  assert.equal(saves, schedulingSaved + 2, "reconciliation never replaces a deleted or absent original");
+  const restoreOptions = { ...proofOptions, label: "entity-smoke-" + "e".repeat(24) };
+  const toRestore = await verifyEntitySmokeFeature({ ...restoreOptions, operation: "scheduling-create" });
+  const beforeRestore = saves;
+  const restoredProof = await verifyEntitySmokeFeature({ ...restoreOptions, operation: "scheduling-restore", expectedDigest: toRestore.record_digest, expectedId: toRestore.record_id });
+  assert.equal(restoredProof.code, "ENTITY_SMOKE_SCHEDULING_RECORD_RESTORED");
+  assert.equal(restoredProof.record_id, toRestore.record_id); assert.equal(restoredProof.record_digest, toRestore.record_digest);
+  assert.equal(Date.parse(restoredProof.due_at) - Date.parse(restoredProof.deleted_at), 300001);
+  assert.deepEqual(restoredProof.steps, ["release", "liveness", "readiness", "read", "archive", "delete", "restore-deleted"]);
+  assert.equal(saves, beforeRestore + 3);
+  const restoredRow = await services.repository.get(toRestore.record_id);
+  assert.equal(restoredRow.visibility, "archived"); assert.equal(restoredRow.lifecycle.state, "active");
   const lifecycle = await verifyEntitySmokeFeature({ ...proofOptions, operation: "lifecycle", label: "entity-smoke-" + "b".repeat(24) });
   assert.equal(lifecycle.code, "ENTITY_SMOKE_LIFECYCLE_PROVEN");
   assert.deepEqual(lifecycle.steps, ["release", "liveness", "readiness", "create", "read", "update", "list", "archive", "restore-archive", "delete", "restore-deleted", "purge-eligibility"]);

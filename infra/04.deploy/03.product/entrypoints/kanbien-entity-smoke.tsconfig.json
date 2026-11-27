@@ -17,7 +17,11 @@
     ]
   },
   "include": [
-    "./kanbien-entity-smoke*.ts",
+    "./kanbien-entity-smoke.main.ts",
+    "./kanbien-entity-smoke-verifier.main.ts",
+    "./kanbien-entity-smoke-administration.main.ts",
+    "./kanbien-entity-smoke-migration.main.ts",
+    "./kanbien-entity-smoke-database-proof.main.ts",
     "./entity-smoke/**/*.ts"
   ]
 }

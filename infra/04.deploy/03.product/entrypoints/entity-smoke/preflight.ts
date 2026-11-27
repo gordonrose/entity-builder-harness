@@ -4,7 +4,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [security, sre]
@@ -28,7 +28,8 @@ type Condition = "invalid-input" | "count-mismatch" | "wrong-type" | "mismatch" 
 // Authentication follows explicit membership grants, including NOINHERIT.
 // pg_has_role also treats superusers as implicit members of every role, which
 // is a privilege rule, not an authentication membership observation.
-export const entitySmokePasswordAuthenticationPredicate = "NOT EXISTS (WITH RECURSIVE memberships(roleid) AS (SELECT oid FROM pg_roles WHERE rolname = session_user UNION SELECT m.roleid FROM pg_auth_members AS m JOIN memberships AS parent ON m.member = parent.roleid) SELECT 1 FROM memberships JOIN pg_roles AS role ON role.oid = memberships.roleid WHERE role.rolname = 'rds_iam')";
+export { postgreSqlPasswordAuthenticationPredicate as entitySmokePasswordAuthenticationPredicate } from "../shared/persistence/role-credential";
+import { postgreSqlPasswordAuthenticationPredicate as entitySmokePasswordAuthenticationPredicate } from "../shared/persistence/role-credential";
 
 /** TLS/authentication and destination selection are owned by the same real
  * pool/configuration constructors as the later operation. This observes that

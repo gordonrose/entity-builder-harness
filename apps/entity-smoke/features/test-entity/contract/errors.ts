@@ -1,6 +1,6 @@
 import type { CoreError, MessageDescriptor } from "@kanbien/core/shared";
-import { createDiagnosticRecord } from "@kanbien/core/diagnostics";
-import { testEntityIdentifierConflictDiagnostic } from "./diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, requireDiagnosticRecord } from "@kanbien/core/diagnostics";
+import { testEntityIdentifierConflictDiagnostic, testEntityRetentionDiagnostic, testEntityWriteConflictDiagnostic } from "./diagnostics";
 
 export interface TestEntityError extends MessageDescriptor {
   readonly diagnosticRecord?: CoreError["diagnosticRecord"];
@@ -10,6 +10,27 @@ export interface TestEntityError extends MessageDescriptor {
 export function testEntityError(code: string, defaultMessage: string, diagnosticRecord?: CoreError["diagnosticRecord"], relatedDiagnosticRecords?: CoreError["relatedDiagnosticRecords"]): TestEntityError {
   return { code, defaultMessage, ...(diagnosticRecord === undefined ? {} : { diagnosticRecord }),
     ...(relatedDiagnosticRecords === undefined ? {} : { relatedDiagnosticRecords }) };
+}
+
+export function testEntityRetentionRejected(
+  field: "transaction" | "delivery" | "subject" | "entity-id",
+  reason: "missing" | "mismatch" | "invalid-format",
+): TestEntityError {
+  const evidence = requireDiagnosticRecord([testEntityRetentionDiagnostic], captureDiagnosticRecord(() => {
+    const checked = createDiagnosticRecord(testEntityRetentionDiagnostic, { field, reason, effect: "mutation-not-invoked" });
+    if (!checked.ok) throw checked.error;
+    return checked.value;
+  }));
+  return testEntityError("TEST_ENTITY_RETENTION_REJECTED", "The retention operation could not be validated.", evidence);
+}
+
+export function testEntityWriteConflict(): TestEntityError {
+  const evidence = requireDiagnosticRecord([testEntityWriteConflictDiagnostic], captureDiagnosticRecord(() => {
+    const checked = createDiagnosticRecord(testEntityWriteConflictDiagnostic, { condition: "changed-or-missing", effect: "not-saved" });
+    if (!checked.ok) throw checked.error;
+    return checked.value;
+  }));
+  return testEntityError("TEST_ENTITY_WRITE_CONFLICT", "The test entity changed before it could be saved.", evidence);
 }
 
 /** Provider bindings translate a positively identified key collision while

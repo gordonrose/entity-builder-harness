@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.verify-platform-shell-postgresql-reference
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: persistence.operations
 #   disciplines:
@@ -28,7 +28,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-RENDERED_FOUNDATION="$(mktemp /tmp/platform-shell-relational-reference.XXXXXX.yml)"
+RENDERED_FOUNDATION="$(mktemp --tmpdir platform-shell-relational-reference.XXXXXX.yml)"
 trap 'rm -f "$RENDERED_FOUNDATION"' EXIT
 bash scripts/04.deploy/legacy/kanbien-staging/render-platform-shell-foundation-template/script.sh --output "$RENDERED_FOUNDATION" >/dev/null
 

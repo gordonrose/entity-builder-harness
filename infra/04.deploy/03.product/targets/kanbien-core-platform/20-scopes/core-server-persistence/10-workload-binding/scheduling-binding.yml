@@ -1,0 +1,39 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.core-server-persistence.scheduling-binding
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.scheduling
+#   disciplines: [architecture, security, sre]
+#   kind: workload-binding
+#   purpose: Bind independent immutable dispatcher and worker packages to the scoped scheduler without changing the HTTP workload.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.capability.scheduling-control
+#     path: scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py
+schema: deploy/scheduling-control-binding/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: declared-not-live
+stack: kanbien-core-platform-core-server-persistence-scheduling
+network_stack: kanbien-core-platform-scheduling-network
+database_stack: kanbien-core-platform-core-server-persistence
+legacy_foundation_stack: kanbien-staging-platform-shell-foundation
+repository: kanbien-core-platform/core-server
+programs:
+  dispatch: kanbien-core-server-persistence-scheduling-dispatch
+  worker: kanbien-core-server-persistence-scheduling-worker
+program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+image_contract: infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+realization_contract: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/scheduling-realization-contract.yml
+template: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+network_template: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+controller: scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh
+local_proof: scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py
+runtime: aws-lambda-container-image-published-version
+initial_state: tick-disabled-worker-disabled
+controls: independent-tick-and-worker
+activation: complete-migration-effective-grants-qualified-packages-network-compatibility-and-reviewed-cost-required

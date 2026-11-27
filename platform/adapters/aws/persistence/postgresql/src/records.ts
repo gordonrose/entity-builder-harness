@@ -62,6 +62,7 @@ export interface PostgreSqlProcessingRow {
   readonly lease_acquired_at: Date | null;
   readonly lease_expires_at: Date | null;
   readonly released_at: Date | null;
+  readonly retry_at?: Date | null;
   readonly completion_outcome: "succeeded" | "terminal-failure" | null;
   readonly completed_at: Date | null;
 }
@@ -155,6 +156,7 @@ export function processingRecordFromRow(row: PostgreSqlProcessingRow, observatio
     attempt: attempt.value,
     ...(lease === undefined ? {} : { lease }),
     ...(row.released_at === null ? {} : { releasedAt: iso(row.released_at) }),
+    ...(row.retry_at == null ? {} : { retryAt: iso(row.retry_at) }),
     ...(row.completion_outcome === null || row.completed_at === null ? {} : { completion: { outcome: row.completion_outcome, completedAt: iso(row.completed_at) } }),
   });
   } catch (cause) { observation?.threw(cause); throw cause; }

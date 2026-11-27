@@ -1,0 +1,377 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.aws.scoped-scheduling-template
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.scheduling
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Declare independent initially disabled dispatcher and worker functions on an existing private PostgreSQL target.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: product.plan.reusable-aws-scheduling
+#     path: .agentic/03.product/plans/implementation/reusable-aws-scheduling.md
+AWSTemplateFormatVersion: '2010-09-09'
+Description: One isolated scheduling scope; no database replacement, HTTP update, public ingress or new fixed-charge endpoint.
+Parameters:
+  Scope: { Type: String, AllowedValues: [core-server-persistence, entity-smoke] }
+  VpcId: { Type: 'AWS::EC2::VPC::Id' }
+  VpcCidr: { Type: String, AllowedPattern: '^(10|172|192)\.[0-9]{1,3}\.[0-9]{1,3}\.0/[0-9]{1,2}$' }
+  PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  EndpointSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  DatabaseEndpoint: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9.-]+$' }
+  DatabaseName: { Type: String, AllowedPattern: '^[a-z][a-z0-9_]{0,62}$' }
+  DatabaseResourceId: { Type: String, AllowedPattern: '^db-[A-Za-z0-9]+$' }
+  DatabaseSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  DispatchImageUri: { Type: String, AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.eu-west-1\.amazonaws\.com/kanbien-core-platform/[a-z0-9-]+@sha256:[a-f0-9]{64}$' }
+  WorkerImageUri: { Type: String, AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.eu-west-1\.amazonaws\.com/kanbien-core-platform/[a-z0-9-]+@sha256:[a-f0-9]{64}$' }
+  SourceRevision: { Type: String, AllowedPattern: '^[a-f0-9]{40}$' }
+  TickEnabled: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }
+  WorkerEnabled: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }
+  DenyDispatcherSend: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }
+  AlarmTopicArn: { Type: String, AllowedPattern: '^arn:aws:sns:eu-west-1:[0-9]{12}:kanbien-core-platform-observability-alerts$' }
+Mappings:
+  Scopes:
+    core-server-persistence: { Schema: platform, Dispatcher: core_scheduling_dispatch, Worker: core_scheduling_worker }
+    entity-smoke: { Schema: entity_smoke, Dispatcher: entity_smoke_scheduling_dispatch, Worker: entity_smoke_scheduling_worker }
+Conditions:
+  TickActivated: !Equals [!Ref TickEnabled, 'true']
+  WorkerActivated: !Equals [!Ref WorkerEnabled, 'true']
+  DispatcherSendDenied: !Equals [!Ref DenyDispatcherSend, 'true']
+Resources:
+  SchedulingSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Scoped scheduling access to existing PostgreSQL and private service endpoints only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+      SecurityGroupEgress:
+        - { IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroupId }
+  EndpointIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref SchedulingSecurityGroup }
+  DatabaseIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroupId, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref SchedulingSecurityGroup }
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: !Sub 'kanbien-core-platform-${Scope}-scheduling-dlq'
+      SqsManagedSseEnabled: true
+      MessageRetentionPeriod: 1209600
+      RedriveAllowPolicy:
+        redrivePermission: byQueue
+        sourceQueueArns: [!Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:kanbien-core-platform-${Scope}-scheduling']
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  JobQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: !Sub 'kanbien-core-platform-${Scope}-scheduling'
+      SqsManagedSseEnabled: true
+      VisibilityTimeout: 360
+      ReceiveMessageWaitTimeSeconds: 20
+      MessageRetentionPeriod: 345600
+      RedrivePolicy: { deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn, maxReceiveCount: 5 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  QueueTransportPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues: [!Ref JobQueue, !Ref DeadLetterQueue]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: 'sqs:*'
+            Resource: [!GetAtt JobQueue.Arn, !GetAtt DeadLetterQueue.Arn]
+            Condition: { Bool: { 'aws:SecureTransport': 'false' } }
+          - !If
+            - DispatcherSendDenied
+            - Effect: Deny
+              Principal: '*'
+              Action: 'sqs:SendMessage'
+              Resource: !GetAtt JobQueue.Arn
+              Condition: { ArnEquals: { 'aws:PrincipalArn': !GetAtt DispatchRole.Arn } }
+            - !Ref AWS::NoValue
+  RuntimeLogs:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/kanbien-core-platform/${Scope}/scheduling'
+      RetentionInDays: 7
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  DispatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: lambda.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: scoped-dispatch
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !GetAtt RuntimeLogs.Arn }
+              - { Effect: Allow, Action: 'sqs:SendMessage', Resource: [!GetAtt JobQueue.Arn, !GetAtt DeadLetterQueue.Arn] }
+              - Effect: Allow
+                Action: 'rds-db:connect'
+                Resource: !Sub
+                  - 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/${User}'
+                  - { User: !FindInMap [Scopes, !Ref Scope, Dispatcher] }
+              - { Effect: Allow, Action: ['ec2:CreateNetworkInterface', 'ec2:DescribeNetworkInterfaces', 'ec2:DescribeSubnets', 'ec2:DeleteNetworkInterface', 'ec2:AssignPrivateIpAddresses', 'ec2:UnassignPrivateIpAddresses'], Resource: '*' }
+              - Effect: Deny
+                Action: ['ec2:CreateNetworkInterface', 'ec2:DescribeNetworkInterfaces', 'ec2:DescribeSubnets', 'ec2:DeleteNetworkInterface', 'ec2:AssignPrivateIpAddresses', 'ec2:UnassignPrivateIpAddresses']
+                Resource: '*'
+                Condition: { ArnEquals: { 'lambda:SourceFunctionArn': !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:kc-${Scope}-schedule-dispatch' } }
+  WorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{ Effect: Allow, Principal: { Service: lambda.amazonaws.com }, Action: 'sts:AssumeRole' }]
+      Policies:
+        - PolicyName: scoped-worker
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ['logs:CreateLogStream', 'logs:PutLogEvents'], Resource: !GetAtt RuntimeLogs.Arn }
+              - { Effect: Allow, Action: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes', 'sqs:ChangeMessageVisibility'], Resource: !GetAtt JobQueue.Arn }
+              - Effect: Allow
+                Action: 'rds-db:connect'
+                Resource: !Sub
+                  - 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/${User}'
+                  - { User: !FindInMap [Scopes, !Ref Scope, Worker] }
+              - { Effect: Allow, Action: ['ec2:CreateNetworkInterface', 'ec2:DescribeNetworkInterfaces', 'ec2:DescribeSubnets', 'ec2:DeleteNetworkInterface', 'ec2:AssignPrivateIpAddresses', 'ec2:UnassignPrivateIpAddresses'], Resource: '*' }
+              - Effect: Deny
+                Action: ['ec2:CreateNetworkInterface', 'ec2:DescribeNetworkInterfaces', 'ec2:DescribeSubnets', 'ec2:DeleteNetworkInterface', 'ec2:AssignPrivateIpAddresses', 'ec2:UnassignPrivateIpAddresses']
+                Resource: '*'
+                Condition: { ArnEquals: { 'lambda:SourceFunctionArn': !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:kc-${Scope}-schedule-worker' } }
+  DispatchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'kc-${Scope}-schedule-dispatch'
+      PackageType: Image
+      Code: { ImageUri: !Ref DispatchImageUri }
+      Architectures: [x86_64]
+      Role: !GetAtt DispatchRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      ReservedConcurrentExecutions: 1
+      EphemeralStorage: { Size: 512 }
+      VpcConfig: { SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref SchedulingSecurityGroup] }
+      LoggingConfig: { LogGroup: !Ref RuntimeLogs, LogFormat: JSON }
+      Environment:
+        Variables:
+          NODE_ENV: production
+          PLATFORM_DEPLOYMENT_EXPOSURE: private
+          PLATFORM_SOURCE_COMMIT_SHA: !Ref SourceRevision
+          PERSISTENCE_IMPLEMENTATION: postgresql
+          PERSISTENCE_POSTGRES_HOST: !Ref DatabaseEndpoint
+          PERSISTENCE_POSTGRES_PORT: '5432'
+          PERSISTENCE_POSTGRES_DATABASE: !Ref DatabaseName
+          PERSISTENCE_POSTGRES_SCHEMA: !FindInMap [Scopes, !Ref Scope, Schema]
+          PERSISTENCE_POSTGRES_CA_PATH: /app/assets/rds-eu-west-1-bundle.crt
+          PERSISTENCE_POSTGRES_IAM_REGION: !Ref AWS::Region
+          PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: !Sub
+            - 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/${User}'
+            - { User: !FindInMap [Scopes, !Ref Scope, Dispatcher] }
+          PERSISTENCE_SCHEDULING_DATABASE_USERNAME: !FindInMap [Scopes, !Ref Scope, Dispatcher]
+          SCHEDULING_QUEUE_URL: !Ref JobQueue
+          SCHEDULING_QUEUE_ARN: !GetAtt JobQueue.Arn
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  # The controller replaces each Version logical ID with a release fingerprint.
+  # Retention keeps older immutable versions available for explicit recovery.
+  DispatchVersion:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      FunctionName: !Ref DispatchFunction
+      Description: !Sub '${SourceRevision} ${DispatchImageUri}'
+  DispatchAsyncFailure:
+    Type: AWS::Lambda::EventInvokeConfig
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      FunctionName: !Ref DispatchFunction
+      Qualifier: !GetAtt DispatchVersion.Version
+      MaximumEventAgeInSeconds: 60
+      MaximumRetryAttempts: 0
+      DestinationConfig: { OnFailure: { Destination: !GetAtt DeadLetterQueue.Arn } }
+  WorkerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'kc-${Scope}-schedule-worker'
+      PackageType: Image
+      Code: { ImageUri: !Ref WorkerImageUri }
+      Architectures: [x86_64]
+      Role: !GetAtt WorkerRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      ReservedConcurrentExecutions: 2
+      EphemeralStorage: { Size: 512 }
+      VpcConfig: { SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref SchedulingSecurityGroup] }
+      LoggingConfig: { LogGroup: !Ref RuntimeLogs, LogFormat: JSON }
+      Environment:
+        Variables:
+          NODE_ENV: production
+          PLATFORM_DEPLOYMENT_EXPOSURE: private
+          PLATFORM_SOURCE_COMMIT_SHA: !Ref SourceRevision
+          PERSISTENCE_IMPLEMENTATION: postgresql
+          PERSISTENCE_POSTGRES_HOST: !Ref DatabaseEndpoint
+          PERSISTENCE_POSTGRES_PORT: '5432'
+          PERSISTENCE_POSTGRES_DATABASE: !Ref DatabaseName
+          PERSISTENCE_POSTGRES_SCHEMA: !FindInMap [Scopes, !Ref Scope, Schema]
+          PERSISTENCE_POSTGRES_CA_PATH: /app/assets/rds-eu-west-1-bundle.crt
+          PERSISTENCE_POSTGRES_IAM_REGION: !Ref AWS::Region
+          PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: !Sub
+            - 'arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DatabaseResourceId}/${User}'
+            - { User: !FindInMap [Scopes, !Ref Scope, Worker] }
+          PERSISTENCE_SCHEDULING_DATABASE_USERNAME: !FindInMap [Scopes, !Ref Scope, Worker]
+          SCHEDULING_QUEUE_URL: !Ref JobQueue
+          SCHEDULING_QUEUE_ARN: !GetAtt JobQueue.Arn
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  WorkerVersion:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      FunctionName: !Ref WorkerFunction
+      Description: !Sub '${SourceRevision} ${WorkerImageUri}'
+  WorkerMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      FunctionName: !Ref WorkerVersion
+      EventSourceArn: !GetAtt JobQueue.Arn
+      Enabled: !If [WorkerActivated, true, false]
+      BatchSize: 1
+      MaximumBatchingWindowInSeconds: 0
+      FunctionResponseTypes: [ReportBatchItemFailures]
+      ScalingConfig: { MaximumConcurrency: 2 }
+  TickGroup:
+    Type: AWS::Scheduler::ScheduleGroup
+    Properties:
+      Name: !Sub 'kanbien-core-platform-${Scope}'
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: !Ref Scope }]
+  TickRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: scheduler.amazonaws.com }
+            Action: 'sts:AssumeRole'
+            Condition: { StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' }, ArnEquals: { 'aws:SourceArn': !GetAtt TickGroup.Arn } }
+      Policies:
+        - PolicyName: scoped-tick
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: 'lambda:InvokeFunction', Resource: !Ref DispatchVersion }
+              - { Effect: Allow, Action: 'sqs:SendMessage', Resource: !GetAtt DeadLetterQueue.Arn }
+  FixedTick:
+    Type: AWS::Scheduler::Schedule
+    DependsOn: DispatchAsyncFailure
+    Properties:
+      Name: due-pass
+      GroupName: !Ref TickGroup
+      State: !If [TickActivated, ENABLED, DISABLED]
+      ScheduleExpression: rate(1 minute)
+      ScheduleExpressionTimezone: UTC
+      FlexibleTimeWindow: { Mode: 'OFF' }
+      Target:
+        Arn: !Ref DispatchVersion
+        RoleArn: !GetAtt TickRole.Arn
+        Input: '{"scheduler":{"schedule_arn":"<aws.scheduler.schedule-arn>","scheduled_at":"<aws.scheduler.scheduled-time>","execution_id":"<aws.scheduler.execution-id>","attempt":"<aws.scheduler.attempt-number>"}}'
+        RetryPolicy: { MaximumEventAgeInSeconds: 60, MaximumRetryAttempts: 0 }
+        DeadLetterConfig: { Arn: !GetAtt DeadLetterQueue.Arn }
+  DispatchSilenceAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'kanbien-core-platform-${Scope}-scheduling-dispatch-silence'
+      AlarmDescription: No dispatcher invocation for three minutes while its fixed tick is enabled.
+      ActionsEnabled: !If [TickActivated, true, false]
+      AlarmActions: [!Ref AlarmTopicArn]
+      OKActions: [!Ref AlarmTopicArn]
+      Namespace: AWS/Lambda
+      MetricName: Invocations
+      Dimensions: [{ Name: FunctionName, Value: !Ref DispatchFunction }, { Name: Resource, Value: !Sub '${DispatchFunction}:${DispatchVersion.Version}' }]
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+  DispatchErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'kanbien-core-platform-${Scope}-scheduling-dispatch-errors'
+      AlarmDescription: Dispatcher invocation failed; inspect selected safe diagnostics and its retained failure queue.
+      AlarmActions: [!Ref AlarmTopicArn]
+      OKActions: [!Ref AlarmTopicArn]
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{ Name: FunctionName, Value: !Ref DispatchFunction }, { Name: Resource, Value: !Sub '${DispatchFunction}:${DispatchVersion.Version}' }]
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+  QueueAgeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'kanbien-core-platform-${Scope}-scheduling-queue-age'
+      AlarmDescription: Eligible visible work is over five minutes old; this does not measure poison-message or PostgreSQL reminder age.
+      AlarmActions: [!Ref AlarmTopicArn]
+      OKActions: [!Ref AlarmTopicArn]
+      Namespace: AWS/SQS
+      MetricName: ApproximateAgeOfOldestMessage
+      Dimensions: [{ Name: QueueName, Value: !GetAtt JobQueue.QueueName }]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: 300
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+  DeadLetterAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'kanbien-core-platform-${Scope}-scheduling-dead-letter'
+      AlarmDescription: Retained failed scheduling delivery requires explicit investigation; no automatic replay.
+      AlarmActions: [!Ref AlarmTopicArn]
+      OKActions: [!Ref AlarmTopicArn]
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions: [{ Name: QueueName, Value: !GetAtt DeadLetterQueue.QueueName }]
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+Outputs:
+  JobQueueUrl: { Value: !Ref JobQueue }
+  JobQueueArn: { Value: !GetAtt JobQueue.Arn }
+  DeadLetterQueueArn: { Value: !GetAtt DeadLetterQueue.Arn }
+  DispatchFunctionArn: { Value: !GetAtt DispatchFunction.Arn }
+  WorkerFunctionArn: { Value: !GetAtt WorkerFunction.Arn }
+  DispatchVersionArn: { Value: !Ref DispatchVersion }
+  WorkerVersionArn: { Value: !Ref WorkerVersion }
+  WorkerMappingId: { Value: !Ref WorkerMapping }
+  FixedTickArn: { Value: !GetAtt FixedTick.Arn }
+  SchedulingSecurityGroupId: { Value: !Ref SchedulingSecurityGroup }

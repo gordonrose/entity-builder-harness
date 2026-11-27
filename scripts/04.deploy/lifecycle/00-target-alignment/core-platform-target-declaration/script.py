@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 11
+#   version: 12
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -211,6 +211,7 @@ def check_foundation(root: Path) -> None:
     for intent in intents:
         if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
+    check_access_maintenance(access)
     cost = mapping(foundation_root / "cost-control.yml", "cost-control-unreadable")
     expected_controls = {"one-task-only", "no-autoscaling", "no-nat", "no-public-ingress", "no-data-services", "no-new-cost-category"}
     if (
@@ -245,6 +246,20 @@ def check_foundation(root: Path) -> None:
             or evidence_waiver.get("follow_up_owner") != waiver.get("follow_up_owner")
         ):
             raise DeclarationFailure("cost-control-evidence-invalid")
+
+
+def check_access_maintenance(access: dict[str, Any]) -> dict[str, Any]:
+    """One adopted permission change, not an arbitrary policy-update language."""
+    expected = {
+        "operation": "add-repository-observation",
+        "controller": "scripts/04.deploy/lifecycle/50-deploy/capabilities/foundation-access-update/script.py",
+        "workflow": ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/update-delivery-observation-access.md",
+        "logical_resource": "DeliveryRole", "policy_name": "publish-core-image",
+        "resource_parameter": "ExistingRepositoryArn", "action": "ecr:DescribeRepositories",
+    }
+    if access.get("schema") != "deploy/technical-access/v1" or access.get("target") != TARGET or access.get("maintenance") != {"delivery-repository-observation": expected}:
+        raise DeclarationFailure("technical-access-maintenance-invalid")
+    return expected
 
 
 def check_scope(root: Path, rehearsal_root: Path | None = None) -> None:

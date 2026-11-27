@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 31
+#   version: 34
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -22,6 +22,122 @@ from test_support import *
 
 class RepositoryContractTests(unittest.TestCase):
     def codes(self, report): return {item["code"] for item in report["findings"]}
+
+    def test_scheduler_contract_inputs_and_foundation_effects_are_owned(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        checks = catalog['checks']
+        contracts = 'infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/'
+        cases = [('.agentic/04.deploy/schemas/change-impact.v1.schema.yml', 'persistence-composition'),
+                 (contracts + 'core-scheduling-package-custody.delivery-access.yml', 'managed-handler-image-contracts'),
+                 (contracts + 'entity-smoke-scheduling-package-custody.delivery-access.yml', 'managed-handler-image-contracts')]
+        for path, identity in cases:
+            with self.subTest(path=path):
+                inputs = checks[identity]['inputs']
+                self.assertIn(path, inputs)
+                self.assertTrue(any(identity in rule['checks'] and any(selection.below(path, ref)
+                    for ref in rule['inputs']) for rule in catalog['repository_inputs']))
+                with tempfile.TemporaryDirectory(prefix='scheduler-contract-input-') as directory:
+                    root = Path(directory); source = root / path
+                    source.parent.mkdir(parents=True); source.write_text('original')
+                    before = selection.fingerprint(root, inputs)
+                    source.write_text('changed')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = [ref for ref in inputs if not selection.below(path, ref)]
+                    before = selection.fingerprint(root, omitted)
+                    source.write_text('changed-again')
+                    self.assertEqual(before, selection.fingerprint(root, omitted))
+        identity = 'foundation-access-update-contracts'
+        self.assertEqual(checks[identity]['effects'], ['read-only', 'writes-files'])
+        self.assertEqual(selection.validate_check(ROOT, identity, checks[identity]), [])
+        wrong = {**checks[identity], 'effects': ['read-only']}
+        self.assertIn('check-effects-mismatch', self.codes({'findings': selection.validate_check(ROOT, identity, wrong)}))
+
+    def test_scheduler_proof_inputs_cover_native_and_provider_dependencies(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        checks = catalog['checks']
+        shared = checks['scheduling-runtime-proof-contracts']['inputs']
+        self.assertIs(shared, checks['scheduling-acceptance-contracts']['inputs'])
+        self.assertIs(shared, checks['scheduling-provider-controls']['inputs'])
+        core = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/'
+        entity = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/'
+        common = [
+            'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py',
+            'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py',
+            'scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py',
+            'scripts/04.deploy/shared/provider-adapters/aws/task_journal.py',
+            'scripts/04.deploy/operational-realization-gate/script.py',
+            'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py',
+            'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py',
+            'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml',
+            'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml',
+            core + 'run-administration/script.py', core + 'proof-receipts.py',
+            core + 'task-operations.py', core + 'rehearse-isolated-database-restore/script.py',
+            core + 'observability-receipts.py', core + 'rehearse-observability-readiness/script.py',
+            entity + 'acceptance-evaluation/implementation/acceptance-evidence.py',
+            entity + 'task-execution/implementation/task-route.py',
+            entity + 'task-execution/implementation/task-steps.py',
+            'scripts/repo/check-selection/script.py',
+            'scripts/repo/check-selection/check-inputs.mjs',
+            'scripts/repo/workspace-build/declarations.mjs',
+        ]
+        for identity, references in [('scheduling-runtime-proof-contracts', common),
+                                     ('scheduling-acceptance-contracts', common),
+                                     ('scheduling-provider-controls', common)]:
+            inputs = set(checks[identity]['inputs'])
+            self.assertEqual(len(inputs), len(checks[identity]['inputs']))
+            self.assertFalse(inputs & {'scripts', 'infra', 'platform', 'apps', '.agentic'})
+            self.assertTrue(all((ROOT / item).exists() for item in inputs))
+            self.assertEqual(selection.validate_check(ROOT, identity, checks[identity]), [])
+            for reference in references:
+                with self.subTest(check=identity, dependency=reference):
+                    self.assertTrue(any(selection.below(reference, item) for item in inputs))
+                    self.assertTrue(any(identity in rule['checks'] and any(
+                        selection.below(reference, item) for item in rule['inputs'])
+                        for rule in catalog['repository_inputs']))
+            # The real fingerprint must change, not merely a matching filename
+            # assertion; omitting the dependency demonstrates the stale result.
+            for reference in (references[0], references[-1]):
+                with tempfile.TemporaryDirectory(prefix='scheduler-proof-input-') as directory:
+                    root = Path(directory)
+                    source = root / reference
+                    source.parent.mkdir(parents=True)
+                    source.write_text('controlled original dependency')
+                    before = selection.fingerprint(root, inputs)
+                    source.write_text('controlled changed dependency')
+                    self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                    omitted = {item for item in inputs if not selection.below(reference, item)}
+                    before = selection.fingerprint(root, omitted)
+                    source.write_text('controlled third dependency')
+                    self.assertEqual(before, selection.fingerprint(root, omitted))
+
+    def test_managed_payload_inputs_cover_actual_fixture_reads(self):
+        checks = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
+        check = checks['managed-handler-payload']
+        source = """
+import {readProgramBuildInputs} from './scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs';
+const files = new Set();
+for (const programId of JSON.parse(process.argv[1])) {
+  const selected = readProgramBuildInputs(process.cwd(), {programId});
+  for (const path of [selected.runtimeEntry.source, ...selected.manifestPaths,
+    ...selected.inputs.sourceFiles, ...Object.values(selected.inputs.packages)
+      .flatMap(exports => Object.values(exports).filter(path => path.endsWith('.json')))]) files.add(path);
+}
+console.log(JSON.stringify([...files].sort()));
+"""
+        result = subprocess.run(['node', '--input-type=module', '-e', source,
+                                 json.dumps(check['applicability']['program_ids'])],
+                                cwd=ROOT, capture_output=True, text=True, check=True)
+        consumed = json.loads(result.stdout)
+        self.assertTrue(consumed)
+        def missing(inputs):
+            return [path for path in consumed
+                    if not any(selection.below(path, ref) for ref in inputs)]
+        self.assertEqual(missing(check['inputs']), [])
+        selected = 'platform/adapters/aws/runtime/lambda/package.json'
+        self.assertIn(selected, consumed)
+        self.assertIn(selected, missing([ref for ref in check['inputs'] if ref != selected]))
+        self.assertEqual(checks['scheduling-provider-controls']['feedback']['rationale'],
+                         'Prove exact legacy queue routes, immutable releases and observe-only recovery with controlled provider responses.')
 
     def test_retained_staging_catalogue_is_explicitly_isolated(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
@@ -408,6 +524,31 @@ class RepositoryContractTests(unittest.TestCase):
                 source.write_text('fixture source v3\n')
                 self.assertEqual(missing_before, selection.fingerprint(root, omitted), 'counterexample reproduces omitted-root cache identity')
                 self.assertIn('@kanbien/app-entity-smoke', checks[identity]['runtime']['node_packages'])
+
+    def test_catalog_configuration_selects_its_reader_and_invalidates_consumed_inputs(self):
+        config = 'scripts/repo/diagnostic-coverage/tsconfig.json'
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        inputs = set(catalog['checks']['diagnostic-catalog-readers']['inputs'])
+        def selected(candidate):
+            return {identity for rule in candidate['repository_inputs'] if config in rule['inputs'] for identity in rule['checks']}
+        self.assertEqual(selected(catalog), {'diagnostic-catalog-readers'})
+        stale = copy.deepcopy(catalog)
+        for rule in stale['repository_inputs']:
+            if config in rule['inputs']: rule['checks'] = ['diagnostic-runtime-contracts']
+        self.assertNotIn('diagnostic-catalog-readers', selected(stale))
+        self.assertTrue(any(selection.below(config, item) for item in inputs))
+        project = json.loads((ROOT / config).read_text())
+        for include in project['include']:
+            prefix = (ROOT / config).parent.joinpath(include.split('*', 1)[0]).resolve().relative_to(ROOT).as_posix().rstrip('/')
+            self.assertTrue(any(selection.below(prefix, item) for item in inputs), prefix)
+        with tempfile.TemporaryDirectory(prefix='catalog-config-input-') as directory:
+            root = Path(directory); source = root / config
+            source.parent.mkdir(parents=True); source.write_text('first')
+            before = selection.fingerprint(root, inputs); source.write_text('second')
+            self.assertNotEqual(before, selection.fingerprint(root, inputs))
+            omitted = {item for item in inputs if not selection.below(config, item)}
+            before = selection.fingerprint(root, omitted); source.write_text('third')
+            self.assertEqual(before, selection.fingerprint(root, omitted))
 
     def test_feedback_pilot_binds_real_owners_without_reclassifying_existing_gates(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
@@ -906,8 +1047,23 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(check['argv'], ['bash', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh'])
         self.assertEqual(set(check['inputs']), {
             'platform/adapters/aws/persistence/postgresql', 'platform/persistence', 'packages/core',
+            'platform/adapters/aws/queue/sqs',
             'platform/contracts', 'platform/security', 'platform/observability', 'apps/platform-smoke',
             'platform/config', 'platform/health', 'platform/runtime', 'platform/server', 'platform/workers',
+            'platform/testing', 'apps/entity-smoke',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/verification.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/proof-facts.ts',
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts',
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts',
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.ts',
@@ -1146,6 +1302,71 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(script.split(' && '), ['npm run platform:adapter:aws:queue:sqs:' + name
             for name in ['typecheck', 'build', 'test', 'boundary']])
         self.assertFalse(selection.validate_check(ROOT, 'sqs-queue-runtime', check))
+
+    def test_scheduling_proofs_are_local_owned_and_select_their_actual_sources(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        checks = catalog['checks']
+        adapter, composition = checks['lambda-runtime'], checks['scheduling-composition']
+        self.assertEqual(adapter['argv'], ['bash', 'scripts/repo/diagnostic-coverage/verify.sh', '--unit', 'lambda'])
+        self.assertEqual(composition['argv'], ['bash', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh', '--scheduling'])
+        for identity, check in [('lambda-runtime', adapter), ('scheduling-composition', composition)]:
+            self.assertEqual(check['effects'], ['writes-files'])
+            self.assertEqual(check['stage'], 'local')
+            self.assertFalse(selection.validate_check(ROOT, identity, check))
+        context = selection.workspace_context.load(ROOT, {'lambda-runtime': adapter}, selection.coverage.safe_path)['checks']['lambda-runtime']
+        self.assertTrue({'packages/core', 'platform/persistence', 'platform/adapters/aws/runtime/lambda'} <= set(context['references']))
+        self.assertNotIn('platform/adapters/aws/runtime/ecs-fargate', context['references'])
+        rules = [rule['inputs'] for rule in catalog['repository_inputs'] if 'scheduling-composition' in rule['checks']]
+        self.assertEqual(rules, [composition['inputs']])
+        cases = {'lambda-runtime': 'platform/adapters/aws/runtime/lambda/src/dispatch.ts',
+                 'scheduling-composition': 'infra/04.deploy/03.product/entrypoints/shared/scheduling/composition.ts'}
+        for identity, source in cases.items():
+            self.assertTrue(any(selection.below(source, path) for path in checks[identity]['inputs']))
+            stale = copy.deepcopy(checks[identity])
+            stale['inputs'] = [path for path in stale['inputs'] if not selection.below(source, path)]
+            self.assertFalse(any(selection.below(source, path) for path in stale['inputs']))
+
+    def test_scheduler_preparation_binds_direct_real_consumers(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        entrypoints = 'infra/04.deploy/03.product/entrypoints/'
+        templates = 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/'
+        cases = {
+            '.agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml': 'core-dependency-boundary',
+            **{entrypoints + scope + '-scheduling-' + purpose + '.tsconfig.json': 'core-dependency-boundary'
+               for scope in ('kanbien-core-server-persistence', 'kanbien-entity-smoke') for purpose in ('dispatch', 'worker')},
+            **{entrypoints + 'contracts/' + name + '-diagnostics.v1.json': 'diagnostic-catalog-readers'
+               for name in ('kanbien-core-server-acceptance', 'scheduling-target')},
+            **{templates + name + '.yml': 'persistence-provider-regression' for name in ('scheduling', 'scheduling-network')},
+            'apps/entity-smoke/features/test-entity/domain/services/purge-expired-test-entities.ts': 'postgresql-disposable-diagnostics',
+            'platform/testing/src/index.ts': 'postgresql-disposable-diagnostics',
+            entrypoints + 'entity-smoke/postgresql.ts': 'postgresql-disposable-diagnostics',
+            **{entrypoints + 'entity-smoke/' + name + '.ts': 'postgresql-disposable-diagnostics'
+               for name in ('runtime', 'configuration', 'diagnostics', 'verification', 'proof-facts')},
+            **{entrypoints + 'shared/persistence/' + name + '.ts': 'postgresql-disposable-diagnostics'
+               for name in ('configuration', 'configuration-implementation', 'operation-diagnostics')},
+            'platform/adapters/aws/queue/sqs/src/lambda-batch.ts': 'postgresql-disposable-diagnostics',
+            entrypoints + 'kanbien-core-server-persistence-postgresql.ts': 'postgresql-disposable-diagnostics',
+            entrypoints + 'kanbien-core-server-persistence-scheduling.app.ts': 'postgresql-disposable-diagnostics',
+            entrypoints + 'kanbien-core-server-persistence-diagnostics.ts': 'postgresql-disposable-diagnostics',
+        }
+        for source, owner in cases.items():
+            with self.subTest(source=source, owner=owner):
+                self.assertTrue((ROOT / source).is_file())
+                rules = [rule for rule in catalog['repository_inputs'] if owner in rule['checks']]
+                self.assertTrue(any(selection.below(source, path) for rule in rules for path in rule['inputs']))
+                inputs = catalog['checks'][owner]['inputs']
+                self.assertTrue(any(selection.below(source, path) for path in inputs))
+                # An incidental/full-graph consumer cannot replace either edge.
+                removed = [path for path in inputs if not selection.below(source, path)]
+                self.assertFalse(any(selection.below(source, path) for path in removed))
+        self.assertEqual(catalog['checks']['postgresql-disposable-diagnostics']['stage'], 'package')
+        self.assertEqual(catalog['checks']['persistence-provider-regression']['stage'], 'local')
+        program = (ROOT / 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs-test.mjs').read_text()
+        self.assertIn('managed handler projects isolate each declared scheduling program', program)
+        self.assertIn('JSON.parse(readFileSync(join(root, selected.project)', program)
+        provider = (ROOT / catalog['checks']['persistence-provider-regression']['argv'][1]).read_text()
+        self.assertIn('scheduling_safety(scheduling); network_safety(network)', provider)
+        self.assertIn('does not qualify an image, AWS deployment', provider)
 
     def test_package_units_preserve_original_command_membership_and_audited_inputs(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']
@@ -1462,6 +1683,8 @@ class RepositoryContractTests(unittest.TestCase):
             ('scripts/repo/diagnostic-coverage/smoke-test.py', {'diagnostic-catalog-readers'},
              {'diagnostic-adoption', 'diagnostic-runtime-contracts', 'core-runtime', 'platform-server-runtime',
               'kanbien-platform-runtime', 'entity-smoke-composition', 'persistence-composition'}),
+            ('scripts/repo/diagnostic-coverage/tsconfig.json', {'diagnostic-catalog-readers'},
+             {'diagnostic-runtime-contracts', 'core-runtime', 'platform-server-runtime', 'kanbien-platform-runtime'}),
             ('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml',
              {'check-selection-promotion', 'check-selection-repository-contracts'}, {'check-selection-mechanics'}),
             ('scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh', {'chat-main-refresh-regression', 'check-selection-repository-contracts'}, {'check-selection-regression', 'check-selection-mechanics'}),

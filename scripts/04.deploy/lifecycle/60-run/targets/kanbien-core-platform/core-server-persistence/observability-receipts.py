@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""Validate and retain the three bounded observability-MVP proof receipts.
+"""Validate bounded readiness and scheduler alert evidence.
 
-This target-specific module deliberately records only the first readiness path:
-failure observed, alarm delivery acknowledged, and recovery observed.  It is
-not an alert journal, mail archive, or general execution history.
+The legacy readiness path retains its three immutable receipts. The separate
+scheduler contract returns a source-bound packet to existing acceptance custody;
+neither path is an alert journal, mail archive or general execution history.
 """
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.kanbien-core-platform.observability-receipts
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Validate and retain bounded non-secret evidence for the first PostgreSQL readiness alert path.
+#   purpose: Validate bounded non-secret readiness and scheduler alert evidence through their separate closed contracts.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
-#   effects: [writes-files]
+#   effects: [network, writes-files]
 from __future__ import annotations
 
 import hashlib
@@ -29,7 +29,9 @@ import json
 import os
 import re
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
+from functools import lru_cache
+import importlib.util
 from pathlib import Path
 from typing import Any
 
@@ -182,3 +184,233 @@ def persist(receipt: dict[str, Any]) -> Path:
         os.fsync(handle.fileno())
     os.replace(temporary, destination)
     return destination
+
+
+@lru_cache(maxsize=1)
+def scheduling_runtime():
+    """Reuse actual runtime/original-Invoke readers, never a second log parser."""
+    path = ROOT / "scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/proof.py"
+    specification = importlib.util.spec_from_file_location("observability_scheduling_runtime", path)
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+def scheduling_require(condition, code):
+    if not condition:
+        raise ReceiptError("scheduling-alert-" + code)
+
+
+def scheduling_time(value):
+    if isinstance(value, datetime):
+        scheduling_require(value.tzinfo is not None, "time-invalid")
+        value = value.astimezone(timezone.utc).isoformat()
+    scheduling_require(isinstance(value, str), "time-invalid")
+    try: parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError: raise ReceiptError("scheduling-alert-time-invalid") from None
+    scheduling_require(parsed.tzinfo is not None, "time-invalid")
+    return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def scheduling_expected(expected):
+    scheduling_require(isinstance(expected, dict) and set(expected) == {"scope", "source_revision", "version_arn", "image_uri", "log_group", "topic_arn"}
+        and expected["scope"] in {"core-server-persistence", "entity-smoke"}, "selection-invalid")
+    topic = re.fullmatch(r"arn:aws:sns:eu-west-1:([0-9]{12}):kanbien-core-platform-observability-alerts", str(expected["topic_arn"]))
+    scheduling_require(topic is not None and re.fullmatch(r"[a-f0-9]{40}", str(expected["source_revision"]))
+        and re.fullmatch(r"arn:aws:lambda:eu-west-1:" + topic.group(1) + r":function:kc-" + expected["scope"] + r"-schedule-dispatch:[1-9][0-9]*", str(expected["version_arn"]))
+        and re.fullmatch(topic.group(1) + r"\.dkr\.ecr\.eu-west-1\.amazonaws\.com/[a-z0-9][a-z0-9/_-]{0,255}@sha256:[a-f0-9]{64}", str(expected["image_uri"]))
+        and expected["log_group"] == "/aws/lambda/kanbien-core-platform/" + expected["scope"] + "/scheduling", "selection-invalid")
+    return {"purpose": "dispatch", **{key: expected[key] for key in ("source_revision", "version_arn", "image_uri", "log_group")}}
+
+
+def scheduling_subscriptions(provider, topic):
+    runtime = scheduling_runtime()
+    rows = runtime.ADMISSION.collection(provider, "sns", "list-subscriptions-by-topic", "Subscriptions", TopicArn=topic)
+    scheduling_require(len(rows) <= 20 and all(isinstance(row, dict) for row in rows), "subscription-inventory-invalid")
+    confirmed = []
+    for row in rows:
+        if row.get("Protocol") != "email" or not isinstance(row.get("SubscriptionArn"), str) or not row["SubscriptionArn"].startswith(topic + ":"): continue
+        value = provider("sns", "get-subscription-attributes", SubscriptionArn=row["SubscriptionArn"]).get("Attributes", {})
+        if isinstance(value, dict) and value.get("TopicArn") == topic and value.get("Protocol") == "email" and value.get("PendingConfirmation") == "false":
+            confirmed.append({"protocol": "email", "subscription_sha256": hashlib.sha256(row["SubscriptionArn"].encode()).hexdigest()})
+    scheduling_require(0 < len(confirmed) <= 20 and len({row["subscription_sha256"] for row in confirmed}) == len(confirmed), "confirmed-subscription-required")
+    return sorted(confirmed, key=lambda row: row["subscription_sha256"])
+
+
+def scheduling_history(provider, *, alarm_name, topic, started_at, ended_at):
+    """Retain bounded machine facts only, excluding reasons and message content."""
+    runtime = scheduling_runtime()
+    rows = runtime.ADMISSION.collection(provider, "cloudwatch", "describe-alarm-history", "AlarmHistoryItems",
+        AlarmName=alarm_name, StartDate=started_at, EndDate=ended_at, ScanBy="TimestampAscending", MaxRecords=100)
+    scheduling_require(len(rows) <= 100, "history-too-large")
+    states, actions = [], []
+    for row in rows:
+        scheduling_require(isinstance(row, dict), "history-invalid")
+        scheduling_require(row.get("AlarmName") == alarm_name and row.get("AlarmType", "MetricAlarm") == "MetricAlarm", "history-alarm-mismatch")
+        kind = row.get("HistoryItemType")
+        if kind not in {"StateUpdate", "Action"}: continue
+        try: data = json.loads(row.get("HistoryData", ""))
+        except (ValueError, TypeError): raise ReceiptError("scheduling-alert-history-invalid") from None
+        scheduling_require(isinstance(data, dict), "history-invalid")
+        stamp = scheduling_time(row.get("Timestamp"))
+        if kind == "StateUpdate":
+            scheduling_require(data.get("version") == "1.0" and isinstance(data.get("oldState"), dict)
+                and isinstance(data.get("newState"), dict), "history-version-unrecognized")
+            old, new = data.get("oldState", {}).get("stateValue"), data.get("newState", {}).get("stateValue")
+            scheduling_require(old in {"OK", "ALARM", "INSUFFICIENT_DATA"} and new in {"OK", "ALARM", "INSUFFICIENT_DATA"}, "history-state-unrecognized")
+            states.append({"at": stamp, "old": old, "new": new})
+        else:
+            scheduling_require(data.get("actionState") == "Succeeded" and data.get("notificationResource") == topic, "notification-action-unconfirmed")
+            epoch = data.get("stateUpdateTimestamp")
+            scheduling_require(type(epoch) is int and 946684800000 <= epoch < 4102444800000, "history-action-time-invalid")
+            episode = datetime.fromtimestamp(epoch / 1000, timezone.utc)
+            actions.append({"at": stamp, "episode_at": scheduling_time(episode), "topic_arn": topic, "status": "Succeeded"})
+    return {"states": states, "actions": actions}
+
+
+def capture_scheduling_alert(provider, *, expected, failure, recovery_window, started_at, ended_at):
+    """Observe only. The caller first authenticates the original M6 fault effect."""
+    runtime, selected = scheduling_runtime(), scheduling_expected(expected)
+    control = runtime.control_owner()
+    start, end = map(runtime.ADMISSION.utc, (started_at, ended_at))
+    scheduling_require(0 < (end - start).total_seconds() <= 3600 and end <= datetime.now(timezone.utc), "window-invalid")
+    scheduling_require(isinstance(failure, dict) and set(failure) == {"operation_id", "request_id", "invoked_at", "request_sha256"}, "original-failure-invalid")
+    invocation = control.capture_failed_invocation(provider, {"expected": {"runtime": selected}},
+        {"operation_id": failure["operation_id"], "reserved_at": failure["invoked_at"]})
+    function = runtime.runtime_function(provider("lambda", "get-function", FunctionName=expected["version_arn"]), selected)
+    alarm_name = "kanbien-core-platform-" + expected["scope"] + "-scheduling-dispatch-errors"
+    rows = provider("cloudwatch", "describe-alarms", AlarmNames=[alarm_name]).get("MetricAlarms", [])
+    scheduling_require(isinstance(rows, list) and len(rows) == 1, "alarm-unavailable")
+    alarm = rows[0]
+    fields = ("AlarmName", "Namespace", "MetricName", "Dimensions", "Statistic", "Period", "EvaluationPeriods", "Threshold",
+        "ComparisonOperator", "TreatMissingData", "AlarmActions", "OKActions", "StateValue")
+    selected_alarm = {key: alarm.get(key) for key in fields}
+    selected_alarm["ActionsEnabled"] = alarm.get("ActionsEnabled")
+    dimensions = alarm.get("Dimensions")
+    scheduling_require(isinstance(dimensions, list) and all(isinstance(row, dict) and set(row) == {"Name", "Value"}
+        and isinstance(row["Name"], str) and isinstance(row["Value"], str) for row in dimensions), "alarm-policy-mismatch")
+    selected_alarm["Dimensions"] = sorted(dimensions, key=lambda row: row["Name"])
+    selected_alarm["StateUpdatedTimestamp"] = scheduling_time(alarm.get("StateUpdatedTimestamp"))
+    function_name = expected["version_arn"].split(":function:")[1].rsplit(":", 1)[0]
+    dimensions = [{"Name": "FunctionName", "Value": function_name}, {"Name": "Resource", "Value": expected["version_arn"].split(":function:")[1]}]
+    result = provider("cloudwatch", "get-metric-statistics", Namespace="AWS/Lambda", MetricName="Errors", Dimensions=dimensions,
+        StartTime=started_at, EndTime=ended_at, Period=60, Statistics=["Sum"], Unit="Count")
+    points = result.get("Datapoints", [])
+    scheduling_require(isinstance(points, list) and 1 <= len(points) <= 60, "error-signal-missing")
+    metrics = [{"at": scheduling_time(row.get("Timestamp")), "sum": row.get("Sum")} for row in points]
+    packet = {"schema": "deploy/scheduling-alert-observation/v1", "expected": expected, "failure": failure,
+        "invocation": invocation, "function": function, "recovery_window": recovery_window,
+        "started_at": started_at, "ended_at": ended_at, "collected_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "alarm": selected_alarm, "metrics": metrics,
+        "history": scheduling_history(provider, alarm_name=alarm_name, topic=expected["topic_arn"], started_at=started_at, ended_at=ended_at),
+        "subscriptions": scheduling_subscriptions(provider, expected["topic_arn"]), "notification": None}
+    validate_scheduling_alert(packet, expected=expected, failure=failure, require_notification=False)
+    return packet
+
+
+def validate_scheduling_alert(packet, *, expected, failure, require_notification=True):
+    """Pure historical replay; selected original effect/material custody is external."""
+    try:
+        return _validate_scheduling_alert(packet, expected=expected, failure=failure, require_notification=require_notification)
+    except ReceiptError:
+        raise
+    except (KeyError, TypeError, AttributeError, ValueError, OverflowError, RecursionError):
+        raise ReceiptError("scheduling-alert-packet-invalid") from None
+
+
+def _validate_scheduling_alert(packet, *, expected, failure, require_notification):
+    runtime, selected = scheduling_runtime(), scheduling_expected(expected)
+    scheduling_require(isinstance(packet, dict) and set(packet) == {"schema", "expected", "failure", "invocation", "function", "recovery_window",
+        "started_at", "ended_at", "collected_at", "alarm", "metrics", "history", "subscriptions", "notification"}
+        and packet["schema"] == "deploy/scheduling-alert-observation/v1" and packet["expected"] == expected and packet["failure"] == failure, "packet-mismatch")
+    scheduling_require(isinstance(failure, dict) and set(failure) == {"operation_id", "request_id", "invoked_at", "request_sha256"}
+        and isinstance(failure["request_sha256"], str) and re.fullmatch(r"[a-f0-9]{64}", failure["request_sha256"])
+        and isinstance(failure["operation_id"], str) and re.fullmatch(r"scheduling-proof-[a-f0-9]{32}", failure["operation_id"]), "original-failure-invalid")
+    start, end, collected = map(runtime.ADMISSION.utc, (packet["started_at"], packet["ended_at"], packet["collected_at"]))
+    invoked = runtime.ADMISSION.utc(scheduling_time(failure["invoked_at"]))
+    scheduling_require(0 < (end - start).total_seconds() <= 3600 and start <= invoked < end <= collected, "window-invalid")
+    scheduling_require(runtime.runtime_function(packet["function"], selected) == packet["function"], "function-mismatch")
+    value = packet["invocation"]
+    scheduling_require(isinstance(value, dict) and set(value) == {"log_stream", "marker", "start", "report"}, "invocation-invalid")
+    logs = [{"level": "info", "message": "Scheduling proof invocation.", "fields": {"scheduling_invocation": value["marker"]}},
+        {"type": "platform.start", "record": value["start"]}, {"type": "platform.report", "record": value["report"]}]
+    checked = runtime.control_owner().failed_invocation_evidence(logs, {"expected": {"runtime": selected}},
+        {"operation_id": failure["operation_id"], "reserved_at": failure["invoked_at"]}, value["log_stream"])
+    scheduling_require(checked == value and value["marker"]["request_id"] == failure["request_id"], "invocation-mismatch")
+    recovered = runtime.validate_runtime_window(packet["recovery_window"], expected=selected)
+    recoveries = [runtime.ADMISSION.utc(row["observation"]["observed_at"]) for row in recovered
+        if row["observation"]["result"]["published"] > 0 and row["observation"]["request_id"] != failure["request_id"]]
+    scheduling_require(recoveries and invoked < min(recoveries) < end, "recovered-delivery-missing")
+    name = "kanbien-core-platform-" + expected["scope"] + "-scheduling-dispatch-errors"
+    resource = expected["version_arn"].split(":function:")[1]
+    alarm = packet["alarm"]
+    expected_alarm = {"AlarmName": name, "Namespace": "AWS/Lambda", "MetricName": "Errors",
+        "Dimensions": [{"Name": "FunctionName", "Value": resource.rsplit(":", 1)[0]}, {"Name": "Resource", "Value": resource}],
+        "Statistic": "Sum", "Period": 60, "EvaluationPeriods": 1, "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold", "TreatMissingData": "notBreaching",
+        "AlarmActions": [expected["topic_arn"]], "OKActions": [expected["topic_arn"]], "StateValue": "OK", "ActionsEnabled": True}
+    scheduling_require(isinstance(alarm, dict) and set(alarm) == set(expected_alarm) | {"StateUpdatedTimestamp"}
+        and all(alarm[key] == value for key, value in expected_alarm.items())
+        and type(alarm["Period"]) is int and type(alarm["EvaluationPeriods"]) is int
+        and type(alarm["Threshold"]) in {int, float} and alarm["ActionsEnabled"] is True, "alarm-policy-mismatch")
+    history = packet["history"]
+    scheduling_require(isinstance(history, dict) and set(history) == {"states", "actions"}
+        and isinstance(history["states"], list) and isinstance(history["actions"], list)
+        and len(history["states"]) <= 100 and len(history["actions"]) <= 100, "history-invalid")
+    for row in history["states"]:
+        scheduling_require(isinstance(row, dict) and set(row) == {"at", "old", "new"}
+            and row["old"] in {"OK", "ALARM", "INSUFFICIENT_DATA"} and row["new"] in {"OK", "ALARM", "INSUFFICIENT_DATA"}
+            and start <= runtime.ADMISSION.utc(row["at"]) < end, "history-invalid")
+    alarms = [row for row in history["states"] if row["new"] == "ALARM" and row["old"] != "ALARM" and runtime.ADMISSION.utc(row["at"]) >= invoked]
+    scheduling_require(len(alarms) == 1, "alarm-episode-ambiguous")
+    episode = alarms[0]["at"]
+    recoveries_in_history = [row for row in history["states"] if row["old"] == "ALARM" and row["new"] == "OK"
+        and runtime.ADMISSION.utc(row["at"]) > runtime.ADMISSION.utc(episode)]
+    scheduling_require(len(recoveries_in_history) == 1 and same_alarm_episode({"alarm_state_updated_at": recoveries_in_history[0]["at"]},
+        {"alarm_state_updated_at": alarm["StateUpdatedTimestamp"]}), "alarm-recovery-missing")
+    actions = []
+    for row in history["actions"]:
+        scheduling_require(isinstance(row, dict) and set(row) == {"at", "episode_at", "topic_arn", "status"}
+            and row["topic_arn"] == expected["topic_arn"] and row["status"] == "Succeeded"
+            and start <= runtime.ADMISSION.utc(row["episode_at"]) <= runtime.ADMISSION.utc(row["at"]) < end, "notification-action-unconfirmed")
+        if same_alarm_episode({"alarm_state_updated_at": episode}, {"alarm_state_updated_at": row["episode_at"]}): actions.append(row)
+    scheduling_require(actions, "notification-action-missing")
+    metrics = packet["metrics"]
+    scheduling_require(isinstance(metrics, list) and 1 <= len(metrics) <= 60, "error-signal-missing")
+    bins = {}
+    for row in metrics:
+        scheduling_require(isinstance(row, dict) and set(row) == {"at", "sum"} and type(row["sum"]) in {int, float}
+            and 0 <= row["sum"] <= 100 and int(row["sum"]) == row["sum"], "error-signal-invalid")
+        stamp = runtime.ADMISSION.utc(row["at"])
+        scheduling_require(stamp not in bins and start <= stamp < end and stamp.second == stamp.microsecond == 0, "error-signal-invalid")
+        bins[stamp] = row["sum"]
+    scheduling_require(any(total > 0 and invoked.replace(second=0, microsecond=0) <= stamp <= runtime.ADMISSION.utc(episode)
+        for stamp, total in bins.items()), "original-error-signal-missing")
+    subscriptions = packet["subscriptions"]
+    scheduling_require(isinstance(subscriptions, list) and 0 < len(subscriptions) <= 20
+        and all(isinstance(row, dict) and set(row) == {"protocol", "subscription_sha256"} and row["protocol"] == "email"
+            and isinstance(row["subscription_sha256"], str) and re.fullmatch(r"[a-f0-9]{64}", row["subscription_sha256"]) for row in subscriptions)
+        and len({row["subscription_sha256"] for row in subscriptions}) == len(subscriptions), "confirmed-subscription-required")
+    notification = packet["notification"]
+    if notification is None:
+        scheduling_require(not require_notification, "human-delivery-confirmation-required")
+    else:
+        scheduling_require(isinstance(notification, dict) and set(notification) == {"alarm_state_updated_at", "operator_delivery_confirmed_at", "recorded_at"}
+            and same_alarm_episode({"alarm_state_updated_at": episode}, notification)
+            and runtime.ADMISSION.utc(episode) <= runtime.ADMISSION.utc(notification["operator_delivery_confirmed_at"])
+                <= runtime.ADMISSION.utc(notification["recorded_at"])
+            and collected <= runtime.ADMISSION.utc(notification["recorded_at"]), "human-delivery-confirmation-invalid")
+    return {"scope": expected["scope"], "source_revision": expected["source_revision"], "function_arn": expected["version_arn"],
+        "request_id": failure["request_id"], "alarm_state_updated_at": episode, "notification_confirmed": notification is not None,
+        "recovered_at": recoveries_in_history[0]["at"], "packet_sha256": digest(packet)}
+
+
+def confirm_scheduling_alert(provider, packet, *, expected, failure, operator_delivery_confirmed_at, recorded_at):
+    """Only the owned operator-confirmation route calls this; never infer delivery."""
+    checked = validate_scheduling_alert(packet, expected=expected, failure=failure, require_notification=False)
+    scheduling_require(packet["notification"] is None, "notification-already-recorded")
+    scheduling_require(scheduling_subscriptions(provider, expected["topic_arn"]) == packet["subscriptions"], "subscription-changed")
+    value = {**packet, "notification": {"alarm_state_updated_at": checked["alarm_state_updated_at"],
+        "operator_delivery_confirmed_at": scheduling_time(operator_delivery_confirmed_at), "recorded_at": scheduling_time(recorded_at)}}
+    validate_scheduling_alert(value, expected=expected, failure=failure)
+    return value

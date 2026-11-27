@@ -5,7 +5,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -31,6 +31,28 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location('selector_fixture', ROOT / 'scripts/repo/check-selection/test_support.py')
 fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
+
+class DirectProofCommands(unittest.TestCase):
+    def test_closed_interpreters_keep_source_and_effect_checks(self):
+        spec = importlib.util.spec_from_file_location('actual_delivery_inventory', ROOT / 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py')
+        inventory = importlib.util.module_from_spec(spec); spec.loader.exec_module(inventory)
+        for interpreter, suffix, marker in [('bash', '.sh', '#'), ('node', '.mjs', '//'), ('node', '.js', '//'), ('python3', '.py', '#')]:
+            with self.subTest(interpreter=interpreter, suffix=suffix):
+                path = 'scripts/proof' + suffix
+                body = marker + '   effects: [read-only, writes-files]\n'
+                check = {'argv': [interpreter, path, '--fixture'], 'stage': 'local', 'effects': ['read-only', 'writes-files']}
+                found, errors = inventory.route_proof_members({'proof': check}, ['proof'], {path: body})
+                self.assertEqual(errors, [])
+                self.assertEqual(found, {'proof': check['argv']})
+                _, errors = inventory.route_proof_members({'proof': {**check, 'effects': ['read-only']}}, ['proof'], {path: body})
+                self.assertEqual(errors, [{'code': 'delivery-aggregate-member-boundary-invalid', 'check_id': 'proof'}])
+        for argv in (['python3', 'scripts/proof.sh'], ['node', 'scripts/proof.py'], ['sh', 'scripts/proof.sh'],
+                     ['python3', '-c', 'print(1)'], ['node', '../proof.mjs'], ['node', '/tmp/proof.mjs'],
+                     ['node', 'scripts/proof.mjs', '$(aws)'], ['python3', 'scripts/proof.py', ';aws']):
+            with self.subTest(argv=argv):
+                check = {'argv': argv, 'stage': 'local', 'effects': ['read-only']}
+                _, errors = inventory.route_proof_members({'proof': check}, ['proof'], {})
+                self.assertEqual(errors, [{'code': 'delivery-proof-command-invalid', 'check_id': 'proof'}])
 
 class DeliveryInventoryCLI(unittest.TestCase):
     def setUp(self):

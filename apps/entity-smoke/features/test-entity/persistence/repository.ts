@@ -1,4 +1,4 @@
-import type { Result } from "@kanbien/core/shared";
+import type { ISODateTime, Result } from "@kanbien/core/shared";
 import type { TestEntityError } from "../contract/errors";
 import type { TestEntity, TestEntityId, TestEntityStatus } from "../contract/types";
 
@@ -6,10 +6,16 @@ import type { TestEntity, TestEntityId, TestEntityStatus } from "../contract/typ
 export interface TestEntityRepository {
   get(id: TestEntityId): Promise<TestEntity | null>;
   create(entity: TestEntity): Promise<Result<TestEntity, TestEntityError>>;
-  save(entity: TestEntity): Promise<Result<TestEntity, TestEntityError>>;
+  /** Save only if the row still equals the snapshot read for this operation. */
+  save(entity: TestEntity, expected: TestEntity): Promise<Result<TestEntity, TestEntityError>>;
   listByStatus(status: TestEntityStatus): Promise<readonly TestEntity[]>;
-  /** Cleanup sees only records that were deliberately archived and then logically deleted. */
-  listArchivedDeleted(): Promise<readonly TestEntity[]>;
-  /** Re-check the cleanup predicate at the storage boundary before removing a row. */
-  purgeArchivedDeleted(id: TestEntityId): Promise<Result<boolean, TestEntityError>>;
+  /** Re-check this deletion generation, retention and recovery at the mutation boundary. */
+  purgeArchivedDeleted(input: TestEntityPurgeCondition): Promise<Result<boolean, TestEntityError>>;
+}
+
+export interface TestEntityPurgeCondition {
+  readonly id: TestEntityId;
+  readonly deletedAt: ISODateTime;
+  readonly asOf: ISODateTime;
+  readonly retentionWindowMs: number;
 }

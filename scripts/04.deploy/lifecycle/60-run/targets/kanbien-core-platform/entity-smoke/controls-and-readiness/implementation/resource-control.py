@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -151,6 +151,7 @@ def validate_request(phase, request):
         "restore-change-set": {"binding", "parameters_sha256", "template_sha256"},
         "execute-restore": {"binding", "parameters_sha256", "template_sha256", "change_set_arn", "stack_arn"},
         "delete-restore": {"binding", "stack_arn", "restored_resource_id", "resources_sha256", "reader_task_arn", "reader_receipt_sha256"},
+        "delete-failed-restore": {"binding", "stack_arn", "restored_resource_id", "resources_sha256", "reader_task_arn", "reader_receipt_sha256"},
         "deploy-create-change-set": {"binding", "parameters_sha256", "template_sha256"},
         "deploy-activate-change-set": {"binding", "parameters_sha256", "template_sha256"},
         "deploy-execute-create": {"binding", "parameters_sha256", "template_sha256", "change_set_arn", "stack_arn"},
@@ -193,7 +194,7 @@ def validate_request(phase, request):
         stack = "kanbien-core-platform-entity-smoke" if deployment else "kanbien-core-platform-entity-smoke-restore-" + request["binding"]["proof_label"].removeprefix("entity-smoke-")
         if not deployment: stack = "kanbien-core-platform-entity-smoke-restore-" + resource_label(request["binding"]).removeprefix("entity-smoke-")
         require(isinstance(request["stack_arn"], str) and re.fullmatch(r"arn:aws:cloudformation:" + REGION + ":" + ACCOUNT + ":stack/" + stack + r"/[A-Za-z0-9-]+", request["stack_arn"]) is not None, "resource-request-invalid")
-    if phase == "delete-restore":
+    if phase in {"delete-restore", "delete-failed-restore"}:
         require(isinstance(request["restored_resource_id"], str) and re.fullmatch(r"db-[A-Za-z0-9]+", request["restored_resource_id"]) is not None and isinstance(request["reader_task_arn"], str) and re.fullmatch(task_pattern, request["reader_task_arn"]) is not None, "resource-request-invalid")
 
 
@@ -214,6 +215,67 @@ class ResourceStore(RESERVATIONS.ImmutableReservationStore):
         path = self.root / (request["binding"]["proof_label"] + "-" + phase + ".json")
         CONTROL.no_symlinks(path)
         return path
+
+
+def reserve_resource_cost(store, phase, request):
+    """Wrap the existing reservation, without granting provider capability."""
+    native_failure = None
+    def original():
+        nonlocal native_failure
+        try: return store.reserve(phase, request)
+        except Exception as failure:
+            native_failure = failure
+            raise
+    try:
+        owner = module("entity_recovery_cost", Path(__file__).resolve().parents[6] / "50-deploy/capabilities/scheduling-control/script.py")
+        return owner.reserve_recovery_cost_admission(target=CLUSTER, scope="entity-smoke", phase=phase,
+            request=request, reserve=original)
+    except Exception as failure:
+        if failure is native_failure: raise
+        raise ResourceFailure("resource-cost-admission-not-confirmed") from None
+
+
+def scheduling_resource_census(proof_label):
+    """Read original resources from the same fixed namespaces as task custody."""
+    try:
+        route = module("entity_resource_namespace", Path(__file__).resolve().parents[2] / "task-execution/implementation/task-route.py")
+        root = route.C.delivery_cache(proof_label)
+        CONTROL.no_symlinks(root)
+        namespaces = [root]
+        releases = root / "releases"
+        CONTROL.no_symlinks(releases)
+        if releases.exists():
+            paths = sorted(releases.iterdir())
+            require(len(paths) <= 4096, "resource-cost-census-limit")
+            for path in paths:
+                CONTROL.no_symlinks(path)
+                require(path.is_dir() and re.fullmatch(r"[a-f0-9]{64}", path.name), "resource-cost-namespace-invalid")
+                namespaces.append(path)
+        originals = {}
+        for namespace in namespaces:
+            for value in ResourceStore(namespace / "attempts").records():
+                identity = value["operation_id"]
+                require(identity not in originals or originals[identity] == value, "resource-cost-census-conflict")
+                originals[identity] = value
+        require(len(originals) <= 4096, "resource-cost-census-limit")
+        return [value for _, value in sorted(originals.items()) if value["phase"] in {"create-recovery-point", "execute-restore"}]
+    except ResourceFailure: raise
+    except Exception: raise ResourceFailure("resource-cost-census-not-confirmed") from None
+
+
+def resource_cleanup_admission(store, binding, stack_arn, *, required=False):
+    """Active proof budgets cannot adopt an older or unrelated restore."""
+    try:
+        owner = module("entity_recovery_cleanup_cost", Path(__file__).resolve().parents[6] / "50-deploy/capabilities/scheduling-control/script.py")
+        require(type(required) is bool, "resource-cleanup-cost-binding-invalid")
+        if not required and not owner.cost_intent_active(target=CLUSTER): return
+        values = [value for value in store.records() if value["phase"] == "execute-restore"
+            and value["request"]["binding"] == binding and value["request"]["stack_arn"] == stack_arn]
+        require(len(values) == 1, "resource-cleanup-original-required")
+        require(owner.recovery_cleanup_admission(target=CLUSTER, scope="entity-smoke", original=values[0]) == values[0],
+            "resource-cleanup-cost-binding-invalid")
+    except ResourceFailure: raise
+    except Exception: raise ResourceFailure("resource-cleanup-cost-admission-not-confirmed") from None
 
 def only(response, field):
     values = response.get(field) if isinstance(response, dict) else None
@@ -375,6 +437,6 @@ def create_recovery_point(provider, store, binding, resource_id, original_commit
         return SNAPSHOTS.create(provider, store, phase="create-recovery-point", request=request,
             arguments=lambda reservation: {"DBInstanceIdentifier": SOURCE_DATABASE, "DBSnapshotIdentifier": snapshot, "Tags": tags},
             precondition=precondition, validate_reservation=validate_reservation, observe=observe,
-            passthrough=(SubmissionNotStarted,))
+            passthrough=(SubmissionNotStarted,), reserve=lambda: reserve_resource_cost(store, "create-recovery-point", request))
     except SNAPSHOTS.SnapshotFailure:
         raise ResourceFailure("resource-submission-uncertain-reconcile-only") from None

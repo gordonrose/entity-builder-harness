@@ -18,6 +18,8 @@ causation logic must use.
 | `src/worker.ts` | Receives one SQS delivery, exposes acknowledgement/release, and validates target environment configuration. |
 | `src/errors.ts` | Provides safe adapter errors that do not expose raw provider response or message-body data. |
 | `src/observations.ts` | Supplies Core-owned, bounded command, guard and informational receive-reduction evidence. |
+| `src/lambda-batch.ts` | Checks a managed Lambda batch and returns failed native message IDs without receiving or deleting messages itself. |
+| `src/diagnostics.ts` | Combines owned configuration and Lambda-batch definitions into the public SQS catalogue. |
 | `src/index.ts` | Deliberate public exports only. |
 | `src/configuration/` | Source-independent sender/receiver requirements, strict checking, assembly and safe reports; see its [guide](src/configuration/README.md). |
 | `tests/` | Prove sender/receiver envelope preservation, provider-ID separation, command shapes, malformed-envelope containment, and package boundaries. |
@@ -40,6 +42,41 @@ On the other side, SQS supplies a receipt handle that is valid only for the
 current delivery. The worker adapter reads the message body and reconstructs
 the Core envelope from it. It never substitutes SQS's `MessageId` for the
 envelope ID. This keeps an outbox entry identifiable across delivery retries.
+
+## When Lambda supplies the batch
+
+`createPlatformSqsLambdaBatchHandler` returns a `PlatformSqsLambdaBatchHandler`
+whose `run(event, invocation?)` processes one bounded batch in order.
+`PlatformSqsLambdaBatchOptions` supplies the exact expected queue ARN,
+`maximumBatchSize` (1–10), a `processMessage` callback and optional diagnostic
+and visibility-change dependencies. Target composition connects that callback
+to the durable worker; this adapter does not choose an app or job.
+
+Before processing, it checks all native message IDs for missing or duplicate
+values and checks each source ARN. It then decodes the existing Core envelope
+and calls the supplied processor. `PlatformSqsLambdaRecordDisposition` is either
+`acknowledge` or `retry` with an optional delay. A stop leaves every not-yet-started
+record failed rather than silently acknowledging it.
+
+Suppose native deliveries `a` and `b` carry two distinct durable envelopes.
+The first processor confirms success; the second asks for retry. The response is:
+
+```json
+{ "batchItemFailures": [{ "itemIdentifier": "b" }] }
+```
+
+`PlatformSqsLambdaBatchResponse` describes that shape. These are AWS delivery IDs,
+not durable outbox IDs inside the bodies. The event-source mapping must enable
+`ReportBatchItemFailures`; AWS then owns acknowledgement and redrive. The adapter
+does not call receive/delete or claim a terminal record reached a dead-letter
+queue. Optional retry visibility uses the existing `release` port; a failed
+visibility change still leaves the record unacknowledged.
+
+`sqsLambdaBatchDiagnostic`, `sqsLambdaBatchDiagnosticCatalog` and combined
+`sqsDiagnosticCatalog` expose finite local conditions without raw bodies or
+provider errors. The [batch tests](tests/contract/lambda-batch-runtime.test.ts)
+cover mixed outcomes, source/identity mismatch, bounded stopping and diagnostic
+faults. AWS behavior and finished-function packaging require separate proof.
 
 ## Deliberate boundaries
 

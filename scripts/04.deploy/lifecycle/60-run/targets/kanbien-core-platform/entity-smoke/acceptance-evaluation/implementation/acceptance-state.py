@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.acceptance-state.implementation
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -59,7 +59,7 @@ class State:
         self.base, self.root, self.evidence_class = root, root / EVIDENCE_PATH, "simulated" if rehearsal else "live"
         S.REPOSITORY_ROOT, S.EVIDENCE_CLASS = root, self.evidence_class
 
-    def candidate(self, path, *, current_contracts=True, _validate_history=True):
+    def candidate(self, path, *, current_contracts=True, _validate_history=True, qualification_profile=None):
         K.C.RESOURCE.CONTROL.no_symlinks(path.absolute())
         path = S.under(self.root, path.absolute(), S.CANDIDATE_DIRECTORY)
         raw = bounded(path, 65536)
@@ -67,7 +67,7 @@ class State:
         except (ValueError, UnicodeError, K.C.yaml.YAMLError): raise StateFailure("acceptance-state-candidate-invalid") from None
         require(isinstance(record, dict) and set(record) == {"schema", "target", "scope", "status", "evidence_class", "release", "proof", "proof_set"}, "acceptance-state-candidate-invalid")
         proofs = record.get("proof_set")
-        require(isinstance(proofs, dict) and set(proofs) == {"entity-smoke-complete-proof"}, "acceptance-state-proof-set-incomplete")
+        require(isinstance(proofs, dict) and "entity-smoke-complete-proof" in proofs, "acceptance-state-proof-set-incomplete")
         entry = proofs["entity-smoke-complete-proof"]
         require(isinstance(entry, dict) and set(entry) == {"path", "sha256"} and isinstance(entry["path"], str)
                 and re.fullmatch(r"proof-receipts/entity-smoke-[a-f0-9]{64}\.json", entry["path"]), "acceptance-state-proof-reference-invalid")
@@ -78,6 +78,17 @@ class State:
         try: packet = json.loads(proof_bytes)
         except (ValueError, UnicodeError, RecursionError): raise StateFailure("acceptance-state-proof-invalid") from None
         K.validate_packet(packet, evidence_class=self.evidence_class)
+        require(qualification_profile in {None, K.SCHEDULING.PROFILE}, "acceptance-state-qualification-profile-invalid")
+        K.validate_scheduling(packet, required=qualification_profile is not None, evidence_class=self.evidence_class)
+        require(qualification_profile is None or packet.get("qualification_profile") == qualification_profile,
+                "acceptance-state-qualification-profile-mismatch")
+        expected_proofs = {"entity-smoke-complete-proof"}
+        if "scheduling_qualification" in packet:
+            extra = K.SCHEDULING.material(packet["scheduling_qualification"])
+            expected_proofs.update(extra)
+            for name, (relative, payload) in extra.items():
+                require(proofs.get(name) == {"path": relative, "sha256": S.sha256_bytes(payload)}, "acceptance-state-scheduling-proof-mismatch")
+        require(set(proofs) == expected_proofs, "acceptance-state-proof-set-incomplete")
         require(not current_contracts or packet["schema"] != K.LEGACY_SUCCESSOR_SCHEMA,
                 "acceptance-current-migration-proof-required")
         require(proof_bytes == S.canonical(packet) + b"\n" and proof_path.name == "entity-smoke-" + A.digest(packet)[7:] + ".json", "acceptance-state-proof-reference-invalid")
@@ -126,7 +137,7 @@ class State:
             selected = previous
         return result
 
-    def current(self, *, allow_missing=False):
+    def current(self, *, allow_missing=False, qualification_profile=None):
         K.C.RESOURCE.CONTROL.no_symlinks(self.root / S.CURRENT)
         state = S.current(self.root)
         if state is None:
@@ -140,7 +151,7 @@ class State:
         bounded(history_path, 65536)
         history, _ = S.document(history_path)
         require(history["evidence"]["kind"] == "verified-release-candidate", "acceptance-state-feature-candidate-required")
-        result = self.candidate(self.root / history["evidence"]["path"], current_contracts=False)
+        result = self.candidate(self.root / history["evidence"]["path"], current_contracts=False, qualification_profile=qualification_profile)
         require(S.release_id(result["identity"]) == state["release_id"], "acceptance-state-current-binding-mismatch")
         if result["packet"]["schema"] in K.SUCCESSOR_SCHEMAS:
             require(state["predecessor"] == result["packet"]["delivery"]["expected_predecessor"],
@@ -156,6 +167,7 @@ def parse(arguments=None):
     parser.add_argument("--record", type=Path)
     parser.add_argument("--root", type=Path, default=SOURCE_ROOT)
     parser.add_argument("--rehearsal-root", type=Path)
+    parser.add_argument("--qualification-profile", choices=("scheduling-a2-v1",))
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args = parser.parse_args(arguments)
@@ -172,7 +184,7 @@ def main():
         owner = State(args.rehearsal_root or args.root, rehearsal=args.rehearsal_root is not None)
         if args.record is not None:
             require(args.record.absolute() == owner.root / S.CURRENT, "acceptance-state-current-reference-invalid")
-        result = owner.candidate(args.candidate_record) if args.operation == "validate-candidate" else owner.current(allow_missing=args.operation == "current-release")
+        result = owner.candidate(args.candidate_record, qualification_profile=args.qualification_profile) if args.operation == "validate-candidate" else owner.current(allow_missing=args.operation == "current-release", qualification_profile=args.qualification_profile)
         release = "none" if result is None else S.release_id(result["identity"])
         print(json.dumps({"schema": "deploy/entity-smoke-acceptance-state-report/v1", "verdict": "validated", "target": K.TARGET, "scope": K.SCOPE,
             "release_id": release, "evidence_class": owner.evidence_class, "current_readiness": False, "findings": []})); return 0

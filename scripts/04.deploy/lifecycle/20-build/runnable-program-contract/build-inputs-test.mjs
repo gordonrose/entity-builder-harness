@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.runnable-program.build-inputs-test
-//   version: 1
+//   version: 3
 //   status: draft
 //   created_on: "2026-11-15"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines: [architecture, security, sre]
@@ -44,10 +44,11 @@ function fixture(t) {
     put(`packages/${directory}/src/index.ts`, "export const value = 17;\n");
   }
   put("program.tsconfig.json", { compilerOptions: { module: "CommonJS" } });
+  put("program.ts", "export const handler = async () => true;\n");
   const declaration = { schema: "deploy/runnable-program-contract/v1", id: "renamed-candidate", version: 1,
     dependency_bindings: { application: { workspace_package: "@example/leaf" },
       values: { workspace_package: "@example/value" }, database: { external_packages: ["driver"] } },
-    runnable_programs: [{ id: "renamed-ledger", build: { kind: "workspace-typescript", typescript_project: "program.tsconfig.json" },
+    runnable_programs: [{ id: "renamed-ledger", source_entrypoint: "program.ts", entrypoint: "handler.js", runtime_executable: "node", build: { kind: "workspace-typescript", typescript_project: "program.tsconfig.json" },
       approved_dependencies: ["application", "values", "database"], observed_dependencies: ["application", "values", "database"], forbidden_dependencies: ["other"] }] };
   const save = () => put("program.yml", stringify(declaration)); save();
   const run = (options = {}) => readProgramBuildInputs(root, { programId: "renamed-ledger", contractPath: "program.yml", ...options });
@@ -74,11 +75,26 @@ function rejects(run, code) {
 test("renamed program derives only existing approved package bindings and declared external roots", t => {
   const { run } = fixture(t), result = run();
   assert.equal(result.project, "program.tsconfig.json");
+  assert.deepEqual(result.runtimeEntry, { executionKind: "process", source: "program.ts", compiled: "program.js", output: "handler.js" });
   assert.deepEqual(result.selection, { roots: ["@example/leaf", "@example/value"], allowedPackages: ["@example/leaf", "@example/value"] });
   assert.deepEqual(result.inputs.externalDependencies, ["driver"]);
   assert.deepEqual(result.inputs.compilerPaths, { "@example/leaf": ["packages/leaf/src/index.ts"], "@example/value": ["packages/value/src/index.ts"] });
   assert(result.manifestPaths.includes("program.yml"));
   assert(result.manifestPaths.includes("program.tsconfig.json"));
+});
+
+test("managed handler projection rejects unsafe selections before payload preparation", t => {
+  const { declaration, save, run } = fixture(t), program = declaration.runnable_programs[0];
+  program.execution_kind = "managed-handler"; program.handler_export = "handler"; save();
+  assert.deepEqual(run().runtimeEntry, { executionKind: "managed-handler", source: "program.ts", compiled: "program.js", output: "handler.js", handlerExport: "handler" });
+  for (const [field, value, code] of [["handler_export", "a.b", "program-build-handler-invalid"],
+    ["source_entrypoint", "../PRIVATE_CANARY.ts", "program-build-entrypoint-invalid"],
+    ["entrypoint", "../PRIVATE_CANARY.js", "program-build-entrypoint-invalid"],
+    ["execution_kind", "PRIVATE_CANARY", "program-build-execution-invalid"],
+    ["runtime_executable", "python", "program-build-handler-invalid"]]) {
+    const original = program[field]; program[field] = value; save(); rejects(run, code); program[field] = original;
+  }
+  program.execution_kind = "process"; save(); rejects(run, "program-build-handler-invalid");
 });
 
 test("missing bindings and transitive dependencies outside approval reject", t => {
@@ -156,6 +172,31 @@ test("all three actual programs derive their current distinct package and extern
   assert(!baseline.inputs.packageNames.includes("@kanbien/app-entity-smoke"));
   assert.deepEqual(feature.inputs.externalDependencies, ["@aws-sdk/rds-signer", "pg"]);
   assert.deepEqual(feature.inputs.compilerPaths["@kanbien/platform-server/main"], ["platform/server/src/main.ts"]);
+});
+
+test("managed handler projects isolate each declared scheduling program", () => {
+  const root = fileURLToPath(new URL("../../../../../", import.meta.url));
+  for (const scope of ["kanbien-core-server-persistence", "kanbien-entity-smoke"]) {
+    for (const purpose of ["dispatch", "worker"]) {
+      const id = `${scope}-scheduling-${purpose}`;
+      const selected = readProgramBuildInputs(root, { programId: id });
+      const project = JSON.parse(readFileSync(join(root, selected.project), "utf8"));
+      const isolated = candidate => {
+        assert.deepEqual(candidate.include, [`./${id}.handler.ts`]);
+        assert.equal(candidate.compilerOptions.strict, true);
+        assert.equal(candidate.compilerOptions.noEmitOnError, true);
+        assert.equal(candidate.compilerOptions.paths, undefined);
+      };
+      isolated(project);
+      assert.throws(() => isolated({ ...project, include: ["./*.ts"] }));
+      assert.equal(selected.runtimeEntry.executionKind, "managed-handler");
+      assert.equal(selected.runtimeEntry.handlerExport, "handler");
+      assert.equal(selected.runtimeEntry.source, `infra/04.deploy/03.product/entrypoints/${id}.handler.ts`);
+      assert(selected.inputs.packageNames.includes("@kanbien/platform-adapter-aws-runtime-lambda"));
+      assert.equal(selected.inputs.packageNames.includes("@kanbien/app-entity-smoke"), scope === "kanbien-entity-smoke");
+      assert(!selected.inputs.packageNames.includes("@kanbien/platform-adapter-aws-runtime-ecs-fargate"));
+    }
+  }
 });
 
 test("renamed program command invokes the shared compiler with declared selection", t => {

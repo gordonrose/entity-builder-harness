@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -36,6 +36,9 @@ REQUEST = {
     "deadline_seconds": 180, "proof_label": "entity-smoke-" + "e" * 24,
 }
 CANARY = "credential-and-provider-message-canary"
+# This primitive fixture controls cost admission; the owner has separate
+# complete-census/lock tests and these tests never inspect a real budget.
+CONTROL.reserve_task_cost = lambda request, reserve, **_options: reserve()
 
 
 def fails(call, code):
@@ -50,6 +53,73 @@ def task(reservation):
     return {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "f" * 32,
             "taskDefinitionArn": REQUEST["definition"], "startedBy": reservation["operation_id"],
             "overrides": CONTROL.overrides(REQUEST), "lastStatus": "STOPPED"}
+
+
+with tempfile.TemporaryDirectory(prefix="entity-smoke-task-cost-") as temporary:
+    store = CONTROL.AttemptStore(Path(temporary))
+    calls = []
+    def refuse(request, reserve, **options):
+        calls.append(options)
+        CONTROL.reject("task-cost-admission-not-confirmed")
+    original = CONTROL.reserve_task_cost
+    CONTROL.reserve_task_cost = refuse
+    fails(lambda: CONTROL.invoke_once(lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("no provider call before admission")), store, "budget", REQUEST), "task-cost-admission-not-confirmed")
+    assert store.read("budget", REQUEST) is None
+    reserved, _ = store.reserve("budget", REQUEST)
+    reconcile = CONTROL.reconcile_reserved
+    CONTROL.reconcile_reserved = lambda provider, value: (value, task(value))
+    assert CONTROL.invoke_once(None, store, "budget", REQUEST)[0] == reserved
+    assert len(calls) == 1, "existing original uses reconciliation, not new budget admission"
+    CONTROL.reconcile_reserved, CONTROL.reserve_task_cost = reconcile, original
+
+
+with tempfile.TemporaryDirectory(prefix="entity-smoke-task-census-") as temporary:
+    store = CONTROL.AttemptStore(Path(temporary))
+    assert store.reservations() == []
+    original, _ = store.reserve("original", REQUEST)
+    assert store.reservations() == [original], "unresolved original remains in cost census"
+    path = store.path_for("original", REQUEST)
+    changed = copy.deepcopy(original); changed["request_sha256"] = "0" * 64
+    path.write_text(json.dumps(changed))
+    fails(store.reservations, "attempt-reservation-mismatch")
+
+
+for operation in ("scheduling-delete", "scheduling-restore"):
+    selected = {**REQUEST, "environment": {**REQUEST["environment"], "ENTITY_SMOKE_VERIFICATION_OPERATION": operation,
+        "ENTITY_SMOKE_EXPECTED_ID": "00000000-0000-4000-8000-000000000123", "ENTITY_SMOKE_EXPECTED_DIGEST": "1" * 64}}
+    assert CONTROL.validate_request(selected) == selected
+    for value in (None, "", CANARY):
+        altered = copy.deepcopy(selected)
+        if value is None: altered["environment"].pop("ENTITY_SMOKE_EXPECTED_ID")
+        else: altered["environment"]["ENTITY_SMOKE_EXPECTED_ID"] = value
+        fails(lambda: CONTROL.validate_request(altered), "task-scheduling-selection-invalid")
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-synthetic-original-") as temporary:
+        store = CONTROL.AttemptStore(Path(temporary))
+        first, created = store.reserve("caller-first", selected)
+        second, created_again = store.reserve("caller-second", selected)
+        assert created and not created_again and first == second
+        altered = copy.deepcopy(selected); altered["environment"]["ENTITY_SMOKE_EXPECTED_ID"] = "00000000-0000-4000-8000-000000000124"
+        fails(lambda: store.reserve("caller-third", altered), "attempt-reservation-mismatch")
+
+
+migration = {**REQUEST, "workload": "migration", "definition": REQUEST["definition"].replace("-verifier:", "-migration:"),
+    "environment": {"ENTITY_SMOKE_MIGRATION_OPERATION": "apply"}}
+original_migration = CONTROL.canonical(migration)
+assert CONTROL.validate_request(migration) == migration and CONTROL.canonical(migration) == original_migration
+scheduled = {**migration, "environment": {**migration["environment"], "PERSISTENCE_MIGRATION_PROFILE": "scheduling"}}
+assert CONTROL.validate_request(scheduled) == scheduled and CONTROL.canonical(scheduled) != original_migration
+for profile in ("baseline", "unknown", CANARY):
+    fails(lambda profile=profile: CONTROL.validate_request({**scheduled, "environment": {**scheduled["environment"], "PERSISTENCE_MIGRATION_PROFILE": profile}}), "task-migration-profile-invalid")
+fails(lambda: CONTROL.validate_request({**scheduled, "environment": {"ENTITY_SMOKE_MIGRATION_OPERATION": "preflight", "PERSISTENCE_MIGRATION_PROFILE": "scheduling"}}), "task-migration-profile-invalid")
+fails(lambda: CONTROL.validate_request({**REQUEST, "environment": {**REQUEST["environment"], "PERSISTENCE_MIGRATION_PROFILE": "scheduling"}}), "task-migration-profile-invalid")
+with tempfile.TemporaryDirectory(prefix="entity-smoke-migration-profile-") as temporary:
+    store = CONTROL.AttemptStore(Path(temporary))
+    reservation, _ = store.reserve("migration-profile", scheduled)
+    fails(lambda: store.read("migration-profile", migration), "attempt-reservation-mismatch")
+    observed = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "2" * 32,
+        "taskDefinitionArn": scheduled["definition"], "startedBy": reservation["operation_id"], "overrides": CONTROL.overrides(scheduled)}
+    assert CONTROL.exact_task(observed, reservation) == observed
+    fails(lambda: CONTROL.exact_task({**observed, "overrides": CONTROL.overrides(migration)}, reservation), "task-observation-overrides-mismatch")
 
 
 # Construct observations independently of the production request/override builder.

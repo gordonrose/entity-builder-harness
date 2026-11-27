@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -48,6 +48,15 @@ def fixture(workload="verifier", operation="create"):
               "proof_label_sha256": hashlib.sha256(LABEL.encode()).hexdigest(), "record_digest": DIGEST,
               "steps": ["release", "liveness", "readiness", "create", "read"], "checked_at": "2026-11-08T12:00:04Z"}
     if workload == "administration": result = {"verdict": "passed", "code": "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED" if operation == "observe-migration-state" else "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED", "operation": operation}
+    if workload == "administration" and operation in EVIDENCE.SCHEDULING_STATE.RESULTS:
+        result.update(code=EVIDENCE.SCHEDULING_STATE.RESULTS[operation], database_state={
+            "schema": "kanbien/scheduling-database-state/v1", "manifest_sha256": "a" * 64, "migration_count": 7,
+            "work_inventory": {"waiting_schedules": 0, "pending_outbox": 0, "active_processing": 0}})
+    if workload == "administration" and operation == EVIDENCE.SCHEDULING_STATE.PREFIX_OPERATION:
+        result.update(code=EVIDENCE.SCHEDULING_STATE.PREFIX_RESULT, migration_prefix={
+            "schema": "kanbien/scheduling-migration-prefix/v1", "manifest_sha256": "a" * 64,
+            "manifest_migration_count": 7, "minimum_applied_migrations": 1, "applied_migrations": 1,
+            "applied_prefix_sha256": "b" * 64, "state": "partial"})
     if workload == "migration": result = {"verdict": "passed", "code": "ENTITY_SMOKE_MIGRATION_APPLIED"}
     if workload in {"database-proof", "restore-reader"}:
         result.pop("source_revision"); result["schema"] = "deploy/entity-smoke-database-proof/v1"
@@ -88,10 +97,40 @@ def fails(call, code):
     else: raise AssertionError("expected finite task-evidence rejection")
 
 
+def scheduling_fixture(operation):
+    task, reservation, result = fixture("verifier", "create")
+    environment = reservation["request"]["environment"]
+    environment["ENTITY_SMOKE_VERIFICATION_OPERATION"] = operation
+    result.update(operation=operation, code=EVIDENCE.HTTP_CODES[operation], steps=EVIDENCE.HTTP_STEPS[operation],
+                  record_id="00000000-0000-4000-8000-000000000123")
+    if operation in {"scheduling-delete", "scheduling-restore"}:
+        environment.update(ENTITY_SMOKE_EXPECTED_ID=result["record_id"], ENTITY_SMOKE_EXPECTED_DIGEST=DIGEST)
+        result.update(deleted_at="2026-11-08T12:00:03.000Z", restore_eligible_until="2026-11-08T12:01:03.000Z", due_at="2026-11-08T12:05:03.001Z")
+    reservation["request_sha256"] = hashlib.sha256(EVIDENCE.CONTROL.canonical(reservation["request"])).hexdigest()
+    task["overrides"] = EVIDENCE.CONTROL.overrides(reservation["request"])
+    return task, reservation, result
+
+
+for operation in ("scheduling-create", "scheduling-observe-create", "scheduling-delete", "scheduling-restore"):
+    task, reservation, result = scheduling_fixture(operation)
+    assert collect(task, reservation, result)["result"] == result
+    for change, code in ((lambda value: value.update(record_id=CANARY), "task-scheduling-result-invalid"),
+                         (lambda value: value.update(private=CANARY), "task-result-fields-invalid")):
+        altered = copy.deepcopy(result); change(altered)
+        fails(lambda: collect(task, reservation, altered), code)
+    if operation in {"scheduling-delete", "scheduling-restore"}:
+        altered = {**result, "record_id": "00000000-0000-4000-8000-000000000124"}
+        fails(lambda: collect(task, reservation, altered), "task-scheduling-identity-mismatch")
+        altered = {**result, "due_at": result["deleted_at"]}
+        fails(lambda: collect(task, reservation, altered), "task-scheduling-time-invalid")
+
+
 cases = [("administration", operation) for operation in ["bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime"]]
+cases += [("administration", operation) for operation in EVIDENCE.SCHEDULING_STATE.RESULTS]
 cases += [("migration", "apply"), ("database-proof", "permissions"), ("database-proof", "collision"), ("restore-reader", "restore-read")]
 cases += [("verifier", operation) for operation in ["create", "read", "observe-create", "cleanup", "lifecycle", "ready", "unready"]]
 cases += [(workload, "preflight") for workload in ["administration", "migration", "database-proof", "restore-reader"]]
+cases += [("administration", EVIDENCE.SCHEDULING_STATE.PREFIX_OPERATION)]
 for workload, operation in cases:
     task, reservation, result = fixture(workload, operation)
     proof = collect(task, reservation, result)
@@ -99,6 +138,44 @@ for workload, operation in cases:
     assert proof["task"]["completion_duration_seconds"] == 4
     assert CANARY not in json.dumps(proof) and LABEL not in json.dumps(proof)
     assert EVIDENCE.validate_retained(proof, reservation) == proof
+
+for field, replacement in (("schema", "kanbien/scheduling-database-state/v1"), ("manifest_sha256", CANARY),
+        ("manifest_sha256", "A" * 64), ("manifest_migration_count", 8), ("manifest_migration_count", True),
+        ("minimum_applied_migrations", 2), ("minimum_applied_migrations", False), ("applied_migrations", 0),
+        ("applied_migrations", 8), ("applied_migrations", 1.0), ("applied_prefix_sha256", "a" * 64),
+        ("state", "complete"), ("state", {}), ("private", CANARY)):
+    task, reservation, result = fixture("administration", EVIDENCE.SCHEDULING_STATE.PREFIX_OPERATION)
+    result["migration_prefix"][field] = replacement
+    fails(lambda: collect(task, reservation, result), "task-result-invalid")
+task, reservation, result = fixture("administration", EVIDENCE.SCHEDULING_STATE.PREFIX_OPERATION)
+result["migration_prefix"].update(applied_migrations=7, applied_prefix_sha256="a" * 64, state="complete")
+assert collect(task, reservation, result)["result"]["migration_prefix"]["state"] == "complete"
+for field in ("migration_prefix", "database_state", "work_inventory"):
+    wrong = copy.deepcopy(result)
+    if field == "migration_prefix": del wrong[field]
+    else: wrong[field] = {}
+    fails(lambda: collect(task, reservation, wrong), "task-result-invalid")
+# Even a valid complete prefix is not the full-state observation contract.
+task, reservation, state_result = fixture("administration", "observe-scheduling-state")
+state_result.pop("database_state"); state_result["migration_prefix"] = result["migration_prefix"]
+fails(lambda: collect(task, reservation, state_result), "task-result-invalid")
+
+for replacement in (None, {}, {"waiting_schedules": 0, "pending_outbox": 0},
+                    {"waiting_schedules": True, "pending_outbox": 0, "active_processing": 0},
+                    {"waiting_schedules": -1, "pending_outbox": 0, "active_processing": 0},
+                    {"waiting_schedules": 9007199254740992, "pending_outbox": 0, "active_processing": 0},
+                    {"waiting_schedules": 0, "pending_outbox": 0, "active_processing": 0, "private": CANARY}):
+    task, reservation, result = fixture("administration", "observe-scheduling-state")
+    result["database_state"]["work_inventory"] = replacement
+    fails(lambda: collect(task, reservation, result), "task-result-invalid")
+task, reservation, result = fixture("administration", "observe-scheduling-state")
+result["database_state"]["work_inventory"]["waiting_schedules"] = 3
+assert collect(task, reservation, result)["result"]["database_state"]["work_inventory"]["waiting_schedules"] == 3
+# A nonempty observation is evidence, not a falsely asserted activation pass.
+for field, replacement in (("manifest_sha256", CANARY), ("migration_count", True), ("private", CANARY)):
+    task, reservation, result = fixture("administration", "observe-scheduling-state")
+    result["database_state"][field] = replacement
+    fails(lambda: collect(task, reservation, result), "task-result-invalid")
 
 for reason, expected in (("CannotPullContainerError: 403 Forbidden " + CANARY, "task-image-pull-access-denied"),
                          ("CannotPullContainerError: " + CANARY, "task-image-pull-not-confirmed"),

@@ -1,4 +1,5 @@
 import { createPlatformSchedule } from "@kanbien/platform-persistence";
+import { recordId, recordKind, recordReference } from "@kanbien/core/persistence";
 import { testEntityError, type TestEntityError } from "../../contract/errors";
 import type { TestEntity } from "../../contract/types";
 import { testEntityExpiredPurgeDueAt } from "../retention";
@@ -13,7 +14,11 @@ export async function rememberExpiredTestEntityPurge(
   const dueAt = testEntityExpiredPurgeDueAt(entity);
   if (reminder === undefined || entity.visibility !== "archived" || dueAt === undefined) return { ok: true };
 
-  const schedule = createPlatformSchedule({ jobName: reminder.jobName, dueAt: dueAt.toISOString() }, deps.uuidGenerator);
+  const kind = recordKind("entity-smoke.test-entity"), id = recordId(entity.id);
+  if (!kind.ok) return kind;
+  if (!id.ok) return id;
+  const schedule = createPlatformSchedule({ jobName: reminder.jobName, dueAt: dueAt.toISOString(),
+    subject: recordReference({ kind: kind.value, id: id.value }) }, deps.uuidGenerator);
   if (!schedule.ok) return { ok: false, error: testEntityError(schedule.error.code, schedule.error.defaultMessage,
     schedule.error.diagnosticRecord, schedule.error.relatedDiagnosticRecords) };
 

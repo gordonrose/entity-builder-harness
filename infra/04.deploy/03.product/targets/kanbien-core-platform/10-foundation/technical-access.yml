@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -12,7 +12,7 @@
 #   - security
 #   - sre
 #   kind: access-declaration
-#   purpose: Declare the distinct future delivery and workload startup access intents without naming AWS roles.
+#   purpose: Declare distinct delivery and workload access intents and the bounded repository observation permission maintenance route.
 #   portability:
 #     class: internal
 #     targets: []
@@ -41,3 +41,12 @@ access_intents:
       - delivery-mutation
       - application-data-access
       - staging-access
+maintenance:
+  delivery-repository-observation:
+    operation: add-repository-observation
+    controller: scripts/04.deploy/lifecycle/50-deploy/capabilities/foundation-access-update/script.py
+    workflow: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/update-delivery-observation-access.md
+    logical_resource: DeliveryRole
+    policy_name: publish-core-image
+    resource_parameter: ExistingRepositoryArn
+    action: ecr:DescribeRepositories

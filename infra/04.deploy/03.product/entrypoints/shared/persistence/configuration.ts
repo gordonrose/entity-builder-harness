@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.shared-persistence-configuration
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-15"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.persistence
 //   disciplines: [security, sre]
@@ -54,6 +54,7 @@ const administratorCredentialV1Reasons = [
 ] as const;
 export const persistenceConfigurationDiagnostic = defineConfigurationDiagnostic("kanbien-core-server.configuration-invalid", Object.keys(persistenceConfigurationBindings), configurationV1Reasons);
 export const persistenceIamConfigurationDiagnostic = defineConfigurationDiagnostic("kanbien-core-server.iam-configuration-invalid", ["authentication.username", "authentication.region"], configurationV1Reasons);
+export const persistenceMigrationProfileDiagnostic = defineConfigurationDiagnostic("kanbien-core-server.migration-profile-invalid", ["migration.profile"], configurationV1Reasons);
 export const persistenceAdministratorCredentialBindings = { "administrator.credentials": "PERSISTENCE_ADMINISTRATOR_CREDENTIALS" } as const;
 export const persistenceAdministratorCredentialDiagnostic = defineConfigurationDiagnostic("kanbien-core-server.administrator-credentials-invalid", ["administrator.credentials", "administrator.username", "administrator.password"], administratorCredentialV1Reasons);
 export const persistenceAdministrationBindings = {
@@ -61,7 +62,7 @@ export const persistenceAdministrationBindings = {
   "runtime.username": "PERSISTENCE_RUNTIME_DATABASE_USERNAME",
   "administration.operation": "PERSISTENCE_ADMINISTRATION_OPERATION",
 } as const;
-export const persistenceAdministrationOperations = ["bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege", "observe-migration-state"] as const;
+export const persistenceAdministrationOperations = ["bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege", "observe-migration-state", "grant-scheduling-access", "observe-scheduling-state", "prove-scheduling-access", "observe-scheduling-prefix", "seed-scheduling-proof", "observe-scheduling-proof"] as const;
 export type PersistenceAdministrationOperation = typeof persistenceAdministrationOperations[number];
 export const persistenceAdministrationRelationships = [
   { relationship: "administrator-migration-separation", rule: "must-differ", left: "administrator.username", right: "migration.username" },
@@ -80,7 +81,7 @@ export const persistenceCertificateSourceDiagnostic = defineDiagnostic({ code: "
   } },
 } as const);
 export const persistenceCertificateReadDiagnostic = defineConfigurationSourceReadDiagnostic("kanbien-core-server.certificate-source-read-failed", ["database.tls.authority-source"]);
-export const persistenceConfigurationDiagnosticCatalog = { owner: "kanbien-core-server", definitions: [persistenceImplementationDiagnostic, persistenceConfigurationDiagnostic, persistenceIamConfigurationDiagnostic, persistenceAdministratorCredentialDiagnostic, persistenceCertificateSourceDiagnostic, persistenceCertificateReadDiagnostic, ...persistenceAdministrationDiagnostics.definitions] } as const;
+export const persistenceConfigurationDiagnosticCatalog = { owner: "kanbien-core-server", definitions: [persistenceImplementationDiagnostic, persistenceConfigurationDiagnostic, persistenceIamConfigurationDiagnostic, persistenceMigrationProfileDiagnostic, persistenceAdministratorCredentialDiagnostic, persistenceCertificateSourceDiagnostic, persistenceCertificateReadDiagnostic, ...persistenceAdministrationDiagnostics.definitions] } as const;
 export const persistenceTaskConfigurationDiagnosticCatalog = { owner: "kanbien-core-server", definitions: [...persistenceConfigurationDiagnosticCatalog.definitions, ...persistenceMaintenanceDiagnosticCatalog.definitions] } as const;
 const persistenceSourceDefinitions = [...coreDiagnosticCatalog.definitions, ...platformPersistenceDiagnosticCatalog.definitions];
 const taskDiagnosticDefinitions = [...persistenceConfigurationDiagnosticCatalog.definitions, ...platformSecurityDiagnosticCatalog.definitions, ...persistenceSourceDefinitions, ...platformObservabilityDiagnosticCatalog.definitions];
@@ -112,7 +113,7 @@ export function persistenceConfigurationFailure(issues: readonly ConfigSettingIs
   return { ok: false as const, error: { code: "CONFIGURATION_INVALID" as const, diagnostic } };
 }
 
-export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: "server" | "migration" | "restore" | "administration", implementation?: PersistenceConfigurationImplementation) {
+export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: "server" | "scheduled" | "migration" | "restore" | "administration", implementation?: PersistenceConfigurationImplementation) {
   const selected = implementation === undefined ? selectPersistenceConfigurationImplementation(env["PERSISTENCE_IMPLEMENTATION"]) : { ok: true as const, value: implementation };
   if (!selected.ok) return selected;
   const reference = purpose === "administration" ? "administrator.reference" : "authentication.reference";
@@ -127,8 +128,8 @@ export function persistenceConfigurationResult(env: NodeJS.ProcessEnv, purpose: 
       maximumPoolSize: purpose === "server" ? 4 : 1,
       // Migration and restoration are bounded operations whose declared
       // completion work can legitimately exceed a server readiness window.
-      connectionTimeoutMs: purpose === "server" ? 5_000 : 30_000, idleTimeoutMs: 10_000,
-      statementTimeoutMs: purpose === "migration" || purpose === "administration" ? 240_000 : purpose === "restore" ? 30_000 : 5_000,
+      connectionTimeoutMs: purpose === "server" || purpose === "scheduled" ? 5_000 : 30_000, idleTimeoutMs: 10_000,
+      statementTimeoutMs: purpose === "migration" || purpose === "administration" ? 240_000 : purpose === "restore" ? 30_000 : purpose === "scheduled" ? 3_000 : 5_000,
       tls: { mode: "verify-full", certificateAuthoritySource: "injected" },
     }),
   });
@@ -242,6 +243,15 @@ const checkMaintenanceInstructions: PersistenceInstructionCheck = (source, requi
 });
 export function persistenceMigrationInstructionsResult(env: NodeJS.ProcessEnv) {
   return validatePersistenceMigrationInstructions(env[persistenceMaintenanceBindings["migration.operation"]], checkMaintenanceInstructions);
+}
+/** The target selects a manifest; the provider's operation remains apply. */
+export function persistenceMigrationProfileResult(env: NodeJS.ProcessEnv) {
+  const input = env["PERSISTENCE_MIGRATION_PROFILE"];
+  const checked = validateConfigSettings(recordConfigSource({ profile: input === undefined ? "baseline" : input }), [
+    { setting: "migration.profile", source: "profile", rule: { kind: "text", pattern: /^(?:baseline|scheduling)$/ } },
+  ]);
+  if (!checked.ok) return persistenceConfigurationFailure(checked.error.issues, persistenceMigrationProfileDiagnostic);
+  return { ok: true as const, value: checked.value["migration.profile"] as "baseline" | "scheduling" };
 }
 export function persistenceVerificationModeInput(env: NodeJS.ProcessEnv): unknown {
   return env[persistenceMaintenanceBindings["verification.mode"]];

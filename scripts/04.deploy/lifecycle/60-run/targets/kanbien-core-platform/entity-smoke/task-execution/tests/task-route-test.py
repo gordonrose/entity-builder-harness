@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 5
+#   version: 6
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -45,6 +45,9 @@ M = module("entity_smoke_task_route_fixture", DIRECTORY / "task-execution/implem
 BF = module("entity_smoke_task_binding_responses", DIRECTORY / "task-execution/tests/task-binding-test.py")
 F = BF.F
 REAL_ROOT, CANARY = M.C.ROOT, BF.CANARY
+# Simulated task protocol, not live budget qualification. The real cost owner
+# separately proves its complete census and shared reservation lock.
+M.RUNNER.CONTROL.reserve_task_cost = lambda request, reserve, **_options: reserve()
 
 
 class Provider(F.Provider):
@@ -60,6 +63,9 @@ class Provider(F.Provider):
         self.server_states, self.replacement_lost = None, False
         self.history_applied = True
         self.fail_operation = None
+        self.scheduling_applied = 1
+        self.synthetic_rows = {}
+        self.synthetic_completed = False
     def __call__(self, service, operation, **parameters):
         self.observed.append((service, operation, parameters))
         if self.server_states is not None:
@@ -93,7 +99,41 @@ class Provider(F.Provider):
             elif workload == "administration":
                 result = {"verdict": "passed", "code": "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED", "operation": selected}
                 if selected == "observe-migration-state": result["code"] = "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED" if self.history_applied else "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"
-            elif workload == "migration": result = {"verdict": "passed", "code": "ENTITY_SMOKE_MIGRATION_APPLIED"}
+                if selected == "observe-scheduling-prefix":
+                    result.update(code="PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", migration_prefix={
+                        "schema": "kanbien/scheduling-migration-prefix/v1", "manifest_sha256": "a" * 64,
+                        "manifest_migration_count": 7, "minimum_applied_migrations": 1, "applied_migrations": self.scheduling_applied,
+                        "applied_prefix_sha256": ("a" if self.scheduling_applied == 7 else "b") * 64,
+                        "state": "complete" if self.scheduling_applied == 7 else "partial"})
+                if selected in M.RUNNER.EVIDENCE.SCHEDULING_STATE.RESULTS:
+                    assert self.scheduling_applied == 7, "partial history must not imply complete scheduling tables"
+                    result.update(code=M.RUNNER.EVIDENCE.SCHEDULING_STATE.RESULTS[selected], database_state={
+                        "schema": "kanbien/scheduling-database-state/v1", "manifest_sha256": "a" * 64, "migration_count": 7,
+                        "work_inventory": {"waiting_schedules": 0, "pending_outbox": 0, "active_processing": 0}})
+                if selected == "observe-scheduling-proof":
+                    identity, due = environment["PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID"], environment.get("PERSISTENCE_SCHEDULING_PROOF_DUE_AT")
+                    row = next(row for row in self.synthetic_rows.values() if row["id"] == identity)
+                    assert row.get("due_at") == due
+                    at = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+                    schedule = {"id": identity, "job_name": M.STEPS.SCHEDULING.PROOF_JOBS["entity-smoke"], "due_at": due,
+                        "state": "delivery-created" if self.synthetic_completed else "waiting", "subject": {"kind": "entity-smoke.test-entity", "id": identity}}
+                    outbox = processing = message = None
+                    if self.synthetic_completed and due is not None:
+                        schedule["outbox_entry_id"] = identity
+                        outbox = {"id": identity, "state": "published", "attempt": 1, "created_at": at, "published_at": at}
+                        processing = {"outbox_entry_id": identity, "state": "completed", "attempt": 1, "completion": {"outcome": "succeeded", "completed_at": at}}
+                        message = {"id": identity, "type": schedule["job_name"], "version": 1, "enqueuedAt": at, "idempotencyKey": identity, "payload": {"outboxEntryId": identity}}
+                    present = due is None or row.get("restored", False) or not self.synthetic_completed
+                    application = {"kind": "entity", "present": present}
+                    if present:
+                        application.update(visibility="active" if due is None else "archived", lifecycle_state="active" if due is None or row.get("restored") else "deleted")
+                        if due is not None and not row.get("restored"): application.update(deleted_at=row["deleted_at"], restore_eligible_until=row["restore_eligible_until"])
+                    result.update(code="PERSISTENCE_SCHEDULING_PROOF_OBSERVED", scheduling_observation={"schema": "kanbien/scheduling-proof-observation/v1",
+                        "selection": {"kind": "subject", "id": identity, **({"due_at": due} if due is not None else {})}, "observed_at": at, "schedule": schedule if due is not None else None, "outbox": outbox,
+                        "processing": processing, "application": application, "delivery_message": message})
+            elif workload == "migration":
+                result = {"verdict": "passed", "code": "ENTITY_SMOKE_MIGRATION_APPLIED"}
+                if environment.get("PERSISTENCE_MIGRATION_PROFILE") == "scheduling": self.scheduling_applied = 7
             elif workload == "restore-reader":
                 assert selected == "restore-read"
                 result = {"schema": "deploy/entity-smoke-database-proof/v1", "verdict": "passed", "operation": selected, "code": "ENTITY_SMOKE_RESTORED_RECORD_RETRIEVED",
@@ -106,7 +146,7 @@ class Provider(F.Provider):
                 if selected == "collision": result.update(code="ENTITY_SMOKE_IDENTIFIER_COLLISION_PROVEN", steps=["identity", "read", "collision", "read"], record_digest="1" * 64)
             else:
                 assert workload == "verifier"
-                codes = {"ready": "ENTITY_SMOKE_HEALTHY", "unready": "ENTITY_SMOKE_LIVE_NOT_READY", "create": "ENTITY_SMOKE_RECORD_CREATED", "observe-create": "ENTITY_SMOKE_RECORD_RECONCILED", "lifecycle": "ENTITY_SMOKE_LIFECYCLE_PROVEN", "read": "ENTITY_SMOKE_RECORD_RETRIEVED"}
+                codes = M.RUNNER.EVIDENCE.HTTP_CODES
                 steps = ["release", "liveness", "readiness"]
                 if selected == "create": steps += ["create", "read"]; self.created_record = True
                 if selected in {"read", "observe-create"}: steps += ["read"]; assert self.created_record
@@ -115,6 +155,21 @@ class Provider(F.Provider):
                           "proof_label_sha256": hashlib.sha256(environment["ENTITY_SMOKE_PROOF_LABEL"].encode()).hexdigest(), "steps": steps, "checked_at": observed_at}
                 if selected not in {"ready", "unready"}: result["record_digest"] = ("2" if selected == "lifecycle" else "1") * 64
                 if selected == "create" and self.missing_create_result: result = None
+                if selected.startswith("scheduling-"):
+                    label = environment["ENTITY_SMOKE_PROOF_LABEL"]
+                    if selected == "scheduling-create":
+                        assert label not in self.synthetic_rows, "a lost original cannot be replaced"
+                        self.synthetic_rows[label] = {"id": "00000000-0000-4000-8000-" + f"{self.next_task_number:012x}"}
+                    row = self.synthetic_rows[label]
+                    result.update(steps=M.RUNNER.EVIDENCE.HTTP_STEPS[selected], record_id=row["id"])
+                    if selected in {"scheduling-delete", "scheduling-restore"}:
+                        assert environment["ENTITY_SMOKE_EXPECTED_ID"] == row["id"] and "due_at" not in row
+                        deleted = datetime.now(timezone.utc)
+                        normalized = lambda value: value.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+                        row.update(deleted_at=normalized(deleted), restore_eligible_until=normalized(deleted + timedelta(minutes=1)),
+                                   due_at=normalized(deleted + timedelta(minutes=5, milliseconds=1)), restored=selected == "scheduling-restore")
+                        result.update({key: row[key] for key in ("deleted_at", "restore_eligible_until", "due_at")})
+                    if selected == "scheduling-create" and self.missing_create_result: result = None
             if selected == self.fail_operation: task["containers"][0]["exitCode"] = 1
             self.remote[arn], self.results[identifier] = task, result
             if self.lost_next:
@@ -146,6 +201,63 @@ def fails(call, code):
         assert failure.code == code, (failure.code, code)
         return failure
     else: raise AssertionError("expected bounded task-plan rejection")
+
+
+def migration_profiles():
+    argv = ["--receipt", "/missing-qualified-receipt.json", "--proof-label", "entity-smoke-" + "a" * 24,
+        "--workload", "migration", "--operation", "apply"]
+    baseline = M.parse(argv)
+    assert baseline.migration_profile == "baseline"
+    fails(lambda: M.parse([*argv, "--migration-profile", "scheduling"]), "task-migration-profile-invalid")
+    scheduled = M.parse([*argv, "--migration-profile", "scheduling", "--proof-stage", "scheduling-migration"])
+    probe = M.parse([*argv, "--migration-profile", "scheduling", "--proof-stage", "scheduling-migration", "--phase", "preflight"])
+    fails(lambda: M.parse([*argv, "--migration-profile", "scheduling", "--proof-stage", "scheduling-migration", "--workload", "administration", "--operation", "bootstrap"]), "task-migration-profile-invalid")
+    binding = {"image_digest": "sha256:" + "a" * 64, "source_revision": "b" * 40,
+        "configuration_contract_sha256": "sha256:" + "c" * 64, "permission_contract_sha256": "sha256:" + "d" * 64,
+        "dependency_incarnation_sha256": "sha256:" + "e" * 64}
+    context = {"binding": binding, "checked": {"definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-migration:1",
+        "security_group": "sg-" + "a" * 17, "subnets": ["subnet-" + "b" * 17]},
+        "report": {"plan": {"preflight_label": baseline.proof_label}}, "completion_deadlines": {"migration": 300}}
+    before = M.STEPS.request(M.dependencies(), context, baseline)
+    after = M.STEPS.request(M.dependencies(), context, scheduled)
+    assert before["environment"] == {"ENTITY_SMOKE_MIGRATION_OPERATION": "apply"}
+    assert after == {**before, "environment": {**before["environment"], "PERSISTENCE_MIGRATION_PROFILE": "scheduling"}}
+    assert M.STEPS.request(M.dependencies(), context, probe)["environment"] == {"ENTITY_SMOKE_MIGRATION_OPERATION": "preflight"}
+    assert M.C.DEPLOY.fingerprint(before) != M.C.DEPLOY.fingerprint(after)
+
+
+migration_profiles()
+
+
+def qualification_profiles():
+    argv = ["--receipt", "/unused-receipt.json", "--proof-label", "entity-smoke-" + "a" * 24,
+        "--workload", "administration", "--operation", "observe-scheduling-state"]
+    preparation = M.parse([*argv, "--proof-stage", "scheduling-preparation"])
+    fails(lambda: M.parse([*argv, "--proof-stage", "scheduling-qualification"]), "task-qualification-profile-required")
+    qualified = M.parse([*argv, "--proof-stage", "scheduling-qualification", "--qualification-profile", "scheduling-a2-v1"])
+    fails(lambda: M.parse([*argv, "--proof-stage", "scheduling-preparation", "--qualification-profile", "scheduling-a2-v1"]), "task-qualification-profile-not-supported")
+    assert M.STEPS.key(preparation) != M.STEPS.key(qualified)
+    assert M.STEPS.path({"cache": Path("/unused-cache")}, preparation) != M.STEPS.path({"cache": Path("/unused-cache")}, qualified)
+    fails(lambda: M.parse([*argv, "--operation", "bootstrap", "--qualification-profile", "scheduling-a2-v1"]), "task-qualification-profile-not-supported")
+    baseline = M.parse([*argv, "--workload", "database-proof", "--operation", "permissions"])
+    selected = M.parse([*argv, "--workload", "database-proof", "--operation", "permissions", "--qualification-profile", "scheduling-a2-v1"])
+    assert M.STEPS.identity_stage(baseline) == "baseline"
+    assert M.STEPS.key(baseline) != M.STEPS.key(selected)
+    assert M.STEPS.identity_stage(selected) == "baseline-scheduling-qualification"
+    qualified.expected_digest = "1" * 64
+    request_context = {"binding": {key: item for key, item in F.BINDING.items() if key != "proof_label"},
+        "checked": {"definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-administration:1",
+            "security_group": "sg-" + "a" * 17, "subnets": ["subnet-" + "b" * 17]},
+        "report": {"plan": {"preflight_label": qualified.proof_label}}, "completion_deadlines": {"administration": 300}}
+    assert M.STEPS.request(M.dependencies(), request_context, qualified)["environment"] == {"ENTITY_SMOKE_ADMINISTRATION_OPERATION": "observe-scheduling-state"}
+    state = {"schema": "kanbien/scheduling-database-state/v1", "manifest_sha256": "a" * 64, "migration_count": 7,
+        "work_inventory": {"waiting_schedules": 0, "pending_outbox": 0, "active_processing": 0}}
+    M.STEPS.validate_qualification_result(qualified, {"result": {"database_state": state}}, "a" * 64)
+    fails(lambda: M.STEPS.validate_qualification_result(qualified, {"result": {"database_state": state}}, "b" * 64), "task-scheduling-manifest-mismatch")
+    fails(lambda: M.parse([*argv, "--operation", "observe-migration-state", "--proof-stage", "initial-recovery", "--qualification-profile", "scheduling-a2-v1"]), "task-qualification-database-selection-mismatch")
+
+
+qualification_profiles()
 
 
 def operator_protocols():
@@ -719,7 +831,378 @@ def run():
                       "prerequisites": "controlled-source-custody-local-proof-and-target-responses-not-qualification", "checks": ["actual-selected-graph-and-generic-gates", "all-reachable-callees-retained", "deployed-resource-lineage", "exact-task-role-network-binding", "preflight-and-business-plan-binding", "no-sixth-gate-before-probe", "planning-no-write-capability", "actual-offline-cli", "actual-execute-provider-runner-collector", "lost-launch-no-replay", "four-ordered-prerequisites-and-activation-consumer", "changed-prerequisite-rejected", "exact-reserved-payload", "known-prewrite-versus-unknown-effect-reporter", "named-missing-prerequisite", "activated-feature-prerequisites", "uncertain-create-observed-never-replayed", "terminal-qualified-original-before-observer", "lifecycle-digest-cannot-replace-original", "collision-and-original-read", "selected-primary-diagnostic-preserved", "public-replacement-requires-baseline-read", "lost-stop-reconciles-original-not-successor", "separate-post-replacement-ready-and-read", "baseline-receipt-substitution-rejected", "changed-replacement-gate-rejected", "replacement-exact-payload", "replacement-public-main-preserves-guard-context", "no-original-record-recreation"]}))
 
 
-def successor_task_protocols(*, requalify=False, failed_recovery=None):
+def scheduling_route_cases(provider, root, binding, cache, live, args):
+    """Real route, admission, task runner and receipts; only transport is simulated."""
+    def launches(): return sum(operation == "run-task" for _, operation, _ in provider.observed)
+    def plan(operation, phase="operation"):
+        args.operation, args.phase = operation, phase
+        return M.plan(args, live())
+    def execute(operation, *, lose=False):
+        for phase in ("preflight", "operation"):
+            prepared = plan(operation, phase)
+            assert prepared["plan"]["execution_route_available"] is True
+            args.approved_plan = prepared["plan_sha256"]
+            if lose and phase == "operation":
+                provider.lost_next = True
+                fails(lambda: M.execute(args, live()), "task-submission-uncertain-reconcile-required")
+                submitted = launches()
+            result = M.execute(args, live())
+            assert result["verdict"] == "completed" and CANARY not in json.dumps(result)
+            if lose and phase == "operation": assert launches() == submitted
+        return M.C.read_json(root / result["receipt"])
+    with patch.object(M.ACCEPTANCE, "prerequisites", side_effect=AssertionError("preparation must not require application acceptance")), \
+         patch.object(M.FEATURE, "prerequisites", side_effect=AssertionError("preparation must not require application records")):
+        planned = plan("observe-scheduling-prefix")
+        assert planned["plan"]["database_effect"] == "read-only-migration-prefix-observation"
+        assert planned["plan"]["expected_record_digest"] is None
+        args.approved_plan = planned["plan_sha256"]
+        before = launches()
+        fails(lambda: M.execute(args, live()), "task-preflight-receipt-required")
+        assert launches() == before
+        # No complete-state packet exists. A valid partial prefix cannot replace it.
+        missing = plan("grant-scheduling-access")
+        assert not missing["plan"]["execution_route_available"] and missing["plan"]["pending_prerequisite"] == "observe-scheduling-state"
+        partial = execute("observe-scheduling-prefix", lose=True)
+        assert partial["receipt"]["result"]["migration_prefix"]["applied_migrations"] == 1
+        assert "database_state" not in partial["receipt"]["result"]
+        assert not (cache / "task-steps/migration-apply-operation.json").exists()
+        assert not (cache / "task-steps/activation-prerequisites.json").exists() and not provider.created_record
+        missing = plan("grant-scheduling-access")
+        assert missing["plan"]["pending_prerequisite"] == "observe-scheduling-state"
+        # The actual migration now consumes the retained prefix through the
+        # independent staged route, with ordinary preflight and one launch.
+        args.workload, args.proof_stage, args.migration_profile = "migration", "scheduling-migration", "scheduling"
+        with patch.object(M.C, "now", return_value="2030-01-01T00:00:00Z"):
+            fails(lambda: plan("apply"), "task-scheduling-prefix-not-fresh")
+        prepared = plan("apply")
+        args.approved_plan = prepared["plan_sha256"]
+        before = launches()
+        fails(lambda: M.execute(args, live()), "task-preflight-receipt-required")
+        assert launches() == before
+        migrated = execute("apply", lose=True)
+        assert migrated["reservation"]["request"]["environment"] == {"ENTITY_SMOKE_MIGRATION_OPERATION": "apply", "PERSISTENCE_MIGRATION_PROFILE": "scheduling"}
+        assert provider.scheduling_applied == 7
+        before = launches()
+        args.approved_plan = plan("apply")["plan_sha256"]
+        assert M.execute(args, live())["reused"] is True and launches() == before
+        assert not (cache / "task-steps/migration-apply-operation.json").exists()
+        args.workload, args.proof_stage, args.migration_profile = "administration", "scheduling-preparation", "baseline"
+        full = execute("observe-scheduling-state")
+        assert full["receipt"]["result"]["database_state"]["migration_count"] == 7
+        missing = plan("prove-scheduling-access")
+        assert missing["plan"]["pending_prerequisite"] == "grant-scheduling-access"
+        # The operation result is historical evidence, not indefinitely fresh grant authority.
+        with patch.object(M.C, "now", return_value="2030-01-01T00:00:00Z"):
+            fails(lambda: plan("grant-scheduling-access"), "task-scheduling-state-not-fresh")
+        grant = execute("grant-scheduling-access")
+        proof = execute("prove-scheduling-access")
+        context = M.prepare(args, live())
+        owner = M.ACCEPTANCE.acceptance_owner().A
+        before = launches()
+        with patch.object(owner, "T", M), patch.object(owner, "C", M.C):
+            def readiness(**changes):
+                selected = {"required_after": partial["receipt"]["task"]["stopped_at"], "source_revision": binding["source_revision"],
+                    "image_digest": binding["image_digest"], "expected_predecessor": getattr(args, "expected_predecessor", None)}
+                return owner.scheduling_database_readiness(args.receipt, args.proof_label, live(), **{**selected, **changes})
+            def rejected(call):
+                try: call()
+                except owner.EvidenceFailure as failure:
+                    assert failure.code == "scheduling-readiness-not-confirmed"
+                else: raise AssertionError("expected finite initial-readiness rejection")
+            try: observed = readiness()
+            except owner.EvidenceFailure as failure:
+                raise AssertionError(("initial readiness rejected", failure.code, failure.item)) from None
+            assert observed["scope"] == "entity-smoke" and observed["migration_count"] == 7
+            assert set(observed["proofs"]) == {"state", "grant", "prove"}
+            assert not any(observed["work_inventory"].values())
+            assert observed["dependency_incarnation_sha256"] == binding["dependency_incarnation_sha256"]
+            def current_state(**changes):
+                selected = {"required_after": partial["receipt"]["task"]["stopped_at"], "source_revision": binding["source_revision"],
+                    "image_digest": binding["image_digest"], "expected_predecessor": getattr(args, "expected_predecessor", None)}
+                return owner.observe_scheduling_state_receipt(args.receipt, args.proof_label, live(), **{**selected, **changes})
+            def state_rejected(call):
+                try: call()
+                except owner.EvidenceFailure as failure:
+                    assert failure.code == "scheduling-state-not-confirmed"
+                else: raise AssertionError("expected finite current-state rejection")
+            state = current_state()
+            assert state["database_state"] == full["receipt"]["result"]["database_state"] and state["packet"] == full
+            assert state["binding"]["dependency_incarnation_sha256"] == binding["dependency_incarnation_sha256"]
+            state_rejected(lambda: current_state(source_revision="f" * 40))
+            state_rejected(lambda: current_state(required_after="2030-01-01T00:00:00Z"))
+            state_id = full["receipt"]["task"]["arn"].rsplit("/", 1)[1]
+            saved_state = copy.deepcopy(provider.results[state_id])
+            provider.results[state_id]["database_state"]["work_inventory"]["pending_outbox"] += 1
+            state_rejected(lambda: current_state())
+            provider.results[state_id] = saved_state
+            with patch.object(M.C, "now", return_value="2030-01-01T00:00:00Z"):
+                state_rejected(lambda: current_state())
+            rejected(lambda: readiness(source_revision="f" * 40))
+            rejected(lambda: readiness(required_after="2030-01-01T00:00:00Z"))
+            task_id = proof["receipt"]["task"]["arn"].rsplit("/", 1)[1]
+            actual = copy.deepcopy(provider.results[task_id])
+            provider.results[task_id]["database_state"]["work_inventory"]["pending_outbox"] = 1
+            rejected(lambda: readiness())
+            provider.results[task_id] = actual
+            with patch.object(M.C, "now", return_value="2030-01-01T00:00:00Z"):
+                rejected(lambda: readiness())
+            assert launches() == before, "initial readiness never launches or retries a task"
+        assert context["prerequisites"]["packets"]["grant-scheduling-access"] == grant
+        lineage = M.STEPS.scheduling_migration_lineage(M.dependencies(), context, args, live())
+        assert lineage["manifest_sha256"] == full["receipt"]["result"]["database_state"]["manifest_sha256"]
+        assert lineage["packets"]["scheduling-migration"] == migrated
+        if context.get("delivery"):
+            assert context["prerequisites"]["packets"]["bootstrap-lineage"] == context["delivery"]["predecessor"]
+            assert "maintenance-deployment" in context["prerequisites"]["packets"]
+            M.STEPS.validate_delivery_step(M.dependencies(), proof, binding, context["delivery"], args)
+        else:
+            assert context["prerequisites"]["packets"]["bootstrap"]["receipt"]["operation"] == "bootstrap"
+        before = launches()
+        args.approved_plan = context["report"]["plan_sha256"]
+        assert M.execute(args, live())["reused"] is True and launches() == before
+        assert not provider.created_record
+    for operation in M.STEPS.SCHEDULING_OPERATIONS:
+        argv = ["--receipt", str(root / "candidate.json"), "--proof-label", binding["proof_label"], "--workload", "administration", "--operation", operation]
+        fails(lambda argv=argv: M.parse(argv), "task-proof-stage-not-supported")
+        selected = M.parse([*argv, "--proof-stage", "scheduling-preparation"])
+        assert selected.expected_digest is None
+        fails(lambda argv=argv: M.parse([*argv, "--proof-stage", "scheduling-preparation", "--expected-digest", "1" * 64]), "task-scheduling-record-selection-prohibited")
+    print("ENTITY_SMOKE_SCHEDULING_PREPARATION_ROUTE_PASSED")
+
+
+def scheduling_initial_protocols(*, complete=False):
+    with tempfile.TemporaryDirectory(prefix="entity-smoke-scheduling-preparation-") as temporary:
+        root, actual_digest = Path(temporary), M.C.digest_file
+        receipt = {"source_revision": F.BINDING["source_revision"], "image_digest": F.BINDING["image_digest"], "receipt_reference": "github-actions-run:controlled-not-qualification"}
+        alignment = {"dependency_incarnation_sha256": F.BINDING["dependency_incarnation_sha256"]}
+        with patch.object(M.C, "ROOT", root), patch.object(M.C, "source_digest", lambda: "sha256:" + "f" * 64), \
+             patch.object(M.C, "digest_file", lambda path: actual_digest(path) if path.is_file() else "sha256:" + "c" * 64), \
+             patch.object(M.C.ALIGN, "read_receipt", lambda path: receipt), patch.object(M.C.ALIGN, "source_preflight", lambda *args, **kwargs: None), \
+             patch.object(M.C.ALIGN, "inspect", lambda *args: (alignment, copy.deepcopy(F.PARAMETERS), "fixture")):
+            binding = {**M.C.binding_for(receipt, alignment), "proof_label": F.BINDING["proof_label"]}
+            provider = Provider()
+            if complete: provider.scheduling_applied = 7
+            def live():
+                value = M.Provider(); value._invoke = lambda service, operation, parameters: provider(service, operation, **parameters)
+                return value
+            cache = M.C.delivery_cache(binding["proof_label"])
+            store = M.C.RESOURCE.ResourceStore(cache / "attempts")
+            reviewed = M.C.DEPLOY.prepare(provider, store, binding, F.PARAMETERS)
+            deployed = M.C.DEPLOY.execute(provider, store, binding, F.PARAMETERS, reviewed["facts"]["change_set_arn"], reviewed["facts"]["stack_arn"])
+            M.C.RESOURCE.write_exclusive(cache / "receipts/create.json", {"schema": "deploy/entity-smoke-infrastructure-receipt/v1", "binding": binding, "result": deployed})
+            args = SimpleNamespace(receipt=root / "candidate.json", proof_label=binding["proof_label"], workload="administration",
+                operation="observe-scheduling-prefix", proof_stage="scheduling-preparation", phase="operation", expected_digest=None)
+            missing = M.plan(args, live())
+            assert missing["plan"]["pending_prerequisite"] == "bootstrap" and not missing["plan"]["execution_route_available"]
+            for phase in ("preflight", "operation"):
+                bootstrap = SimpleNamespace(**{**vars(args), "operation": "bootstrap", "proof_stage": "baseline", "phase": phase})
+                bootstrap.approved_plan = M.plan(bootstrap, live())["plan_sha256"]
+                assert M.execute(bootstrap, live())["verdict"] == "completed"
+            if complete:
+                for phase in ("preflight", "operation"):
+                    args.phase = phase
+                    args.approved_plan = M.plan(args, live())["plan_sha256"]
+                    assert M.execute(args, live())["verdict"] == "completed"
+                args.workload, args.operation, args.proof_stage, args.migration_profile = "migration", "apply", "scheduling-migration", "scheduling"
+                args.approved_plan = M.plan(args, live())["plan_sha256"]
+                before = sum(operation == "run-task" for _, operation, _ in provider.observed)
+                observed = M.execute(args, live())
+                assert observed["verdict"] == "observed" and observed["migration_submitted"] is False
+                assert sum(operation == "run-task" for _, operation, _ in provider.observed) == before
+                assert not (cache / "task-steps/migration-apply-scheduling-migration-operation.json").exists()
+                print("ENTITY_SMOKE_SCHEDULING_COMPLETE_PREFIX_NO_MUTATION_PASSED")
+            else:
+                scheduling_route_cases(provider, root, binding, cache, live, args)
+
+
+def synthetic_route_cases(provider, root, binding, live, original):
+    """Real task/gate/receipt/readback chain; synthetic provider state is controlled."""
+    args = SimpleNamespace(**{**vars(original), "proof_stage": "scheduling-proof", "workload": "verifier", "operation": "scheduling-create",
+        "scheduling_case": "minute-delivery", "scheduling_snapshot": None, "qualification_profile": None, "expected_digest": None})
+    def launches(): return sum(operation == "run-task" for _, operation, _ in provider.observed)
+    def execute(operation, *, snapshot=None, lost=False):
+        args.operation, args.workload, args.scheduling_snapshot = operation, "administration" if operation == "observe-scheduling-proof" else "verifier", snapshot
+        for phase in ("preflight", "operation"):
+            args.phase = phase
+            planned = M.plan(args, live())
+            assert planned["plan"]["execution_route_available"], planned
+            args.approved_plan = planned["plan_sha256"]
+            if lost and phase == "operation":
+                provider.lost_next = True
+                fails(lambda: M.execute(args, live()), "task-submission-uncertain-reconcile-required")
+                submitted = launches()
+            completed = M.execute(args, live())
+            assert completed["verdict"] == "completed"
+            if lost and phase == "operation": assert launches() == submitted
+        return M.C.read_json(root / completed["receipt"])
+    created = execute("scheduling-create", lost=True)
+    identity = created["receipt"]["result"]["record_id"]
+    creation_label = created["reservation"]["request"]["proof_label"]
+    deletion = execute("scheduling-delete")
+    assert deletion["reservation"]["request"]["proof_label"] == creation_label
+    assert deletion["reservation"]["request"]["environment"]["ENTITY_SMOKE_EXPECTED_ID"] == identity
+    before = execute("observe-scheduling-proof", snapshot="before")
+    assert before["receipt"]["result"]["scheduling_observation"]["application"]["present"] is True
+    provider.synthetic_completed = True  # Controlled transport fixture, not live worker proof.
+    after = execute("observe-scheduling-proof", snapshot="after")
+    assert after["receipt"]["result"]["scheduling_observation"]["application"]["present"] is False
+    assert before["reservation"]["operation_id"] != after["reservation"]["operation_id"]
+    count = launches()
+    observed = M.observe_scheduling_proof_receipt(args, live(), required_after=deletion["receipt"]["task"]["stopped_at"],
+        source_revision=binding["source_revision"], image_digest=binding["image_digest"])
+    assert observed["packet"] == after and observed["result"]["scheduling_observation"]["selection"]["id"] == identity
+    owner = module("synthetic_native_archive", DIRECTORY / "acceptance-evaluation/implementation/acceptance-evidence.py")
+    owner.T, owner.C = M, M.C
+    context = M.prepare(args, live())
+    archived = owner.capture_scheduling_proof(M, context, args, live(), required_after=deletion["receipt"]["task"]["stopped_at"],
+        source_revision=binding["source_revision"], image_digest=binding["image_digest"])
+    print("ENTITY_SMOKE_SCHEDULING_ARCHIVE_BYTES=" + str(len(json.dumps(archived["archive"], sort_keys=True, separators=(",", ":")).encode())))
+    assert archived["packet"] == after and archived["archive"]["original"]["operation"]["packet"] == created
+    assert archived["archive"]["deletion"]["operation"]["packet"] == deletion
+    with patch.object(M, "Provider", return_value=live()):
+        assert owner.reobserve_scheduling_proof_packet(archived["archive"], qualified_path="candidate.json", expected_binding=archived["binding"],
+            required_after=deletion["receipt"]["task"]["stopped_at"]) == archived
+        for path in ("../candidate.json", str(root / "candidate.json")):
+            try: owner.reobserve_scheduling_proof_packet(archived["archive"], qualified_path=path, expected_binding=archived["binding"],
+                required_after=deletion["receipt"]["task"]["stopped_at"])
+            except owner.EvidenceFailure as failure: assert failure.code == "acceptance-scheduling-proof-not-confirmed"
+            else: raise AssertionError("caller-selected qualified path accepted")
+    with patch.object(M, "prepare", side_effect=AssertionError("historical proof does not observe current providers")):
+        assert owner.validate_scheduling_proof_packet(archived["archive"], expected_binding=archived["binding"],
+            required_after=deletion["receipt"]["task"]["stopped_at"]) == archived
+        changed = copy.deepcopy(archived["archive"]); changed["deletion"] = None
+        try: owner.validate_scheduling_proof_packet(changed, expected_binding=archived["binding"], required_after=deletion["receipt"]["task"]["stopped_at"])
+        except owner.EvidenceFailure as failure: assert failure.code == "acceptance-scheduling-deletion-required"
+        else: raise AssertionError("an independently retained deletion generation is required")
+    assert launches() == count
+    assert M.execute(args, live())["reused"] is True and launches() == count
+    task_id = after["receipt"]["task"]["arn"].rsplit("/", 1)[1]
+    actual = copy.deepcopy(provider.results[task_id])
+    provider.results[task_id]["scheduling_observation"]["selection"]["id"] = "00000000-0000-4000-8000-000000000999"
+    fails(lambda: M.observe_scheduling_proof_receipt(args, live(), required_after=deletion["receipt"]["task"]["stopped_at"],
+        source_revision=binding["source_revision"], image_digest=binding["image_digest"]), "task-scheduling-observation-invalid")
+    provider.results[task_id] = actual
+    # Cancellation is a separate stable record and one delete+restore task.
+    args.scheduling_case, provider.synthetic_completed = "cancellation", False
+    cancelled = execute("scheduling-create")
+    restored = execute("scheduling-restore", lost=True)
+    assert restored["receipt"]["result"]["record_id"] == cancelled["receipt"]["result"]["record_id"] != identity
+    provider.synthetic_completed = True
+    preserved = execute("observe-scheduling-proof", snapshot="restored")
+    assert preserved["receipt"]["result"]["scheduling_observation"]["application"] == {"kind": "entity", "present": True, "visibility": "archived", "lifecycle_state": "active"}
+    args.scheduling_case = "scope-isolation"
+    untouched = execute("scheduling-create")
+    control = execute("observe-scheduling-proof", snapshot="after")
+    assert control["receipt"]["result"]["scheduling_observation"]["application"] == {"kind": "entity", "present": True, "visibility": "active", "lifecycle_state": "active"}
+    assert control["receipt"]["result"]["scheduling_observation"]["schedule"] is None
+    assert "PERSISTENCE_SCHEDULING_PROOF_DUE_AT" not in control["reservation"]["request"]["environment"]
+    untouched_archive = owner.capture_scheduling_proof(M, M.prepare(args, live()), args, live(), required_after=untouched["receipt"]["task"]["stopped_at"],
+        source_revision=binding["source_revision"], image_digest=binding["image_digest"])
+    assert untouched_archive["archive"]["deletion"] is None and untouched_archive["archive"]["original"]["operation"]["packet"] == untouched
+    args.operation, args.workload, args.scheduling_snapshot = "scheduling-delete", "verifier", None
+    fails(lambda: M.plan(args, live()), "task-scheduling-case-invalid")
+    # A missing original create log permits only a terminal-bound read, never recreation.
+    args.scheduling_case, args.operation, args.workload, args.scheduling_snapshot = "failure-recovery", "scheduling-create", "verifier", None
+    args.phase = "preflight"; planned = M.plan(args, live()); args.approved_plan = planned["plan_sha256"]; M.execute(args, live())
+    args.phase = "operation"; planned = M.plan(args, live()); args.approved_plan = planned["plan_sha256"]
+    provider.missing_create_result = True
+    fails(lambda: M.execute(args, live()), "task-success-observation-not-confirmed")
+    provider.missing_create_result = False
+    count = launches()
+    fails(lambda: M.execute(args, live()), "task-success-observation-not-confirmed")
+    assert launches() == count
+    reconciled = execute("scheduling-observe-create")
+    recovered_delete = execute("scheduling-delete")
+    assert recovered_delete["receipt"]["result"]["record_id"] == reconciled["receipt"]["result"]["record_id"]
+    reconciled_archive = owner.capture_scheduling_proof(M, M.prepare(args, live()), args, live(), required_after=reconciled["receipt"]["task"]["stopped_at"],
+        source_revision=binding["source_revision"], image_digest=binding["image_digest"])
+    assert reconciled_archive["archive"]["original"]["operation"]["packet"] == reconciled
+    assert reconciled_archive["archive"]["original_terminal"]["reservation"]["request"]["environment"]["ENTITY_SMOKE_VERIFICATION_OPERATION"] == "scheduling-create"
+    print("ENTITY_SMOKE_SYNTHETIC_SCHEDULING_ROUTE_PASSED")
+
+
+def scheduling_state_continuation_cases(provider, root, binding, live, original_args):
+    """Actual native route/custody; the separately-tested phase read is controlled."""
+    owner = M.STEPS.scheduling_control()
+    args = SimpleNamespace(**{**vars(original_args), "operation": "observe-scheduling-state", "phase": "operation",
+        "proof_stage": "scheduling-preparation", "scheduling_control_phase": "scope-create-disabled"})
+    def launches(): return sum(operation == "run-task" for _, operation, _ in provider.observed)
+    store = owner.Store(root / "scheduling-phase-fixture")
+    def packet(phase):
+        now = lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        selected = owner.load_binding("kanbien-core-platform", "entity-smoke")
+        controls = dict(zip(("TickEnabled", "WorkerEnabled", "DenyDispatcherSend"), owner.CONTROL_PHASES[phase][1]))
+        parameters = {"DatabaseResourceId": F.PARAMETERS["DatabaseResourceId"], "DatabaseName": F.PARAMETERS["DatabaseName"], **controls}
+        template = {"Resources": {"FixedTick": {"Type": "AWS::Scheduler::Schedule"}, "WorkerMapping": {"Type": "AWS::Lambda::EventSourceMapping"}}}
+        state = {"stack_id": "controlled-scheduling-stack", "resources": {key: {"ResourceType": value["Type"], "PhysicalResourceId": "controlled-" + key} for key, value in template["Resources"].items()}}
+        before = None if phase == "scope-create-disabled" else {"state": state, "parameters": {**parameters, "TickEnabled": "true", "WorkerEnabled": "true"}}
+        intent = {"schema": "deploy/scheduling-phase-intent/v1", "target": "kanbien-core-platform", "scope": "entity-smoke", "phase": phase,
+            "stack": selected["stack"], "mode": "CREATE" if before is None else "UPDATE", "created_at": now(), "template": template,
+            "parameters": parameters, "parameter_inputs": [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())] if before is None else owner.CHANGES.update_parameter_inputs(before["parameters"], {key: value for key, value in controls.items() if before["parameters"][key] != value}),
+            "before": before, "predecessor_sha256": "a" * 64, "source_revision": binding["source_revision"], "network_before": None}
+        request = owner.phase_request(intent)
+        prepare, _ = store.reserve("prepare", request)
+        execute, _ = store.reserve("execute", request)
+        terminal = {"EventId": "controlled-terminal", "StackId": state["stack_id"], "LogicalResourceId": selected["stack"], "PhysicalResourceId": state["stack_id"],
+            "ResourceType": "AWS::CloudFormation::Stack", "ResourceStatus": intent["mode"] + "_COMPLETE", "ClientRequestToken": execute["operation_id"], "Timestamp": now()}
+        value = {"schema": "deploy/scheduling-phase-evidence/v1", "intent": intent, "preparation": prepare, "execution": execute,
+            "terminal": terminal, "readback": state, "captured_at": now()}
+        owner.validate_phase_evidence(value, target="kanbien-core-platform", scope="entity-smoke", source_revision=binding["source_revision"], predecessor_sha256="a" * 64)
+        return value
+    retained = {"scope-create-disabled": packet("scope-create-disabled")}
+    def read(target, scope, phase):
+        assert (target, scope) == ("kanbien-core-platform", "entity-smoke")
+        return copy.deepcopy(retained[phase])
+    with patch.object(owner, "read_disabled_phase", side_effect=read):
+        first = M.prepare(args, live())
+        assert first["report"]["plan"]["scheduling_control_phase"] == args.scheduling_control_phase
+        assert first["prerequisites"]["packets"]["scheduling-control-phase"] == retained[args.scheduling_control_phase]
+        original = SimpleNamespace(**{**vars(args), "scheduling_control_phase": None})
+        assert M.STEPS.path(first, args) != M.STEPS.path(first, original)
+        before = launches()
+        changed = copy.deepcopy(retained[args.scheduling_control_phase])
+        changed["intent"]["source_revision"] = "f" * 40
+        with patch.object(owner, "read_disabled_phase", return_value=changed):
+            fails(lambda: M.plan(args, live()), "task-scheduling-control-phase-not-confirmed")
+        assert launches() == before
+        args.phase = "preflight"
+        args.approved_plan = M.plan(args, live())["plan_sha256"]
+        M.execute(args, live())
+        args.phase = "operation"
+        args.approved_plan = M.plan(args, live())["plan_sha256"]
+        provider.lost_next = True
+        fails(lambda: M.execute(args, live()), "task-submission-uncertain-reconcile-required")
+        submitted = launches()
+        other = SimpleNamespace(**{**vars(args), "scheduling_control_phase": "proof-disable"})
+        fails(lambda: M.plan(other, live()), "task-scheduling-original-state-unresolved")
+        assert launches() == submitted
+        result = M.execute(args, live())
+        assert result["verdict"] == "completed" and launches() == submitted
+        original_packet = M.C.read_json(root / result["receipt"])
+        context = M.prepare(args, live())
+        archive_owner = M.ACCEPTANCE.acceptance_owner().A
+        with patch.object(archive_owner, "T", M), patch.object(archive_owner, "C", M.C):
+            archived = archive_owner.capture_task(M, context, args, live(), "scheduling-state", binding, historical=False)
+            assert archive_owner.validate_task(archived, binding, delivery=context["delivery"], metadata=True) == archived
+            observed = archive_owner.observe_scheduling_state_receipt(args.receipt, args.proof_label, live(),
+                required_after=retained[args.scheduling_control_phase]["terminal"]["Timestamp"], source_revision=binding["source_revision"],
+                image_digest=binding["image_digest"], expected_predecessor=args.expected_predecessor, scheduling_control_phase=args.scheduling_control_phase)
+            assert observed["packet"] == original_packet
+            removed = copy.deepcopy(archived); removed.pop("scheduling_control_phase")
+            try: archive_owner.validate_task(removed, binding, delivery=context["delivery"], metadata=True)
+            except (M.STEPS.StepFailure, M.C.RESOURCE.ResourceFailure): pass
+            else: raise AssertionError("phase-stripped archive accepted")
+        args.approved_plan = context["report"]["plan_sha256"]
+        assert M.execute(args, live())["reused"] and launches() == submitted
+        retained["proof-disable"] = packet("proof-disable")
+        assert M.plan(other, live())["plan"]["execution_route_available"]
+    for operation in ("grant-scheduling-access", "prove-scheduling-access", "observe-scheduling-prefix"):
+        selected = SimpleNamespace(**{**vars(args), "operation": operation})
+        fails(lambda: M.STEPS.stage(selected), "task-scheduling-control-phase-invalid")
+    print("ENTITY_SMOKE_SCHEDULING_STATE_CONTINUATION_PASSED")
+
+
+def successor_task_protocols(*, requalify=False, failed_recovery=None, scheduling_only=False, synthetic_only=False, continuation_only=False):
     """Actual controller/task/collector chain; source/applicability are doubles."""
     evidence = module("successor_task_actual_evidence", DIRECTORY / "acceptance-evaluation/implementation/acceptance-evidence.py")
     with tempfile.TemporaryDirectory(prefix="entity-smoke-successor-tasks-") as temporary:
@@ -751,6 +1234,18 @@ def successor_task_protocols(*, requalify=False, failed_recovery=None):
             delivery, binding = planned["plan"]["delivery"], planned["plan"]["binding"]
             cache = M.C.delivery_cache(binding["proof_label"], delivery)
             deployment = M.C.read_json(cache / "receipts/update.json")
+            if scheduling_only or synthetic_only or continuation_only:
+                provider.created_record = False
+                selected = SimpleNamespace(receipt=root / "candidate.json", proof_label=binding["proof_label"], expected_predecessor=prior["release_id"],
+                    workload="administration", operation="observe-scheduling-prefix", proof_stage="scheduling-preparation", phase="operation", expected_digest=None)
+                original_release = current["release_id"]
+                current["release_id"] = "release-" + "0" * 24
+                fails(lambda: M.plan(selected, live()), "infrastructure-predecessor-mismatch")
+                current["release_id"] = original_release
+                scheduling_route_cases(provider, root, binding, cache, live, selected)
+                if continuation_only or synthetic_only: scheduling_state_continuation_cases(provider, root, binding, live, selected)
+                if synthetic_only: synthetic_route_cases(provider, root, binding, live, selected)
+                return
             if requalify:
                 original = M.C.RESOURCE.running_service_tasks(provider)[0]
                 row = provider("ecs", "describe-tasks", tasks=[original])["tasks"][0]
@@ -1155,6 +1650,9 @@ def transport_read_protocols():
 
 
 if __name__ == "__main__":
+    scheduling_initial_protocols()
+    scheduling_initial_protocols(complete=True)
+    successor_task_protocols(synthetic_only=True)
     successor_task_protocols()
     successor_task_protocols(requalify=True)
     successor_task_protocols(requalify=True, failed_recovery="revoke-runtime")

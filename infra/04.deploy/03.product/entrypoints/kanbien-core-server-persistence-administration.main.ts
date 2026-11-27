@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-administration
-//   version: 3
+//   version: 4
 //   status: draft
 //   created_on: "2026-10-25"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -17,6 +17,8 @@
 
 import {
   createNodePostgreSqlConnectionPool,
+  createNodePostgreSqlTokenConnectionPool,
+  rdsIamAuthenticationToken,
   postgreSqlMigrationChecksum,
   postgreSqlPersistenceFoundationMigration,
   postgreSqlPersistenceConfiguration,
@@ -28,8 +30,10 @@ import { ensureBoundedLoginRole, ensureRdsIamAuthentication, type PostgreSqlLogi
 import { persistenceAdministrationConfigurationResult, persistenceAdministratorCredentialBindings, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceConfigurationResult, persistenceCredentialsResult } from "./shared/persistence/configuration";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { persistenceIamAuthenticationResult, type PersistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
-import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
+import { kanbienCoreServerPersistenceAcceptanceMigration, kanbienCoreServerSchedulingContinuationManifest } from "./kanbien-core-server-persistence-postgresql";
 import { AdministrationObservation, PersistenceTaskObservations, type AdministrationPredicateDetail, type PersistenceTaskDiagnosticOptions } from "./shared/persistence/operation-diagnostics";
+import { grantSchedulingDatabaseAccess, observeSchedulingDatabaseState, observeSchedulingMigrationPrefix, proveSchedulingDatabaseAccess, seedSchedulingProof, observeSchedulingProof, type SchedulingDatabasePolicy, type SchedulingProofApplication } from "./shared/persistence/scheduling-administration";
+import { kanbienCoreScheduledProofJobName, kanbienCoreScheduledProofMessageType } from "./kanbien-core-server-persistence-scheduling.app";
 
 type Identity = PostgreSqlLoginIdentity;
 type MigrationStateObservation = "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" | "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
@@ -65,17 +69,58 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
       : !authority.ok ? authority.error.diagnostic : !preflight.ok ? preflight.error.diagnostic : undefined, undefined, observations, observation);
   }
   const { migration, runtime, operation } = preflight.value;
+  const schedulingOperation = operation === "grant-scheduling-access" || operation === "observe-scheduling-state" || operation === "prove-scheduling-access" || operation === "observe-scheduling-prefix" || operation === "seed-scheduling-proof" || operation === "observe-scheduling-proof";
+  if (schedulingOperation && (configuration.schema !== "platform" || ["core_scheduling_dispatch", "core_scheduling_worker"].includes(administrator.username))) {
+    throw observation.rejected(new Error("PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID"), "identifier", "predicate-rejected");
+  }
   const certificateAuthority = authority.value;
   // Only this operation authenticates as the runtime identity. Validate before
   // either pool, without requiring IAM for administrator-only operations.
   observation.location("authentication-preflight");
-  const authentication = operation === "prove-effective-privilege"
+  const authentication = operation === "prove-effective-privilege" || operation === "prove-scheduling-access"
     ? persistenceIamAuthenticationResult(env, configuration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME") : undefined;
   if (authentication?.ok === false) return rejected("PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED", authentication.error.diagnostic, undefined, observations, observation);
   observation.location("pool-construction");
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...administrator, certificateAuthority });
+  let schedulingCompletion: { verdict: "accepted"; code: string; database_state?: unknown; migration_prefix?: unknown; scheduling_seed?: unknown; scheduling_observation?: unknown } | undefined;
   try {
     observation.location("task-body");
+    if (schedulingOperation) {
+      const policy = kanbienCoreSchedulingDatabasePolicy(configuration.database, migration.username, runtime.username);
+      if (operation === "seed-scheduling-proof" || operation === "observe-scheduling-proof") {
+        const binding = { pool, configuration, policy, jobName: kanbienCoreScheduledProofJobName, messageType: String(kanbienCoreScheduledProofMessageType) };
+        if (operation === "seed-scheduling-proof") {
+          const seed = await seedSchedulingProof({ ...binding, id: env["PERSISTENCE_SCHEDULING_PROOF_ID"], dueAt: env["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"] }, observer);
+          schedulingCompletion = { verdict: "accepted", code: "PERSISTENCE_SCHEDULING_PROOF_SEEDED", scheduling_seed: seed };
+        } else {
+          const snapshot = await observeSchedulingProof({ ...binding, selection: { kind: "schedule", id: env["PERSISTENCE_SCHEDULING_PROOF_ID"] },
+            readApplication: async (client, id): Promise<SchedulingProofApplication> => {
+              const result = await client.query<{ fact_digest: string }>({ text: 'SELECT fact_digest FROM "platform".core_server_persistence_acceptance WHERE record_id=$1', values: [id] });
+              if (result.rows.length === 0) return { kind: "acceptance", present: false };
+              if (result.rows.length !== 1 || typeof result.rows[0]?.fact_digest !== "string" || !/^[a-f0-9]{64}$/.test(result.rows[0].fact_digest)) throw observation.rejected(new Error("PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED"), "row", "predicate-rejected");
+              return { kind: "acceptance", present: true, fact_digest: result.rows[0].fact_digest };
+            } }, observer);
+          schedulingCompletion = { verdict: "accepted", code: "PERSISTENCE_SCHEDULING_PROOF_OBSERVED", scheduling_observation: snapshot };
+        }
+      } else if (operation === "observe-scheduling-prefix") {
+        const prefix = await observeSchedulingMigrationPrefix(pool, policy, observer);
+        schedulingCompletion = { verdict: "accepted", code: "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", migration_prefix: prefix };
+      } else {
+      let state;
+      if (operation === "grant-scheduling-access") state = await grantSchedulingDatabaseAccess(pool, policy, observer);
+      else {
+        state = await observeSchedulingDatabaseState(pool, policy, observer);
+        if (operation === "prove-scheduling-access") {
+          if (authentication?.ok !== true) throw observation.rejected(new Error("PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"), "member", "not-true");
+          const region = authentication.value.region;
+          await proveSchedulingDatabaseAccess(policy, (_role, username) => createNodePostgreSqlTokenConnectionPool(configuration, {
+            username, certificateAuthority, authenticationToken: rdsIamAuthenticationToken({ region, hostname: configuration.host, port: configuration.port, username }),
+          }), observer);
+        }
+      }
+      schedulingCompletion = { verdict: "accepted", code: operation === "grant-scheduling-access" ? "PERSISTENCE_SCHEDULING_ACCESS_GRANTED" : operation === "observe-scheduling-state" ? "PERSISTENCE_SCHEDULING_STATE_CONFIRMED" : "PERSISTENCE_SCHEDULING_PRIVILEGE_PROVEN", database_state: state };
+      }
+    } else {
     if (operation === "bootstrap-identities") {
       await bootstrapIdentities(pool, configuration.database, configuration.schema, migration, runtime, observer);
       return accepted("PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED", observations, observation);
@@ -103,6 +148,7 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
     if (authentication?.ok !== true) throw observation.rejected(new Error("PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"), "member", "not-true");
     await proveRuntimePrivilege(configuration, authentication.value, certificateAuthority, observer);
     return accepted("PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", observations, observation);
+    }
   } catch (error) {
     observation.failed(error);
     observation.location("failure-projection");
@@ -114,7 +160,17 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
     await pool.end();
     restore();
   }
+  if (schedulingCompletion !== undefined) {
+    observation.location("result-projection"); observations.markSerializationReached();
+    console.log(JSON.stringify(schedulingCompletion)); observations.markPublished();
+  }
   }).catch((cause: unknown) => { observations.publishUncaught(); throw cause; });
+}
+
+export function kanbienCoreSchedulingDatabasePolicy(database: string, migrationUsername: string, httpUsername: string): SchedulingDatabasePolicy {
+  return { database, manifest: kanbienCoreServerSchedulingContinuationManifest("platform"), otherSchema: "entity_smoke", migrationUsername, httpUsername,
+    dispatchUsername: "core_scheduling_dispatch", workerUsername: "core_scheduling_worker", applicationTable: "core_server_persistence_acceptance",
+    httpApplicationPrivileges: ["SELECT", "INSERT", "UPDATE", "DELETE"], workerApplicationPrivileges: ["SELECT", "INSERT"] };
 }
 
 async function bootstrapIdentities(

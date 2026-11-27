@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -26,6 +26,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -138,7 +139,7 @@ module.OPERATION_DIAGNOSTICS = original_diagnostics
 # restored instance.  A first verifier launch waits for an aged, exact
 # CloudTrail policy observation, then launches at most one bound task.
 restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql", "iam-db-auth-error"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
-controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "definition-safe", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
+controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-restoration-verifier:1", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
 class LaunchFixture:
     def __init__(self): self.calls = []
     def aws(self, *args):
@@ -159,8 +160,16 @@ module.temporary_restore_identity_policy_stable = lambda *_args: True
 module.temporary_restore_identity_policy_effective = lambda *_args: "ok"
 module.verifier_tasks = lambda *_args: ([], "ok")
 output = io.StringIO()
-with contextlib.redirect_stdout(output):
-    assert module.verify(launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
+actual_root, actual_owner = module.ROOT, module.native_task_owner
+with TemporaryDirectory(prefix="restore-original-fixture-") as temporary:
+    module.ROOT = Path(temporary)
+    subprocess.run(["git", "init", "--quiet", temporary], check=True)
+    native = actual_owner()
+    native.reserve_task_cost = lambda request, reserve, **_options: reserve()
+    module.native_task_owner = lambda: native
+    with contextlib.redirect_stdout(output):
+        assert module.verify(launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
+module.ROOT, module.native_task_owner = actual_root, actual_owner
 module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.temporary_restore_identity_policy_effective, module.verifier_tasks = originals
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Result } from "@kanbien/core/shared";
-import { platformPersistenceError, type PlatformPersistenceError, type PersistenceLocalRejectionDetail } from "@kanbien/platform-persistence";
+import { platformPersistenceError, type PlatformPersistenceError, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "@kanbien/platform-persistence";
 import type { PostgreSqlStatement, PostgreSqlTransactionalClient } from "./connection";
 import { postgreSqlIdentifier, type PostgreSqlPersistenceConfiguration } from "./configuration/index";
 import { postgreSqlPersistenceOperationError } from "./errors";
@@ -21,6 +21,8 @@ export interface PostgreSqlMigrationManifest {
    * because the generic runner normally creates its schema defensively.
    */
   readonly schemaPreprovisioned?: boolean;
+  /** Opt-in continuation of an already accepted, nonempty manifest prefix. */
+  readonly continuation?: { readonly minimumAppliedMigrations: number };
   readonly migrations: readonly PostgreSqlMigration[];
 }
 
@@ -30,6 +32,24 @@ export type PostgreSqlMigrationResult =
 
 export interface PostgreSqlMigrationRunner {
   apply(manifest: PostgreSqlMigrationManifest): Promise<Result<readonly PostgreSqlMigrationResult[], PlatformPersistenceError>>;
+}
+
+/**
+ * Read only an existing journal. The caller owns its read-only transaction and
+ * nonwaiting migration lock; this snapshot never authorizes a later write.
+ * The mutation runner reuses this comparison under its own exclusive locks.
+ */
+export async function readPostgreSqlMigrationPrefix(
+  client: PostgreSqlTransactionalClient,
+  manifest: PostgreSqlMigrationManifest,
+  options: PlatformPersistenceDiagnosticOptions = {},
+): Promise<Result<number, PlatformPersistenceError>> {
+  if (postgreSqlIdentifier(manifest.schema) === undefined) return invalidMigration("Migration manifest schema is invalid.", options, "schema", "pattern");
+  if (manifest.continuation === undefined) return invalidMigration("Prefix observation requires an explicit accepted minimum.", options, "manifest", "missing");
+  const rejected = manifestRejection(manifest);
+  if (rejected !== undefined) return invalidMigration("Migration manifest identifiers, checksums, or statement list are invalid.", options, rejected.field, rejected.condition, rejected.ordinal);
+  try { return await validateContinuation(client, manifest, qualified(manifest.schema, "platform_migration_history"), options, false); }
+  catch (cause) { return { ok: false, error: postgreSqlPersistenceOperationError("migration", cause, options) }; }
 }
 
 export function createPostgreSqlMigrationRunner(
@@ -107,8 +127,38 @@ export function postgreSqlPlatformScheduleHandoffMigration(schema: string, id: s
   return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
 }
 
+/** Optional typed target; existing rows remain subjectless rather than receiving invented identities. */
+export function postgreSqlPlatformScheduleSubjectMigration(schema: string, id: string): PostgreSqlMigration {
+  const schedule = qualified(schema, "platform_schedule");
+  const statements: readonly PostgreSqlStatement[] = [
+    { text: `ALTER TABLE ${schedule} ADD COLUMN subject_kind text, ADD COLUMN subject_id text` },
+    { text: `ALTER TABLE ${schedule} ADD CONSTRAINT platform_schedule_subject_check CHECK ((subject_kind IS NULL AND subject_id IS NULL) OR (subject_kind IS NOT NULL AND subject_id IS NOT NULL))` },
+  ];
+  return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
+}
+
 export function postgreSqlMigrationChecksum(statements: readonly PostgreSqlStatement[]): string {
   return createHash("sha256").update(statements.map((statement) => statement.text).join("\n")).digest("hex");
+}
+
+/** Blocked jobs remain inspectable and require an explicit repaired-registration resume. */
+export function postgreSqlPlatformScheduleControlMigration(schema: string, id: string): PostgreSqlMigration {
+  const schedule = qualified(schema, "platform_schedule");
+  const statements: readonly PostgreSqlStatement[] = [
+    { text: `ALTER TABLE ${schedule} DROP CONSTRAINT platform_schedule_state_check` },
+    { text: `ALTER TABLE ${schedule} ADD CONSTRAINT platform_schedule_state_check CHECK ((state IN ('waiting', 'blocked-job-unavailable', 'blocked-invalid-row') AND outbox_entry_id IS NULL) OR (state = 'delivery-created' AND outbox_entry_id IS NOT NULL))` },
+  ];
+  return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
+}
+
+/** Additive only: callers select a new immutable migration ID for their scope. */
+export function postgreSqlPlatformProcessingRetryMigration(schema: string, id: string): PostgreSqlMigration {
+  const table = qualified(schema, "platform_processing");
+  const statements: readonly PostgreSqlStatement[] = [
+    { text: `ALTER TABLE ${table} ADD COLUMN retry_at timestamptz` },
+    { text: `ALTER TABLE ${table} ADD CONSTRAINT platform_processing_retry_at_check CHECK (retry_at IS NULL OR (state = 'retry-eligible' AND released_at IS NOT NULL AND retry_at >= released_at))` },
+  ];
+  return { id, checksum: postgreSqlMigrationChecksum(statements), statements };
 }
 
 async function applyManifest(
@@ -119,6 +169,10 @@ async function applyManifest(
 ): Promise<Result<readonly PostgreSqlMigrationResult[], PlatformPersistenceError>> {
   const historyTable = qualified(manifest.schema, "platform_migration_history");
   try {
+    if (manifest.continuation !== undefined) {
+      const prefix = await validateContinuation(client, manifest, historyTable, options);
+      if (!prefix.ok) return prefix;
+    }
     if (manifest.schemaPreprovisioned === true) {
       const existing = await client.query<{ readonly exists: boolean }>({
         text: "SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = $1) AS exists",
@@ -163,6 +217,14 @@ async function applyManifest(
 
 function manifestRejection(manifest: PostgreSqlMigrationManifest): Pick<PersistenceLocalRejectionDetail, "field" | "condition" | "ordinal"> | undefined {
   if (manifest.schemaPreprovisioned !== undefined && typeof manifest.schemaPreprovisioned !== "boolean") return { field: "schema-preprovisioned", condition: "wrong-type" };
+  if (manifest.continuation !== undefined) {
+    const continuation = manifest.continuation;
+    if (continuation === null || typeof continuation !== "object") return { field: "manifest", condition: "wrong-type" };
+    const minimum = continuation.minimumAppliedMigrations;
+    if (!Number.isSafeInteger(minimum)) return { field: "limit", condition: "not-integer" };
+    if (minimum < 1) return { field: "limit", condition: "not-positive" };
+    if (minimum > manifest.migrations.length) return { field: "limit", condition: "too-large" };
+  }
   const identifiers = new Set<string>();
   let priorIdentifier: string | undefined;
   let rejected: Pick<PersistenceLocalRejectionDetail, "field" | "condition" | "ordinal"> | undefined;
@@ -188,6 +250,41 @@ function manifestRejection(manifest: PostgreSqlMigrationManifest): Pick<Persiste
   return accepted ? undefined : rejected ?? { field: "manifest", condition: "predicate-rejected" };
 }
 
+async function validateContinuation(
+  client: PostgreSqlTransactionalClient,
+  manifest: PostgreSqlMigrationManifest,
+  historyTable: string,
+  options: PlatformPersistenceDiagnosticOptions,
+  lockHistory = true,
+): Promise<Result<number, PlatformPersistenceError>> {
+  const existing = await client.query<{ readonly relation: string | null }>({
+    text: "SELECT to_regclass($1)::text AS relation", values: [historyTable],
+  });
+  if (existing.rows[0]?.relation == null) {
+    return invalidMigration("Continuation requires an existing accepted migration history.", options, "manifest", "not-found", undefined, "state-check");
+  }
+  // The advisory lock serializes runner callers. The table lock additionally
+  // prevents an administrative journal edit between validation and execution.
+  if (lockHistory) await client.query({ text: `LOCK TABLE ${historyTable} IN SHARE ROW EXCLUSIVE MODE` });
+  const history = await client.query<{ readonly migration_id: string; readonly checksum: string }>({
+    text: `SELECT migration_id, checksum FROM ${historyTable} ORDER BY migration_id LIMIT $1`,
+    values: [manifest.migrations.length + 1],
+  });
+  if (history.rows.length < manifest.continuation!.minimumAppliedMigrations || history.rows.length > manifest.migrations.length) {
+    return invalidMigration("Migration history is not an accepted continuation prefix.", options, "manifest", "mismatch", undefined, "state-check");
+  }
+  for (const [ordinal, row] of history.rows.entries()) {
+    const expected = manifest.migrations[ordinal]!;
+    if (row.migration_id !== expected.id) {
+      return invalidMigration("Migration history is not an accepted continuation prefix.", options, "migration-id", "mismatch", ordinal, "state-check");
+    }
+    if (row.checksum !== expected.checksum) {
+      return invalidMigration("Migration history checksum differs from the accepted continuation prefix.", options, "checksum", "checksum-mismatch", ordinal, "state-check");
+    }
+  }
+  return { ok: true, value: history.rows.length };
+}
+
 function quoted(identifier: string): string {
   if (postgreSqlIdentifier(identifier) === undefined) {
     throw new TypeError("PostgreSQL identifiers must be reviewed lowercase SQL identifiers.");
@@ -199,7 +296,7 @@ function qualified(schema: string, relation: string): string {
   return `${quoted(schema)}.${quoted(relation)}`;
 }
 
-function invalidMigration(defaultMessage: string, options: PostgreSqlTransactionOptions,
+function invalidMigration(defaultMessage: string, options: PlatformPersistenceDiagnosticOptions,
   field: PersistenceLocalRejectionDetail["field"], condition: PersistenceLocalRejectionDetail["condition"], ordinal?: number,
   phase: PersistenceLocalRejectionDetail["phase"] = "preflight"): Result<never, PlatformPersistenceError> {
   return {

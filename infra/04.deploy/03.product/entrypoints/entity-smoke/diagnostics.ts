@@ -4,7 +4,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -29,7 +29,7 @@ import { platformHealthDiagnosticCatalog } from "@kanbien/platform-health";
 import { defineConfigurationDiagnostic, configurationDiagnostic } from "@kanbien/core/config";
 import { persistenceConfigurationDiagnosticCatalog } from "../shared/persistence/configuration";
 import { persistenceTaskOperationDiagnosticCatalog } from "../shared/persistence/operation-diagnostics";
-import { entitySmokeProofDiagnostic } from "./verification";
+import { entitySmokeProofDiagnostic, entitySmokeSchedulingProofDiagnostic } from "./verification";
 
 export const entitySmokeTargetDiagnostic = defineDiagnostic({
   code: "entity-smoke-target.boundary-failed", version: 1,
@@ -80,7 +80,7 @@ export const entitySmokePreflightDiagnostic = defineDiagnostic({
     effect: { type: "enum", values: ["not-started"] },
   } },
 } as const);
-export const entitySmokeTargetDiagnosticCatalog = { owner: "entity-smoke-target", definitions: [entitySmokeTargetDiagnostic, entitySmokeConfigurationDiagnostic, entitySmokeDatabaseConfigurationDiagnostic, entitySmokeProofDiagnostic, entitySmokeDependencyStateDiagnostic, entitySmokeDatabaseProofDiagnostic, entitySmokePreflightDiagnostic] } as const;
+export const entitySmokeTargetDiagnosticCatalog = { owner: "entity-smoke-target", definitions: [entitySmokeTargetDiagnostic, entitySmokeConfigurationDiagnostic, entitySmokeDatabaseConfigurationDiagnostic, entitySmokeProofDiagnostic, entitySmokeSchedulingProofDiagnostic, entitySmokeDependencyStateDiagnostic, entitySmokeDatabaseProofDiagnostic, entitySmokePreflightDiagnostic] } as const;
 export const entitySmokeDiagnosticCatalogs = [coreDiagnosticCatalog, testEntityDiagnosticCatalog, platformPersistenceDiagnosticCatalog, platformSecurityDiagnosticCatalog,
   persistenceConfigurationDiagnosticCatalog, persistenceTaskOperationDiagnosticCatalog, entitySmokeTargetDiagnosticCatalog] as const;
 /** Server builtins and the mounted app already register their own catalogs. */

@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -183,3 +183,52 @@ with patch.object(controller, "aws", return_value={"MetricDataResults": [{"Value
         raise AssertionError("wrong readiness metric passed")
 
 print("observability readiness rehearsal checks passed")
+
+# Scheduler selection is deliberately confirmation-only. It never calls the
+# legacy candidate, credential-revocation or repository receipt writer.
+selected = ["--operation", "record-notification", "--scheduler-scope", "entity-smoke", "--scheduler-alert", "/not/read/in-validation.json",
+    "--operator-delivery-confirmed-at", "2026-11-26T12:01:30Z"]
+with patch.object(controller, "candidate") as candidate, patch.object(controller, "lifecycle") as lifecycle, \
+        patch.object(controller, "persist") as persist, patch.object(controller, "scheduling_notification") as notification:
+    status, result = invoke([*selected, "--validate-arguments"])
+    assert status == 0 and result["verdict"] == "valid"
+    for extra in (["--receipt", "/legacy.json"], ["--failure-receipt", "/legacy.json"], ["--subscription-confirmed-at", past]):
+        status, result = invoke([*selected, *extra])
+        assert status == 1 and result["findings"] == [{"code": "observability-rehearsal-arguments-invalid"}]
+    for operation in ("prepare-failure", "recover"):
+        invalid = [operation if value == "record-notification" else value for value in selected]
+        status, result = invoke(invalid)
+        assert status == 1 and result["findings"] == [{"code": "observability-rehearsal-arguments-invalid"}]
+    candidate.assert_not_called(); lifecycle.assert_not_called(); persist.assert_not_called(); notification.assert_not_called()
+
+module = controller.receipts()
+control = module.scheduling_runtime().control_owner()
+packet = {"expected": {"scope": "entity-smoke", "topic_arn": "arn:aws:sns:eu-west-1:123456789012:kanbien-core-platform-observability-alerts"},
+    "failure": {"retained": "original-selected-reference"}, "notification": None}
+binding = {"provider": {"region": "eu-west-1", "account_id": "123456789012"}}
+with tempfile.TemporaryDirectory() as directory:
+    path = Path(directory) / "scheduler-alert.json"
+    path.write_text(json.dumps(packet))
+    arguments = [str(path) if value == "/not/read/in-validation.json" else value for value in selected]
+    with patch.object(controller, "receipts", return_value=module), patch.object(module, "validate_scheduling_alert", return_value={}) as validate, \
+            patch.object(module, "confirm_scheduling_alert", return_value={**packet, "notification": {"confirmed": True}}) as confirm, \
+            patch.object(control, "load_binding", return_value=binding) as bound, patch.object(control, "Provider") as provider, \
+            patch.object(controller, "candidate") as candidate, patch.object(controller, "lifecycle") as lifecycle, patch.object(controller, "persist") as persist:
+        status, result = invoke(arguments)
+        assert status == 0 and result["scope"] == "entity-smoke" and result["facts"]["scheduling_alert"]["notification"] == {"confirmed": True}
+        assert validate.call_args.kwargs == {"expected": packet["expected"], "failure": packet["failure"], "require_notification": False}
+        assert bound.call_args.args == ("kanbien-core-platform", "entity-smoke") and provider.call_args.args == (binding,)
+        assert confirm.call_args.kwargs["operator_delivery_confirmed_at"] == "2026-11-26T12:01:30Z"
+        assert path.read_text() == json.dumps(packet), "operator confirmation does not overwrite original material"
+        candidate.assert_not_called(); lifecycle.assert_not_called(); persist.assert_not_called()
+    # Missing actual subscription/unknown provider result remains a finite
+    # failure. Supplied packet text is never executable and is never echoed.
+    with patch.object(controller, "receipts", return_value=module), patch.object(module, "validate_scheduling_alert", return_value={}), \
+            patch.object(control, "load_binding", return_value=binding), patch.object(control, "Provider"), \
+            patch.object(module, "confirm_scheduling_alert", side_effect=module.ReceiptError("scheduling-alert-confirmed-subscription-required")):
+        status, result = invoke(arguments)
+    assert status == 1 and result["findings"] == [{"code": "scheduling-alert-confirmed-subscription-required"}]
+    path.write_text('{"PRIVATE_CANARY":')
+    status, result = invoke(arguments)
+    assert status == 1 and "PRIVATE_CANARY" not in json.dumps(result)
+print("scheduler notification-only selection checks passed")

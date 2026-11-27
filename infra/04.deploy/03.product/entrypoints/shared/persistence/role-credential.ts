@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-15"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.persistence
 //   disciplines: [security, sre]
@@ -21,6 +21,9 @@ import type { PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-per
 import { AdministrationObservation, type AdministrationPredicateDetail, type PersistenceTaskDiagnosticOptions } from "./operation-diagnostics";
 
 export type PostgreSqlLoginIdentity = { readonly username: string };
+
+/** Observe actual memberships rather than PostgreSQL's superuser privilege shortcut. */
+export const postgreSqlPasswordAuthenticationPredicate = "NOT EXISTS (WITH RECURSIVE memberships(roleid) AS (SELECT oid FROM pg_roles WHERE rolname = session_user UNION SELECT m.roleid FROM pg_auth_members AS m JOIN memberships AS parent ON m.member = parent.roleid) SELECT 1 FROM memberships JOIN pg_roles AS role ON role.oid = memberships.roleid WHERE role.rolname = 'rds_iam')";
 
 type RoleFacts = {
   readonly exists: boolean;

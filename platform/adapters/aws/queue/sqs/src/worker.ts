@@ -25,7 +25,7 @@ export function createAwsSdkPlatformSqsWorkerQueueFromConfiguration(
 export interface PlatformSqsWorkerQueue {
   receive(): Promise<PlatformSqsReceiveResult>;
   acknowledge(receiptHandle: string): Promise<void>;
-  release(receiptHandle: string): Promise<void>;
+  release(receiptHandle: string, visibilityTimeoutSeconds?: number): Promise<void>;
 }
 
 export type PlatformSqsReceiveResult =
@@ -119,14 +119,15 @@ export function createPlatformSqsWorkerQueue(
         throw operationError("acknowledge", observed.evidence());
       }
     },
-    release: async (receiptHandle) => {
+    release: async (receiptHandle, visibilityTimeoutSeconds = 0) => {
       const observed = sqsObservation(options, "release");
       assertNonEmpty("receiptHandle", receiptHandle, observed);
+      observed.at("selection", () => assertWholeNumberInRange("visibilityTimeoutSeconds", visibilityTimeoutSeconds, sqsVisibilityTimeoutConstraint.minimum, sqsVisibilityTimeoutConstraint.maximum, "visibility-timeout"));
       try {
         await observed.send(options, () => new ChangeMessageVisibilityCommand({
           QueueUrl: options.queueUrl,
           ReceiptHandle: receiptHandle,
-          VisibilityTimeout: 0,
+          VisibilityTimeout: visibilityTimeoutSeconds,
         }));
       } catch {
         throw operationError("release", observed.evidence());

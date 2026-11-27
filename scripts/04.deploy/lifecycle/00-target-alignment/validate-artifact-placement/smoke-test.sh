@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-artifact-placement
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -24,6 +24,20 @@ CHECK="python3 $ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-ar
 
 expect_pass() { $CHECK --kind "$1" --path "$2" --json >/dev/null; }
 expect_fail() { if $CHECK --kind "$1" --path "$2" --json >/dev/null 2>&1; then echo "expected failure: $1 $2" >&2; exit 1; fi; }
+
+expect_pass program-entrypoint infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+expect_pass program-entrypoint infra/04.deploy/03.product/entrypoints/example-worker.handler.ts
+expect_pass program-entrypoint infra/04.deploy/03.product/entrypoints/shared/scheduling/dispatch.ts
+expect_pass program-build-contract infra/04.deploy/03.product/entrypoints/example-worker.tsconfig.json
+expect_pass image-declaration infra/04.deploy/03.product/image/example-worker/Dockerfile
+expect_pass image-declaration infra/04.deploy/03.product/image/example-worker/Dockerfile.dockerignore
+expect_pass image-declaration infra/04.deploy/03.product/image/example-worker/image-contract.yml
+expect_fail program-entrypoint infra/04.deploy/03.product/entrypoints/../outside.ts
+expect_fail program-entrypoint infra/04.deploy/03.product/entrypoints/example.sh
+expect_fail program-entrypoint infra/04.deploy/03.product/targets/example/worker.ts
+expect_fail program-build-contract infra/04.deploy/03.product/entrypoints/example.json
+expect_fail image-declaration infra/04.deploy/03.product/image/example-worker/implementation.py
+expect_fail image-declaration infra/04.deploy/03.product/image/example-worker/nested/Dockerfile
 
 expect_pass foundation-declaration infra/04.deploy/03.product/targets/example/10-foundation/network.yml
 expect_pass scope-declaration infra/04.deploy/03.product/targets/example/20-scopes/server/00-declaration/declaration-contract.yml

@@ -1,4 +1,5 @@
 export { platformWorkerDiagnostic, platformWorkerDiagnosticCatalog, platformWorkerDeliveryRejectedDiagnostic,
+  platformWorkerExternalDeliveryDiagnostic, workerExternalDeliveryRecord,
   platformWorkerCoordinationDiagnostic, platformWorkerDeliveryBoundaryDiagnostic,
   workerDeliveryRejectedRecord, workerCoordinationRecord, workerDeliveryBoundaryRecord,
   type WorkerDeliveryBoundaryDetail, type PlatformWorkerQueueDiagnosticOptions } from "./diagnostics";
@@ -17,6 +18,7 @@ export {
 } from "./queue";
 export type {
   PlatformWorkerDurableOutboxProcessingOptions,
+  PlatformWorkerDeliveryResult,
   PlatformWorkerDeadLetter,
   PlatformWorkerIdempotencyOutcome,
   PlatformWorkerIdempotencyStore,

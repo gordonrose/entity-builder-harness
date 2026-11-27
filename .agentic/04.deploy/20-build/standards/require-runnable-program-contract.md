@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.runnable-program-candidates
-version: 4
+version: 5
 status: active
 created_on: "2026-10-19"
-updated_on: "2026-11-15"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -43,7 +43,7 @@ Every candidate contract declares:
 1. one or more runnable-program records, each with a stable ID, entrypoint,
    approved dependencies, and observed dependencies;
 2. one or more image contracts that bind exactly one declared program to an
-   exec-form command containing that program's entrypoint;
+   exec-form process command or an explicitly declared managed handler;
 3. one or more package candidates that select one declared image contract and
    require an immutable identity after publication; and
 4. candidate-verification evidence field names drawn only from the safe
@@ -52,6 +52,16 @@ Every candidate contract declares:
 Observed dependencies are report input, not approval. A dependency may appear
 in an image only when the selected program declares it as approved. An
 unapproved dependency is a fail-closed boundary violation.
+
+Process programs retain `execution_kind: process` (the default), with an
+`exec` command beginning with their language executable and entrypoint.
+A `managed-handler` program instead declares a compiled Node.js module and
+`handler_export`; its image contract uses `command_mode: handler` and exactly
+one derived `module.export` token. This describes the code selected by an
+external managed runtime, not a process command. Provider packaging must bind
+the actual runtime bootstrap and prove that the finished image invokes that
+export. A handler declaration cannot bypass dependency approval, qualification,
+custody or the stricter process-command checks.
 
 For a `workspace-typescript` build, the program declares its TypeScript project
 and resolves each existing approved dependency ID through `dependency_bindings`.

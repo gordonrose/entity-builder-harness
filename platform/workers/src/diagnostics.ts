@@ -50,6 +50,17 @@ export const platformWorkerDeliveryBoundaryDiagnostic = defineDiagnostic({ code:
     effect: { type: "enum", values: ["handler-not-invoked", "handler-outcome-unknown", "handler-succeeded", "handler-failed", "settlement-unknown", "queue-not-mutated", "queue-mutation-unknown", "not-assessed"] },
   } },
 } as const);
+export const platformWorkerExternalDeliveryDiagnostic = defineDiagnostic({ code: "platform-worker.external-delivery-rejected", version: 1,
+  classification: { failureKind: "validation", failureSource: "platform", severity: "warning", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    field: { type: "enum", values: ["durable-processing", "outbox-store", "outbox-record", "message-type", "message-version", "tenant", "payload", "retry-time", "completion-outcome", "attempt-budget"] },
+    reason: { type: "enum", values: ["absent", "mismatch", "not-due", "exhausted", "unexpected"] },
+    effect: { type: "enum", values: ["handler-not-invoked", "completion-not-established"] },
+  } },
+} as const);
+export function workerExternalDeliveryRecord(detail: NonNullable<typeof platformWorkerExternalDeliveryDiagnostic.__detail>): DiagnosticRecord {
+  return requiredRecord(platformWorkerExternalDeliveryDiagnostic, detail);
+}
 export type WorkerDeliveryBoundaryDetail = NonNullable<typeof platformWorkerDeliveryBoundaryDiagnostic.__detail>;
 export function workerDeliveryRejectedRecord(detail: Omit<NonNullable<typeof platformWorkerDeliveryRejectedDiagnostic.__detail>, "operation"> & {
   readonly operation?: NonNullable<typeof platformWorkerDeliveryRejectedDiagnostic.__detail>["operation"];
@@ -68,7 +79,7 @@ function requiredRecord(definition: DiagnosticDefinition, detail: unknown): Diag
   return checked.value;
 }
 export const platformWorkerDiagnosticCatalog = { owner: "platform-worker", definitions: [...workerRetryConfigurationDiagnosticCatalog.definitions, platformWorkerDiagnostic, platformWorkerConfigurationDiagnostic, platformWorkerBoundaryDiagnostic,
-  platformWorkerDeliveryRejectedDiagnostic, platformWorkerCoordinationDiagnostic, platformWorkerDeliveryBoundaryDiagnostic] } as const;
+  platformWorkerDeliveryRejectedDiagnostic, platformWorkerCoordinationDiagnostic, platformWorkerDeliveryBoundaryDiagnostic, platformWorkerExternalDeliveryDiagnostic] } as const;
 
 /** Optional local-queue observation, independent of any Worker job's profile. */
 export interface PlatformWorkerQueueDiagnosticOptions {

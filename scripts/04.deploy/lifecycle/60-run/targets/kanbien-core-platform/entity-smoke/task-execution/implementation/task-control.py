@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -37,12 +37,15 @@ _RESPONSE_SPEC.loader.exec_module(_RESPONSE)
 TASKS_SPEC = importlib.util.spec_from_file_location("entity_smoke_aws_tasks", Path(__file__).resolve().parents[7] / "shared/provider-adapters/aws/tasks.py")
 TASKS = importlib.util.module_from_spec(TASKS_SPEC)
 TASKS_SPEC.loader.exec_module(TASKS)
+_PROOF_SPEC = importlib.util.spec_from_file_location("entity_smoke_runtime_proof", Path(__file__).resolve().parents[5] / "release-succession/scheduling-proof.py")
+SCHEDULING_PROOF = importlib.util.module_from_spec(_PROOF_SPEC)
+_PROOF_SPEC.loader.exec_module(SCHEDULING_PROOF)
 
 ACCOUNT, REGION, CLUSTER = "337159794548", "eu-west-1", "kanbien-core-platform"
 OPERATIONS = {
-    "administration": ("ENTITY_SMOKE_ADMINISTRATION_OPERATION", {"preflight", "bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime"}),
+    "administration": ("ENTITY_SMOKE_ADMINISTRATION_OPERATION", {"preflight", "bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime", "grant-scheduling-access", "observe-scheduling-state", "prove-scheduling-access", "observe-scheduling-prefix", "observe-scheduling-proof"}),
     "migration": ("ENTITY_SMOKE_MIGRATION_OPERATION", {"preflight", "apply"}),
-    "verifier": ("ENTITY_SMOKE_VERIFICATION_OPERATION", {"create", "read", "observe-create", "cleanup", "lifecycle", "ready", "unready"}),
+    "verifier": ("ENTITY_SMOKE_VERIFICATION_OPERATION", {"create", "read", "observe-create", "cleanup", "lifecycle", "ready", "unready", "scheduling-create", "scheduling-observe-create", "scheduling-delete", "scheduling-restore"}),
     "database-proof": ("ENTITY_SMOKE_DATABASE_PROOF_OPERATION", {"preflight", "permissions", "collision"}),
     "restore-reader": ("ENTITY_SMOKE_DATABASE_PROOF_OPERATION", {"preflight", "restore-read"}),
 }
@@ -99,6 +102,23 @@ def validate_request(value):
     # network or database settings supplied by the immutable task definition.
     selector, allowed_operations = OPERATIONS[workload]
     allowed = {selector, "ENTITY_SMOKE_PROOF_LABEL", "ENTITY_SMOKE_EXPECTED_DIGEST", "ENTITY_SMOKE_EXPECTED_SOURCE"}
+    operation = environment.get(selector)
+    try:
+        if workload == "verifier" and operation in {"scheduling-delete", "scheduling-restore"}:
+            allowed.add("ENTITY_SMOKE_EXPECTED_ID")
+            SCHEDULING_PROOF.proof_identifier(environment.get("ENTITY_SMOKE_EXPECTED_ID"))
+        if workload == "administration" and operation == "observe-scheduling-proof":
+            allowed = {selector, "PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID"}
+            SCHEDULING_PROOF.proof_identifier(environment.get("PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID"))
+            if "PERSISTENCE_SCHEDULING_PROOF_DUE_AT" in environment:
+                allowed.add("PERSISTENCE_SCHEDULING_PROOF_DUE_AT")
+                SCHEDULING_PROOF.proof_time(environment["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"])
+            if set(environment) != allowed: raise ValueError()
+    except ValueError: reject("task-scheduling-selection-invalid")
+    if "PERSISTENCE_MIGRATION_PROFILE" in environment:
+        if workload != "migration" or environment.get(selector) != "apply" or environment["PERSISTENCE_MIGRATION_PROFILE"] != "scheduling":
+            reject("task-migration-profile-invalid")
+        allowed.add("PERSISTENCE_MIGRATION_PROFILE")
     if set(environment) - allowed or environment.get(selector) not in allowed_operations:
         reject("task-request-invalid")
     if environment[selector] == "preflight":
@@ -109,7 +129,7 @@ def validate_request(value):
     if "ENTITY_SMOKE_EXPECTED_SOURCE" in environment and environment["ENTITY_SMOKE_EXPECTED_SOURCE"] != value["source_revision"]:
         reject("task-request-invalid")
     digest = environment.get("ENTITY_SMOKE_EXPECTED_DIGEST")
-    if (digest is not None and re.fullmatch(r"[a-f0-9]{64}", digest) is None) or (environment[selector] in {"read", "restore-read", "cleanup", "collision"} and digest is None):
+    if (digest is not None and re.fullmatch(r"[a-f0-9]{64}", digest) is None) or (environment[selector] in {"read", "restore-read", "cleanup", "collision", "scheduling-delete", "scheduling-restore"} and digest is None):
         reject("task-request-invalid")
     return value
 
@@ -131,7 +151,7 @@ class AttemptStore:
             key = request["proof_label"] + "-" + request["workload"] + "-preflight"
         if request["workload"] == "verifier" and request["environment"][selector] == "unready":
             key = request["proof_label"] + "-verifier-unready"
-        if request["workload"] == "verifier" and request["environment"][selector] in {"create", "lifecycle", "cleanup"}:
+        if request["workload"] == "verifier" and request["environment"][selector] in {"create", "lifecycle", "cleanup", "scheduling-create", "scheduling-delete", "scheduling-restore"}:
             # An alternate caller key cannot create a second submission for
             # the same synthetic record label, even across host interruptions.
             key = request["proof_label"] + "-" + request["environment"][selector]
@@ -156,6 +176,27 @@ class AttemptStore:
         except FileNotFoundError: return None
         except TaskFailure: raise
         except (OSError, ValueError, TypeError, UnicodeError, RecursionError): reject("attempt-reservation-unavailable")
+
+    def reservations(self):
+        """Validated original attempts, including those without a task response."""
+        try:
+            no_symlinks(self.root)
+            paths = sorted(self.root.glob("*.json")) if self.root.exists() else []
+            if len(paths) > 4096: reject("attempt-census-bound-exceeded")
+            result = []
+            for path in paths:
+                no_symlinks(path)
+                with path.open("rb") as stream: raw = stream.read(65537)
+                if len(raw) > 65536: reject("attempt-reservation-unavailable")
+                value = json.loads(raw)
+                request = validate_request(value["request"])
+                if self.path_for(path.stem, request) != path: reject("attempt-reservation-mismatch")
+                checked = self.read(path.stem, request)
+                if checked != value: reject("attempt-reservation-mismatch")
+                result.append(checked)
+            return result
+        except TaskFailure: raise
+        except (OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError): reject("attempt-census-not-confirmed")
 
     def reserve(self, key, request):
         path = self.path_for(key, request)
@@ -200,9 +241,27 @@ def exact_task(task, reservation):
     return task
 
 
-def invoke_once(provider, store, key, request, *, before_submit=None):
+def reserve_task_cost(request, reserve, *, required=False):
+    """Use the fixed budget owner while retaining this native reservation."""
+    try:
+        spec = importlib.util.spec_from_file_location("entity_smoke_scheduling_cost", Path(__file__).resolve().parents[6] / "50-deploy/capabilities/scheduling-control/script.py")
+        owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+        return owner.reserve_cost_admission(target=CLUSTER, scope="entity-smoke", request=request,
+            reserve=reserve, task_definition_arn=request["definition"], required=required)
+    except TaskFailure:
+        raise
+    except Exception:
+        reject("task-cost-admission-not-confirmed")
+
+
+def invoke_once(provider, store, key, request, *, before_submit=None, cost_required=False):
     """Durably reserve before shared submission; existing attempts only reconcile."""
-    reservation, fresh = store.reserve(key, request)
+    previous = store.read(key, request)
+    if previous is not None: return reconcile_reserved(provider, previous)
+    environment = request["environment"]
+    selected = environment[OPERATIONS[request["workload"]][0]]
+    required = cost_required or "scheduling" in selected or environment.get("PERSISTENCE_MIGRATION_PROFILE") == "scheduling"
+    reservation, fresh = reserve_task_cost(request, lambda: store.reserve(key, request), required=required)
     if not fresh: return reconcile_reserved(provider, reservation)
     network = {"awsvpcConfiguration": {"subnets": request["subnets"], "securityGroups": [request["security_group"]], "assignPublicIp": "DISABLED"}}
     try:

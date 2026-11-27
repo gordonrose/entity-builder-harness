@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-steps
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -24,6 +24,8 @@ SUCCESSOR_STEPS = (("baseline", "database-proof", "permissions"), ("baseline", "
                    ("baseline", "database-proof", "collision"), ("initial-recovery", "administration", "observe-migration-state"),
                    ("acceptance", "verifier", "read"))
 REQUALIFICATION_PREFIX = (*SUCCESSOR_STEPS[:-1], ("baseline", "verifier", "read"))
+_SPEC = importlib.util.spec_from_file_location("entity_smoke_acceptance_profile", Path(__file__).resolve().parents[5] / "release-succession/scheduling-proof.py")
+SCHEDULING = importlib.util.module_from_spec(_SPEC); _SPEC.loader.exec_module(SCHEDULING)
 
 
 class AcceptanceFailure(Exception):
@@ -39,9 +41,22 @@ def require(value, code):
     if not value: raise AcceptanceFailure(code)
 
 
+def database_proof(args):
+    try: return SCHEDULING.database_proof(getattr(args, "qualification_profile", None))
+    except SCHEDULING.ProofFailure: raise AcceptanceFailure("acceptance-qualification-profile-invalid") from None
+
+
+def steps(args, *, requalify=False):
+    selected = database_proof(args)
+    return tuple((selected["stage"], workload, selected["operation"]) if operation == "observe-migration-state" else (stage, workload, operation)
+                 for stage, workload, operation in (REQUALIFICATION_PREFIX if requalify else SUCCESSOR_STEPS))
+
+
 def supported(args):
+    if getattr(args, "qualification_profile", None) is not None:
+        require(getattr(args, "expected_predecessor", None) is not None, "acceptance-scheduling-successor-required")
     if getattr(args, "expected_predecessor", None) is not None:
-        return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) in (*SUCCESSOR_STEPS, *REQUALIFICATION_PREFIX, ("rollback", "verifier", "read"))
+        return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) in (*steps(args), *steps(args, requalify=True), ("rollback", "verifier", "read"))
     return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) == ("acceptance", "verifier", "read")
 
 
@@ -66,6 +81,8 @@ def predecessor(context, args):
 
 
 def prerequisites(route, context, args, provider):
+    require(getattr(args, "qualification_profile", None) is None or context.get("delivery") is not None,
+            "acceptance-scheduling-successor-required")
     if context.get("delivery") is not None:
         parent = predecessor(context, args)
         if parent["applicability"].get("mode") != "requalify" or (args.proof_stage, args.workload, args.operation) != ("acceptance", "verifier", "read"):
@@ -113,27 +130,32 @@ def successor_prerequisites(route, context, args, provider):
     """Fresh release checks use existing task admission, not initial setup replay."""
     selection = (getattr(args, "proof_stage", "baseline"), args.workload, args.operation)
     rollback = selection == ("rollback", "verifier", "read")
-    require((selection in (*SUCCESSOR_STEPS, *REQUALIFICATION_PREFIX) or rollback) and args.expected_digest is not None,
+    require((selection in (*steps(args), *steps(args, requalify=True)) or rollback) and args.expected_digest is not None,
             "acceptance-successor-selection-invalid")
     parent = predecessor(context, args)
-    steps = REQUALIFICATION_PREFIX if parent["applicability"].get("mode") == "requalify" else SUCCESSOR_STEPS
-    require(rollback or selection in steps, "acceptance-successor-selection-invalid")
+    selected_steps = steps(args, requalify=parent["applicability"].get("mode") == "requalify")
+    require(rollback or selection in selected_steps, "acceptance-successor-selection-invalid")
     deployed = route.C.completed_deployment(provider, context["binding"], context["parameters"], context["delivery"], rollback=rollback)
     required_after = deployed["required_after"]
     packets = {"deployment": deployed["receipt"], "predecessor": parent}
     timestamp = route.RUNNER.EVIDENCE.timestamp
-    for stage, workload, operation in (() if rollback else steps[:steps.index(selection)]):
+    for stage, workload, operation in (() if rollback else selected_steps[:selected_steps.index(selection)]):
         selected = SimpleNamespace(**{**vars(args), "proof_stage": stage, "workload": workload,
                                      "operation": operation, "phase": "operation"})
         checked = route.BINDING.inspect(provider, workload, context["parameters"], context["resources"], context.get("binding_snapshot"))
         selected_context = {**context, "checked": checked,
-            "report": {"plan": {"preflight_label": route.C.delivery_preflight_label(context["delivery"], stage, workload, operation)}}}
+            "report": {"plan": {"preflight_label": route.C.delivery_preflight_label(context["delivery"], route.STEPS.identity_stage(selected), workload, operation)}}}
         packet = route.STEPS.observe_packet(route, selected_context, selected, provider, historical=True)
         if packet is None: raise route.STEPS.PrerequisiteMissing(workload + "-" + operation)
         require(timestamp(packet["receipt"]["task"]["created_at"]) >= timestamp(required_after),
                 "acceptance-successor-task-order-invalid")
         required_after = packet["receipt"]["task"]["stopped_at"]
         packets[workload + "-" + operation] = packet
+    if selection[0] == "scheduling-qualification":
+        lineage = context.get("scheduling_lineage")
+        require(isinstance(lineage, dict), "acceptance-scheduling-migration-lineage-required")
+        required_after = max(required_after, lineage["required_after"], key=timestamp)
+        packets["scheduling-metadata"] = lineage["packets"]
     request = route.STEPS.request(route, context, args)
     store = route.RUNNER.CONTROL.AttemptStore(context["cache"] / "task-attempts")
     reservation = store.read(route.STEPS.key(args, context["delivery"]), request)

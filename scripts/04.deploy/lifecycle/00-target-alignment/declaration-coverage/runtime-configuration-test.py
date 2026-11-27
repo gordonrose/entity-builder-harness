@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runtime-configuration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -415,6 +415,14 @@ class PreparationInputTests(unittest.TestCase):
         program = 'infra/04.deploy/03.product/entrypoints/runnable-program-index.yml'
         profile = self.base + '/00-target/target-profile.yml'
         foundation = self.base + '/30-provider-realization/aws/cloudformation/foundation.yml'
+        selected_binding = yaml.safe_load((self.root / binding).read_text())
+        selected_image = yaml.safe_load((self.root / selected_binding['image_contract']).read_text())['id']
+
+        def duplicate_selected_candidate(document):
+            matches = [candidate for candidate in document['package_candidates'] if candidate['image_contract'] == selected_image]
+            self.assertEqual(len(matches), 1, 'The ambiguity mutation must duplicate the image selected by the fixture binding.')
+            document['package_candidates'].append(copy.deepcopy(matches[0]))
+
         cases = [
             (foundation, lambda d: d['Outputs']['ClusterArn'].update(Value='private-canary'), 'foundation-output-unsupported'),
             (foundation, lambda d: d['Resources']['Cluster'].update(Type='Other'), 'foundation-resource-unsupported'),
@@ -431,7 +439,7 @@ class PreparationInputTests(unittest.TestCase):
             (binding, lambda d: d.update(image_contract='../private-canary'), 'path-invalid'),
             (binding, lambda d: d['proposed_provider_binding'].pop('publication_pipeline'), 'pipeline-selection-invalid'),
             (binding, lambda d: d['proposed_provider_binding']['dependencies']['database'].update(output='MissingOutput'), 'dependency-output-unsupported'),
-            (program, lambda d: d['package_candidates'].append(copy.deepcopy(d['package_candidates'][-1])), 'candidate-ambiguous'),
+            (program, duplicate_selected_candidate, 'candidate-ambiguous'),
             (profile, lambda d: d['provider'].update(profile=''), 'profile-invalid'),
             (profile, lambda d: d['provider'].update(region=None), 'region-invalid'),
             (profile, lambda d: d['provider'].update(family='other'), 'provider-unsupported'),
@@ -644,5 +652,136 @@ class RuntimeConfigurationTests(unittest.TestCase):
             route_path.write_text(yaml.safe_dump(route, sort_keys=False))
             run('acceptance-route-runtime-input-command-mismatch')
             route_path.write_text(route_source); run()
+
+
+class RequirementSubjectTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        spec = importlib.util.spec_from_file_location("requirement_subject_test", COMMAND)
+        cls.owner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.owner)
+        cls.index_path = "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"
+        cls.family_path = "infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml"
+        cls.index = cls.owner.document(ROOT / cls.index_path)
+        cls.family = cls.owner.document(ROOT / cls.family_path)
+        cls.ids = ["kanbien-core-server-persistence-scheduling-" + purpose for purpose in ("dispatch", "worker")] + ["kanbien-entity-smoke-scheduling-" + purpose for purpose in ("dispatch", "worker")]
+
+    def resolve(self, rows, index=None, family=None):
+        issues, references = [], []
+        contract = {"target": "kanbien-core-platform", "scope": "core-server-persistence", "program": {"id": "legacy-http", "contract": self.index_path}}
+        reference = lambda value, _code: references.append(value) is None and isinstance(value, str) and (ROOT / value).exists()
+        with patch.object(self.owner, "document", return_value=family or self.family):
+            subjects = self.owner.requirement_subjects({"subjects": rows}, contract, {"id": "legacy-http-image"},
+                self.index if index is None else index, ROOT, reference, lambda code: issues.append(code))
+        return subjects, issues, references
+
+    def row(self, identity):
+        return {"program_id": identity, "image_id": identity + "-image", "image_contract": self.family_path}
+
+    def test_declared_subject_schema_matches_existing_compiler_contract(self):
+        schema = self.owner.document(ROOT / ".agentic/04.deploy/schemas/change-impact.v1.schema.yml")
+        self.assertEqual(schema["field"], "change_impact")
+        self.assertEqual(schema["instance_schema"], "deploy/change-impact/v1")
+        subjects = schema["requirements"]["subjects"]
+        self.assertIs(subjects["optional"], True)
+        self.assertEqual(subjects["default"], "the existing scope program and image, unchanged")
+        self.assertEqual(subjects["shape"], "nonempty unique list of exact {program_id, image_id, image_contract} objects")
+        self.assertEqual(self.resolve([self.row(self.ids[0])])[1], [])
+        self.assertIn("requirement-subjects-invalid", self.resolve([])[1])
+        row = self.row(self.ids[0])
+        self.assertIn("requirement-subject-duplicate", self.resolve([row, row])[1])
+        contract, image = {"program": {"id": "old"}}, {"id": "old-image"}
+        self.assertEqual(self.owner.requirement_subjects({}, contract, image, {}, ROOT, None, None), [(contract, image)])
+
+    def test_all_four_exact_family_associations_and_actual_proof_subjects(self):
+        subjects, issues, references = self.resolve([self.row(identity) for identity in self.ids])
+        self.assertEqual(issues, [])
+        self.assertEqual(len(subjects), 4)
+        self.assertIn(self.family_path, references)
+        check = {"stage": "package", "applicability": {"kind": "bound", "program_ids": self.ids, "image_ids": [identity + "-image" for identity in self.ids]}}
+        for contract, image in subjects:
+            self.assertIsNone(self.owner.check_applicability(check, contract, image, ROOT))
+            wrong = {"stage": "package", "applicability": {"kind": "bound", "program_id": "legacy-http", "image_id": "legacy-http-image"}}
+            self.assertEqual(self.owner.check_applicability(wrong, contract, image, ROOT), "requirement-check-subject-mismatch")
+        selected = {"stage": "package", "applicability": {"kind": "bound", "program_id": self.ids[0], "image_id": self.ids[0] + "-image"}}
+        self.assertIsNone(self.owner.check_applicability(selected, *subjects[0], ROOT))
+        self.assertEqual(self.owner.check_applicability(selected, *subjects[1], ROOT), "requirement-check-subject-mismatch")
+
+    def test_invalid_subjects_cannot_fall_back_to_http(self):
+        row = self.row(self.ids[0])
+        for rows, expected in [
+            ([], "requirement-subjects-invalid"),
+            (None, "requirement-subjects-invalid"),
+            ([row, row], "requirement-subject-duplicate"),
+            ([{**row, "unknown": "private-canary"}], "requirement-subject-invalid"),
+            ([{**row, "program_id": "missing-program"}], "requirement-subject-index-mismatch"),
+            ([{**row, "image_id": self.ids[1] + "-image"}], "requirement-subject-image-program-mismatch"),
+            ([{**row, "image_contract": "../private-canary"}], "requirement-subject-invalid"),
+        ]:
+            with self.subTest(expected=expected):
+                subjects, issues, _ = self.resolve(rows)
+                self.assertIn(expected, issues)
+                self.assertTrue(all(subject[0]["program"]["id"] != "legacy-http" for subject in subjects))
+                self.assertNotIn("private-canary", json.dumps(issues))
+
+    def test_family_execution_command_and_index_cardinality_are_checked(self):
+        row = self.row(self.ids[0])
+        for family, expected in [
+            ({**self.family, "schema": "unrelated"}, "requirement-subject-image-schema-unsupported"),
+            ({**self.family, "program_selection": "anything"}, "requirement-subject-managed-family-mismatch"),
+            ({**self.family, "command": ["other.handler"]}, "requirement-subject-handler-command-mismatch"),
+        ]:
+            self.assertIn(expected, self.resolve([row], family=family)[1])
+        altered = copy.deepcopy(self.index)
+        program = next(value for value in altered["runnable_programs"] if value["id"] == row["program_id"])
+        program["execution_kind"] = "long-running-server"
+        self.assertIn("requirement-subject-managed-family-mismatch", self.resolve([row], index=altered)[1])
+        altered = copy.deepcopy(self.index)
+        altered["image_contracts"].append(next(value for value in altered["image_contracts"] if value["id"] == row["image_id"]))
+        self.assertIn("requirement-subject-index-mismatch", self.resolve([row], index=altered)[1])
+
+    def test_legacy_absence_preserves_original_subject_identity(self):
+        contract, image = {"program": {"id": "old"}}, {"id": "old-image"}
+        self.assertEqual(self.owner.requirement_subjects({}, contract, image, {}, ROOT, None, None), [(contract, image)])
+
+    def test_acceptance_check_uses_exact_collector_for_its_declared_profile(self):
+        catalog = self.owner.document(ROOT / "scripts/repo/check-selection/checks.yml")
+        reader = self.owner.document
+        identity = "fixture-scheduling-acceptance"
+        profile = "scheduling-a2-v1"
+        for scope in ("core-server-persistence", "entity-smoke"):
+            contract_path = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes" / scope / "00-declaration/declaration-contract.yml"
+            contract = reader(contract_path)
+            route_path = ROOT / contract["acceptance"]["route"]
+            route = reader(route_path)
+            requirement_ids = set(route["qualification_profiles"][profile]["requirements"].values())
+            for requirement in contract["change_impact"]["requirements"]:
+                if requirement["id"] in requirement_ids:
+                    requirement["run_proofs"] = [identity]
+            base_argv = route["commands"][route["collector"]]["argv"]
+            selected = [*base_argv, "--require-qualification-profile", profile]
+            check = {"stage": "acceptance", "argv": selected, "acceptance_route": contract["acceptance"]["route"]}
+            def observe(selected_contract=contract, selected_route=route, selected_check=check):
+                def document(path):
+                    if path == contract_path: return selected_contract
+                    if path == route_path: return selected_route
+                    return reader(path)
+                with patch.object(self.owner, "document", side_effect=document):
+                    report = self.owner.inspect(contract_path, ROOT, {**catalog, "checks": {**catalog["checks"], identity: selected_check}}, probe_commands=False)
+                return [finding for finding in report["findings"] if finding["code"] == "acceptance-check-route-mismatch"]
+            with self.subTest(scope=scope, case="selected-and-legacy-collectors"):
+                self.assertEqual(observe(), [])
+            for argv in (base_argv, [*selected[:-1], "other"], ["python3", "unrelated.py", *selected[2:]], [*selected, "--extra"]):
+                with self.subTest(scope=scope, case="noncanonical-command"):
+                    self.assertEqual(observe(selected_check={**check, "argv": argv}), [{"code": "acceptance-check-route-mismatch", "reference": identity}])
+            ambiguous = copy.deepcopy(contract)
+            next(item for item in ambiguous["change_impact"]["requirements"] if item["id"] not in requirement_ids)["run_proofs"].append(identity)
+            with self.subTest(scope=scope, case="mixed-baseline-and-selected-profile"):
+                self.assertEqual(observe(selected_contract=ambiguous), [{"code": "acceptance-check-route-mismatch", "reference": identity}])
+            duplicated = copy.deepcopy(route)
+            duplicated["qualification_profiles"]["ambiguous"] = copy.deepcopy(duplicated["qualification_profiles"][profile])
+            with self.subTest(scope=scope, case="ambiguous-declared-profile"):
+                self.assertEqual(observe(selected_route=duplicated), [{"code": "acceptance-check-route-mismatch", "reference": identity}])
+
 
 if __name__=='__main__':unittest.main(verbosity=2)

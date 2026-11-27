@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-dependency-bindings
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -57,6 +57,8 @@ class BindingsTest(unittest.TestCase):
         self.declaration = {"schema": "deploy/runnable-program-contract/v1",
             "dependency_bindings": {"renamed-widget": {"workspace_package": "@example/widget"}},
             "runnable_programs": [{"id": boundary.PROGRAM_ID,
+                "source_entrypoint": str(boundary.SOURCE_ENTRYPOINT),
+                "entrypoint": str(boundary.COMPILED_ENTRYPOINT),
                 "build": {"kind": "workspace-typescript", "typescript_project": "project.json"},
                 "approved_dependencies": ["renamed-widget"],
                 "observed_dependencies": ["renamed-widget"], "forbidden_dependencies": []}]}

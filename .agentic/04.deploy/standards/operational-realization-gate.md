@@ -4,7 +4,7 @@
   version: 6
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-11-19"
+  updated_on: "2026-11-27"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -149,6 +149,13 @@ exactly four true fields: `original_readback_required`,
 `preserve_source_and_shared_resources`. Its allowed classes must be exactly
 `[delete]`; forbidden classes exactly `[create, update, replace, broaden-permission]`.
 Malformed or partial opt-ins fail closed. Existing v1 admission is unchanged.
+
+The exact alternative terminal-failure variant replaces
+`original_readback_required` with `original_terminal_failure_required` and
+`no_unresolved_dependents_required`, both true. The other three fields and
+delete-only classes stay unchanged. It requires separately authorized cleanup,
+authenticated original failure and complete owned resources; unknown outcomes
+remain blocked and this variant cannot establish successful recovery acceptance.
 
 This declaration permits validation of the truthful cleanup shape, not execution.
 An applicable provider-owned rule and actual controller must separately require

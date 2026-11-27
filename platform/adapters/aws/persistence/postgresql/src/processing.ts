@@ -1,6 +1,6 @@
 import type { OutboxEntryId } from "@kanbien/core/persistence";
 import type { Result } from "@kanbien/core/shared";
-import { platformPersistenceError, type PlatformPersistenceError, type PlatformProcessingRecord, type PlatformProcessingStore, type PlatformPersistenceDiagnosticOptions, type PersistenceLocalRejectionDetail } from "@kanbien/platform-persistence";
+import { platformPersistenceError, validatePlatformProcessingRetryAt, type PlatformPersistenceError, type PlatformProcessingRecord, type PlatformProcessingStore, type PlatformPersistenceDiagnosticOptions, type PersistenceLocalRejectionDetail } from "@kanbien/platform-persistence";
 import type { PostgreSqlConnectionPool, PostgreSqlQueryClient } from "./connection";
 import type { PostgreSqlPersistenceConfiguration } from "./configuration/index";
 import { postgreSqlPersistenceOperationError } from "./errors";
@@ -30,13 +30,14 @@ export function createPostgreSqlPlatformProcessingStore(options: PostgreSqlPlatf
       const observed = storedObservation(options, "claim_processing", "reconciled-state", "unknown");
       try {
         const updated = await options.pool.query<PostgreSqlProcessingRow>({
-          text: `INSERT INTO ${table} (outbox_entry_id, state, attempt, lease_owner, lease_fence, lease_acquired_at, lease_expires_at) VALUES ($1, 'claimed', 1, $2, 1, $3, $4) ON CONFLICT (outbox_entry_id) DO UPDATE SET state = 'claimed', attempt = ${table}.attempt + 1, lease_owner = EXCLUDED.lease_owner, lease_fence = ${table}.lease_fence + 1, lease_acquired_at = EXCLUDED.lease_acquired_at, lease_expires_at = EXCLUDED.lease_expires_at, released_at = NULL WHERE ${table}.state <> 'completed' AND (${table}.state = 'retry-eligible' OR ${table}.lease_expires_at <= EXCLUDED.lease_acquired_at) RETURNING *`,
+          text: `INSERT INTO ${table} (outbox_entry_id, state, attempt, lease_owner, lease_fence, lease_acquired_at, lease_expires_at) VALUES ($1, 'claimed', 1, $2, 1, $3, $4) ON CONFLICT (outbox_entry_id) DO UPDATE SET state = 'claimed', attempt = ${table}.attempt + 1, lease_owner = EXCLUDED.lease_owner, lease_fence = ${table}.lease_fence + 1, lease_acquired_at = EXCLUDED.lease_acquired_at, lease_expires_at = EXCLUDED.lease_expires_at, released_at = NULL, retry_at = NULL WHERE (${table}.state = 'retry-eligible' AND (${table}.retry_at IS NULL OR ${table}.retry_at <= EXCLUDED.lease_acquired_at)) OR (${table}.state = 'claimed' AND ${table}.lease_expires_at <= EXCLUDED.lease_acquired_at) RETURNING *`,
           values: [String(input.outboxEntryId), String(input.owner), input.acquiredAt, expiresAt],
         });
         const record = updated.rows[0] === undefined ? undefined : processingRecordFromRow(updated.rows[0], observed);
         if (record !== undefined) return { ok: true, value: { disposition: "claimed", record } };
         const current = await findProcessing(options.pool, table, input.outboxEntryId, observed, false);
         if (current?.state === "completed") return { ok: true, value: { disposition: "already-completed", record: current } };
+        if (current?.state === "retry-eligible" && current.retryAt !== undefined && Date.parse(current.retryAt) > Date.parse(input.acquiredAt)) return { ok: true, value: { disposition: "retry-not-due", record: current } };
         if (current !== null) return { ok: true, value: { disposition: "lease-active", record: current } };
         observed.issue("row", "absent");
         return invalidStoredProcessing(observed);
@@ -63,11 +64,13 @@ export function createPostgreSqlPlatformProcessingStore(options: PostgreSqlPlatf
       finally { observed.flush(); }
     },
     release: async (input) => {
+      const retry = validatePlatformProcessingRetryAt(input, options);
+      if (!retry.ok) return retry;
       const observed = storedObservation(options, "release_processing", "reconciled-state", "unknown");
       try {
         const updated = await options.pool.query<PostgreSqlProcessingRow>({
-          text: `UPDATE ${table} SET state = 'retry-eligible', released_at = $3 WHERE outbox_entry_id = $1 AND state = 'claimed' AND lease_fence = $2 AND lease_expires_at > $3 RETURNING *`,
-          values: [String(input.outboxEntryId), Number(input.fence), input.releasedAt],
+          text: `UPDATE ${table} SET state = 'retry-eligible', released_at = $3, retry_at = $4 WHERE outbox_entry_id = $1 AND state = 'claimed' AND lease_fence = $2 AND lease_expires_at > $3 RETURNING *`,
+          values: [String(input.outboxEntryId), Number(input.fence), input.releasedAt, retry.value ?? null],
         });
         const record = updated.rows[0] === undefined ? undefined : processingRecordFromRow(updated.rows[0], observed);
         if (record !== undefined) return { ok: true, value: record };

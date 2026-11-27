@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.architecture.plan.platform-runtime-implementation
-version: 46
+version: 47
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-11-26"
+updated_on: "2026-11-27"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -133,7 +133,7 @@ or operational use case requires them:
 
 | Future target | Purpose | Current status |
 | --- | --- | --- |
-| Scheduler | Trigger app-owned, time-based work such as a nightly cleanup, weekly report, or hourly integration sync. It should create a standard job delivery rather than embed business work in scheduling mechanics. | No scheduler contract, runtime, entrypoint, provider adapter, or cron resource exists yet. |
+| Scheduler | Trigger app-owned, time-based work such as a nightly cleanup, weekly report, or hourly integration sync. It should create a standard job delivery rather than embed business work in scheduling mechanics. | One-off storage, atomic outbox handover and a callable due pass exist. The [tracked follow-on plan](reusable-aws-scheduling.md) selects A2: fixed minute wakeups, bounded Lambda due scan/relay and a queued Lambda worker. Connected execution, packaging and live proof remain unfinished; calendar scheduling is deferred. |
 | Product/operator CLI | Run a deliberate, one-shot product or operator command with validated input, explicit authority, tenant scope where applicable, audit evidence, and predictable exit status. | No product CLI contract, entrypoint, or deploy target exists yet. Harness and development scripts are not product CLI targets. |
 
 Neither target is required to start ordinary application-layer work. Do not add
@@ -574,10 +574,29 @@ Acceptance for the eventual slice:
 
 ### 6b. Defer Scheduler And Product/Operator CLI Targets
 
-Status: scheduler runtime, entrypoint, and deployment target remain deliberately
-deferred. The first app-owned cleanup job is now implemented and locally proven;
-the platform work that will store and deliver its schedule remains a separate,
-bounded persistence-and-delivery design.
+Status (2026-11-27): one-off reminder storage, atomic outbox handover, bounded
+dispatch, durable queue/worker execution and Lambda compositions are implemented
+locally. Native PostgreSQL tests pass; finished-image qualification, complete
+governed deployment support and automatic live scheduling proof remain unfinished.
+The [reusable AWS scheduling implementation plan](reusable-aws-scheduling.md)
+owns the follow-on milestones, acceptance checklists and progress log. The user
+selected A2 after the operating-cost comparison: PostgreSQL keeps individual
+reminders and a fixed minute EventBridge trigger invokes a bounded Lambda due
+scan and outbox relay. One job queue per scope invokes a Lambda worker. The
+individual-AWS-schedule adapter, registration and notification stages from B
+are unselected; historical cost/progress evidence remains in the plan.
+The user subsequently approved autonomous implementation and bounded live proof
+through 2026-11-27T07:20:22Z, with US$10 proof spend and a US$25/month incremental
+ceiling including 100,000 combined jobs. Governed main integration, bounded new
+scripts and shared-network compatibility work were explicitly authorized;
+technical safety, qualification and cost gates remain mandatory. No AWS/shared
+database mutation has occurred. The detailed plan owns current proof and remaining
+work. The user explicitly resumed on 2026-11-27 at09:18Z and instructed continuation
+until the goal is complete, removing the time cutoff while retaining all safety
+and spending limits. This keeps
+core-platform as a capability proof while products/apps may select independent
+images and targets; earlier staging-shell examples are not a requirement to
+deploy the new scheduler through that legacy runtime.
 Existing harness and development scripts remain harness tools; they must not be
 presented as product runtime commands.
 
@@ -615,21 +634,32 @@ PostgreSQL adapter provides the durable implementation of the schedule store.
 When an Entity Smoke test entity is already archived and becomes logically
 deleted, the app saves one reminder for its existing purge job, due just after
 the five-minute retention boundary. The app deliberately saves that reminder
-before saving the deletion: a later entity-write failure leaves only a harmless
-generic reminder, while a schedule-write failure leaves the entity unchanged.
-This still does not run a due schedule or alter the server into a scheduler
-process.
+before saving the deletion: a schedule-write failure leaves the entity unchanged,
+but the two writes are not atomic. A sufficiently delayed entity save can occur
+after the reminder was consumed, losing cleanup. The follow-on plan requires
+atomic entity/reminder writes before live scheduling activation. This records
+the current limitation, not a completed correction. The HTTP server still does
+not run due schedules.
 
-The next storage slice selects the existing platform outbox foundation in the
-Entity Smoke schema, then adds a later immutable migration that permits a
+The implemented storage slice uses the existing platform outbox foundation in
+the Entity Smoke schema and an additional immutable migration that permits a
 schedule to change from `waiting` to `delivery-created` and retain its outbox
 ID. `handoverDue` locks the due schedule row, writes one supplied outbox entry,
 and makes that state change in one PostgreSQL transaction. It does not create a
-second queue-delivery mechanism. It is deliberately storage only: a later
-due-runner must choose a registered job's message type, call this operation,
-and then rely on the existing outbox relay and worker path. The app job remains
-local proof only. This does not authorise a scheduler package, scheduler
-entrypoint, or deployment/cloud resources.
+second queue-delivery mechanism. The callable due pass now composes this
+handover. A2 reuses that due pass and composes it with the existing outbox relay;
+it must drain pending outbox work even when no new reminder becomes due. A
+fixed wakeup does not replace database due-time checks or transactional claims.
+Production composition must still resolve the selected registered job's message
+type and connect relay/worker execution. Source and local fixtures
+do not establish end-to-end live scheduling. The user has now approved the first
+bounded provider-neutral dispatcher slice after its design walkthrough. It
+composes the existing due pass and relay, including retry of old pending outbox
+work. The first slice is locally complete: focused controlled-fixture/catalogue
+checks and all 25 required affected local integration results pass. The linked
+scheduling plan records proof and remaining per-reminder/dependency bounds;
+full M1 and later milestones remain unfinished. This does not grant
+later-increment, package publication, deployment or cloud authority.
 
 For a future scheduler:
 
@@ -642,10 +672,10 @@ For a future scheduler:
 - Its design must state the schedule identifier, timezone, missed-run policy,
   duplicate/concurrency policy, idempotency key strategy, target tenant or
   tenant-selection rule, and operator observability.
-- Decide through a later target design whether scheduling is a separate
-  long-running service, a provider-triggered one-shot process, or another
-  explicitly governed runtime shape. Do not run an undocumented scheduler loop
-  inside the HTTP server process by default.
+- The follow-on plan selects database-owned scheduling with bounded Lambda
+  dispatch and execution to avoid dedicated idle processes. Its M0/M6 cost and
+  runtime gates resolve the remaining bounds; no undocumented scheduler loop
+  belongs inside the HTTP server. Calendar/DST calculation remains deferred.
 
 For a future product/operator CLI:
 

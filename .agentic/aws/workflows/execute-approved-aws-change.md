@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 6
+  version: 7
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-11-20"
+  updated_on: "2026-11-27"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -52,6 +52,13 @@ Before running a mutating command, confirm:
   approval uses its recovery allowance without asking again. Deleting the
   source database, backups or unrelated resources remains outside that scope.
 - Capture the result and verification evidence after execution.
+
+For the explicitly approved scheduler proof only, the separate
+[proof-only recovery resource rule](../standards/operational-realization-applicability.md#scheduler-proof-only-recovery-resources)
+permits cleanup of newly reserved disposable copies and snapshots. It does not
+permit deleting existing backups or the source database. Follow the native
+identity, terminal-dependency, retained-evidence and single-submission checks;
+the cost horizon is not a deletion instruction or automatic expiry.
 
 ## Bounded ordinary-release approval
 

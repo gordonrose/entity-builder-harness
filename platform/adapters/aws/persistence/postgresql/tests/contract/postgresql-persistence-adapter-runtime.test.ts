@@ -31,9 +31,11 @@ import {
 } from "@kanbien/platform-persistence";
 import {
   createPostgreSqlMigrationRunner,
+  readPostgreSqlMigrationPrefix,
   createPostgreSqlPlatformPersistenceAtomicWriter,
   createPostgreSqlPlatformOutboxStore,
   createPostgreSqlPlatformProcessingStore,
+  postgreSqlPlatformProcessingRetryMigration,
   createPostgreSqlPlatformRecordChangeStore,
   postgreSqlMigrationChecksum,
   postgreSqlPersistenceConfiguration,
@@ -134,6 +136,7 @@ async function main(): Promise<void> {
     statementTimeoutMs: 5_000,
     tls: { mode: "verify-full", certificateAuthoritySource: "injected" },
   }));
+  poolClientDeadlineBinding(configuration);
   deepEqual(postgreSqlPersistenceRequirements.map(item => item.setting), ["database.host", "database.port", "database.name", "database.schema", "authentication.reference"]);
   const logical = { "database.host": configuration.host, "database.port": configuration.port, "database.name": configuration.database,
     "database.schema": configuration.schema, "authentication.reference": configuration.runtimeCredentialSecretReference };
@@ -348,7 +351,9 @@ async function main(): Promise<void> {
   await invocationDiagnostics(configuration);
   await telemetryObservations();
   await migrationObservations(configuration);
+  await migrationContinuationObservations(configuration);
   await storeObservations(configuration, entry, change);
+  await processingRetryObservations(configuration);
   await stateAndNativeObservations(configuration, entry, change);
   await reviewedCorrections(configuration);
   decodeObservations();
@@ -671,6 +676,10 @@ async function migrationObservations(configuration: PostgreSqlPersistenceConfigu
     { manifest: base, version: " ", field: "tool-version", condition: "pattern" },
     { manifest: { ...base, schema: "other" }, field: "schema", condition: "mismatch" },
     { manifest: { ...base, schemaPreprovisioned: "wrong" as never }, field: "schema-preprovisioned", condition: "wrong-type" },
+    { manifest: { ...base, continuation: null as never }, field: "manifest", condition: "wrong-type" },
+    { manifest: { ...base, continuation: { minimumAppliedMigrations: 1.5 } }, field: "limit", condition: "not-integer" },
+    { manifest: { ...base, continuation: { minimumAppliedMigrations: 0 } }, field: "limit", condition: "not-positive" },
+    { manifest: { ...base, continuation: { minimumAppliedMigrations: 2 } }, field: "limit", condition: "too-large" },
     { manifest: { ...base, migrations: [{ ...migration, id: "BAD" }] }, field: "migration-id", condition: "pattern", ordinal: 0 },
     { manifest: { ...base, migrations: [{ ...migration, checksum: "BAD" }] }, field: "checksum", condition: "pattern", ordinal: 0 },
     { manifest: { ...base, migrations: [{ ...migration, statements: [] }] }, field: "statements", condition: "empty", ordinal: 0 },
@@ -687,6 +696,13 @@ async function migrationObservations(configuration: PostgreSqlPersistenceConfigu
     const expected = { operation: "migration", field: fixture.field, condition: fixture.condition, phase: "preflight", effect: "not-started", ...(fixture.ordinal === undefined ? {} : { ordinal: fixture.ordinal }) };
     deepEqual(records.map((record) => record.detail), [expected]);
     if (!result.ok) { equal(result.error.diagnosticRecord?.code, "persistence.local-rejected"); deepEqual(result.error.params, { operation: "migration", provider_failure_class: "unknown" }); }
+    if (fixture.version === undefined && fixture.field !== "schema") {
+      records.length = 0;
+      const prefix = await readPostgreSqlMigrationPrefix(await recordingPool(queries).connect(), { ...fixture.manifest,
+        continuation: "continuation" in fixture.manifest ? fixture.manifest.continuation : { minimumAppliedMigrations: 1 } }, { onDiagnostic: record => records.push(record) });
+      equal(prefix.ok, false); deepEqual(queries, []);
+      deepEqual(records.map(record => record.detail), [expected]);
+    }
   }
   const absentRecords: DiagnosticRecord[] = [];
   const absent = await createPostgreSqlMigrationRunner(configuration, { pool: schemaPreprovisionedPool([], false), onDiagnostic: (record) => absentRecords.push(record) }, "fixture-v1").apply({ ...base, schemaPreprovisioned: true });
@@ -700,6 +716,84 @@ async function migrationObservations(configuration: PostgreSqlPersistenceConfigu
   const later = await createPostgreSqlMigrationRunner(configuration, { pool: { ...recordingPool([]), connect: async () => client }, onDiagnostic: (record) => records.push(record) }, "fixture-v1").apply({ ...base, migrations: [migration, { ...migration, id: "v0002_second" }] });
   equal(later.ok, false); equal(queries.some((query) => query.text === statement.text), true); equal(queries.at(-1)?.text, "ROLLBACK");
   deepEqual(details(records, "persistence.local-rejected")[0], { operation: "migration", field: "checksum", condition: "checksum-mismatch", phase: "after-statements", effect: "unknown", ordinal: 1 });
+}
+
+async function migrationContinuationObservations(configuration: PostgreSqlPersistenceConfiguration): Promise<void> {
+  const migrations = [1, 2, 3].map((ordinal) => {
+    const statements = [{ text: `CREATE TABLE continuation_${ordinal} (id text)` }];
+    return { id: `v000${ordinal}_continuation`, statements, checksum: postgreSqlMigrationChecksum(statements) };
+  });
+  const expected = migrations.map(({ id, checksum }) => ({ migration_id: id, checksum }));
+  const manifest = { schema: configuration.schema, schemaPreprovisioned: true, migrations, continuation: { minimumAppliedMigrations: 1 } };
+  const fixtures = [
+    { name: "absent", history: null, accepted: false, field: "manifest", condition: "not-found" },
+    { name: "empty", history: [], accepted: false, field: "manifest", condition: "mismatch" },
+    { name: "unknown", history: [{ migration_id: "private-history-canary", checksum: "private-checksum-canary" }], accepted: false, field: "migration-id", condition: "mismatch" },
+    { name: "missing-middle", history: [expected[0]!, expected[2]!], accepted: false, field: "migration-id", condition: "mismatch" },
+    { name: "duplicate", history: [expected[0]!, expected[0]!], accepted: false, field: "migration-id", condition: "mismatch" },
+    { name: "checksum", history: [{ ...expected[0]!, checksum: "private-checksum-canary" }], accepted: false, field: "checksum", condition: "checksum-mismatch" },
+    { name: "extra", history: [...expected, { migration_id: "v9999_unknown", checksum: "0".repeat(64) }], accepted: false, field: "manifest", condition: "mismatch" },
+    { name: "prefix", history: expected.slice(0, 1), accepted: true },
+    { name: "partial-suffix", history: expected.slice(0, 2), accepted: true },
+    { name: "complete-lost-response", history: expected, accepted: true },
+  ];
+  for (const fixture of fixtures) {
+    const queries: PostgreSqlStatement[] = [], records: DiagnosticRecord[] = [];
+    const query = async <TRow extends QueryResultRow>(statement: PostgreSqlStatement): Promise<QueryResult<TRow>> => {
+      queries.push(statement);
+      let rows: readonly object[] = [];
+      if (statement.text.startsWith("SELECT to_regclass")) rows = [{ relation: fixture.history === null ? null : "platform_smoke.platform_migration_history" }];
+      if (statement.text.startsWith("SELECT migration_id, checksum")) rows = fixture.history ?? [];
+      if (statement.text.startsWith("SELECT EXISTS (SELECT 1 FROM pg_namespace")) rows = [{ exists: true }];
+      if (statement.text.startsWith("SELECT checksum")) rows = (fixture.history ?? []).filter((row) => row.migration_id === statement.values?.[0]);
+      return { rows } as unknown as QueryResult<TRow>;
+    };
+    const pool: PostgreSqlConnectionPool = { query, connect: async () => ({ query, release() {} }), end: async () => undefined };
+    const result = await createPostgreSqlMigrationRunner(configuration, { pool, onDiagnostic(record) { records.push(record); throw new Error("sink-private-canary"); } }, "fixture-v1").apply(manifest);
+    equal(result.ok, fixture.accepted, fixture.name);
+    const lock = queries.findIndex((item) => item.text.includes("pg_advisory_xact_lock"));
+    const observed = queries.findIndex((item) => item.text.startsWith("SELECT to_regclass"));
+    equal(lock >= 0 && observed > lock, true, "history must be observed inside the existing advisory lock");
+    if (fixture.history !== null) {
+      const tableLock = queries.findIndex((item) => item.text.startsWith("LOCK TABLE"));
+      const historyRead = queries.findIndex((item) => item.text.startsWith("SELECT migration_id, checksum"));
+      equal(tableLock > observed && historyRead > tableLock, true);
+      match(queries[historyRead]!.text, /ORDER BY migration_id LIMIT \$1$/);
+      deepEqual(queries[historyRead]!.values, [4]);
+    }
+    if (!result.ok) {
+      equal(queries.some((item) => /^(CREATE|ALTER|INSERT|UPDATE|DELETE)/.test(item.text)), false, "invalid history must cause no DDL or journal/data writes");
+      equal(queries.at(-1)?.text, "ROLLBACK");
+      const detail = details(records, "persistence.local-rejected")[0] as { field: string; condition: string; phase: string };
+      equal(detail.field, fixture.field); equal(detail.condition, fixture.condition); equal(detail.phase, "state-check");
+      equal(JSON.stringify([result, records]).includes("private"), false);
+    } else {
+      deepEqual(result.value.map((entry) => entry.status), migrations.map((_, index) => index < fixture.history!.length ? "already-applied" : "applied"));
+      equal(queries.filter((item) => item.text.startsWith("CREATE TABLE continuation_")).length, migrations.length - fixture.history!.length);
+      equal(queries.at(-1)?.text, "COMMIT");
+    }
+    queries.length = records.length = 0;
+    const observedPrefix = await readPostgreSqlMigrationPrefix(await pool.connect(), manifest, { onDiagnostic(record) { records.push(record); throw new Error("sink-private-canary"); } });
+    equal(observedPrefix.ok, fixture.accepted, `read-only ${fixture.name}`);
+    equal(queries.every(item => item.text.startsWith("SELECT")), true, "prefix reads cannot create, lock the journal exclusively, or mutate any table");
+    equal(queries.length, fixture.history === null ? 1 : 2);
+    if (observedPrefix.ok) equal(observedPrefix.value, fixture.history!.length);
+    else {
+      const detail = details(records, "persistence.local-rejected")[0] as { field: string; condition: string; phase: string };
+      equal(detail.field, fixture.field); equal(detail.condition, fixture.condition); equal(detail.phase, "state-check");
+      equal(JSON.stringify([observedPrefix, records]).includes("private"), false);
+    }
+  }
+  const { continuation: _minimum, ...missingContinuation } = manifest;
+  for (const rejected of [missingContinuation, { ...manifest, schema: "unsafe-schema" }]) {
+    const calls: PostgreSqlStatement[] = [];
+    equal((await readPostgreSqlMigrationPrefix(await recordingPool(calls).connect(), rejected)).ok, false);
+    deepEqual(calls, [], "unsupported observation must reject before the first query");
+  }
+  const calls: PostgreSqlStatement[] = [], failure = Object.freeze({ code: "42501", message: "private-provider-canary" });
+  const denied = await readPostgreSqlMigrationPrefix(await rowsPool([{ failure }], calls).connect(), manifest);
+  equal(denied.ok, false); equal(calls.length, 1);
+  if (!denied.ok) { equal(denied.error.params?.provider_failure_class, "access_denied"); equal(JSON.stringify(denied.error.diagnosticRecord).includes("private"), false); }
 }
 
 function rowsPool(responses: readonly (readonly object[] | { readonly failure: unknown })[], calls: PostgreSqlStatement[]): PostgreSqlConnectionPool {
@@ -718,6 +812,29 @@ function outboxRow(overrides: Partial<PostgreSqlOutboxRow> = {}): PostgreSqlOutb
 }
 function processingRow(overrides: Partial<PostgreSqlProcessingRow> = {}): PostgreSqlProcessingRow {
   return { outbox_entry_id: "fixture-outbox", state: "retry-eligible", attempt: 1, lease_owner: null, lease_fence: null, lease_acquired_at: null, lease_expires_at: null, released_at: null, completion_outcome: null, completed_at: null, ...overrides };
+}
+async function processingRetryObservations(configuration: PostgreSqlPersistenceConfiguration): Promise<void> {
+  const id = outboxEntryId("fixture-retry"), owner = accepted(platformPersistenceLeaseOwner("fixture.retry"));
+  const acquiredAt = isoDateTimeFromDate(instant), retryAt = isoDateTimeFromDate(new Date(instant.getTime() + 2000));
+  const lease = { lease_owner: String(owner), lease_fence: 1, lease_acquired_at: instant, lease_expires_at: new Date(instant.getTime() + 1000) };
+  const row = processingRow({ outbox_entry_id: String(id), ...lease, state: "retry-eligible", released_at: instant, retry_at: new Date(retryAt) });
+  const calls: PostgreSqlStatement[] = [];
+  const store = createPostgreSqlPlatformProcessingStore({ configuration, pool: rowsPool([[], [row]], calls) });
+  const early = accepted(await store.claim({ outboxEntryId: id, owner, acquiredAt: isoDateTimeFromDate(new Date(instant.getTime() + 1500)), leaseDurationMs: 1000 }));
+  equal(early.disposition, "retry-not-due"); equal(early.record.attempt, 1); equal(early.record.retryAt, retryAt);
+  match(calls[0]!.text, /state = 'retry-eligible' AND .*retry_at IS NULL OR .*retry_at <= EXCLUDED.lease_acquired_at/);
+  match(calls[0]!.text, /OR \([^)]*state = 'claimed' AND [^)]*lease_expires_at <= EXCLUDED.lease_acquired_at\)/);
+  match(calls[0]!.text, /released_at = NULL, retry_at = NULL/);
+  const releaseCalls: PostgreSqlStatement[] = [];
+  const releasing = createPostgreSqlPlatformProcessingStore({ configuration, pool: rowsPool([[row]], releaseCalls) });
+  const released = accepted(await releasing.release({ outboxEntryId: id, fence: accepted(platformPersistenceFence(1)), releasedAt: acquiredAt, retryAt }));
+  equal(released.retryAt, retryAt); equal(releaseCalls[0]!.values?.[3], retryAt); match(releaseCalls[0]!.text, /retry_at = \$4/);
+  const invalid = await releasing.release({ outboxEntryId: id, fence: accepted(platformPersistenceFence(1)), releasedAt: retryAt, retryAt: acquiredAt });
+  equal(invalid.ok, false); equal(releaseCalls.length, 1, "invalid retry timing must not send SQL");
+  const migration = postgreSqlPlatformProcessingRetryMigration(configuration.schema, "v0099_processing_retry_fixture");
+  equal(migration.id, "v0099_processing_retry_fixture");
+  equal(migration.statements.length, 2); match(migration.statements[0]!.text, /ADD COLUMN retry_at timestamptz/);
+  match(migration.statements[1]!.text, /retry_at >= released_at/);
 }
 function lineageRow(overrides: Partial<PostgreSqlLineageRow> = {}): PostgreSqlLineageRow {
   return { id: "fixture-change", record_kind: "fixture.record", record_id: "fixture-id", revision: 1, action: "created", occurred_at: instant, tenant_id: null, actor_kind: null, actor_id: null, correlation_id: null, causation_id: null, changed_fields: null, ...overrides };
@@ -998,6 +1115,24 @@ function checksumMismatchPool(queries: PostgreSqlStatement[]): PostgreSqlConnect
   return { query, connect: async () => client, end: async () => undefined };
 }
 
+function poolClientDeadlineBinding(configuration: PostgreSqlPersistenceConfiguration): void {
+  const filename = require.resolve("../../src/connection"), localRequire = createRequire(filename);
+  const options: Record<string, unknown>[] = [];
+  class CapturedPool extends EventEmitter { constructor(input: Record<string, unknown>) { super(); options.push(input); } }
+  const fixture = { exports: {} as typeof import("../../src/connection") };
+  new Function("require", "module", "exports", readFileSync(filename, "utf8"))(
+    (name: string) => name === "pg" ? { Pool: CapturedPool } : localRequire(name), fixture, fixture.exports);
+  for (const timeout of [100, 5000, 300_000]) {
+    const checked = accepted(postgreSqlPersistenceConfiguration({ ...configuration, statementTimeoutMs: timeout }));
+    fixture.exports.createNodePostgreSqlConnectionPool(checked, { username: "fixture", password: "synthetic", certificateAuthority: "synthetic" });
+    fixture.exports.createNodePostgreSqlTokenConnectionPool(checked, { username: "fixture", authenticationToken: async () => "synthetic", certificateAuthority: "synthetic" });
+    for (const captured of options.splice(0)) {
+      equal(captured.query_timeout, timeout + 1000, "both real pool constructors bind the client deadline to the checked server timeout");
+      equal(captured.options, `-c statement_timeout=${timeout}`);
+      equal(captured.connectionTimeoutMillis, checked.connectionTimeoutMs);
+    }
+  }
+}
 function schemaPreprovisionedPool(queries: PostgreSqlStatement[], schemaExists: boolean): PostgreSqlConnectionPool {
   const query = async <TRow extends QueryResultRow>(statement: PostgreSqlStatement): Promise<QueryResult<TRow>> => {
     queries.push(copyStatement(statement));

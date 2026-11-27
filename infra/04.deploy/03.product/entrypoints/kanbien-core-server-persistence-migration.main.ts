@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-migration
-//   version: 4
+//   version: 5
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -18,13 +18,11 @@
 import {
   createNodePostgreSqlTokenConnectionPool,
   createPostgreSqlMigrationRunner,
-  postgreSqlMigrationChecksum,
-  postgreSqlPersistenceFoundationMigration,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceMigrationInstructionsResult } from "./shared/persistence/configuration";
+import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceTaskDiagnosticFields, persistenceMigrationInstructionsResult, persistenceMigrationProfileResult } from "./shared/persistence/configuration";
 import type { DiagnosticRecord } from "@kanbien/core/diagnostics";
 import { persistenceIamAuthenticationResult } from "./kanbien-core-server-persistence-iam-authentication";
-import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
+import { kanbienCoreServerPersistenceMigrationManifest, kanbienCoreServerSchedulingContinuationManifest } from "./kanbien-core-server-persistence-postgresql";
 import { reportCoreServerPersistenceBoundary } from "./shared/persistence/operation-diagnostics";
 
 export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
@@ -40,17 +38,14 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
   const instructions = persistenceMigrationInstructionsResult(env);
   if (configuration === undefined || credentials === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
   if (!instructions.ok) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID", undefined, undefined, instructions.error.diagnostic);
+  const profile = persistenceMigrationProfileResult(env);
+  if (!profile.ok) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID", undefined, undefined, profile.error.diagnostic);
   const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   const stage = "migration";
   try {
-    const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(configuration.schema);
-    const result = await createPostgreSqlMigrationRunner(configuration, { pool }, "core-server-persistence-v1")[instructions.value.operation]({
-      schema: configuration.schema,
-      // The administrative task owns schema creation and ownership. The
-      // ordinary migration identity must never require database-level CREATE.
-      schemaPreprovisioned: true,
-      migrations: [postgreSqlPersistenceFoundationMigration(configuration.schema), { ...acceptance, checksum: postgreSqlMigrationChecksum(acceptance.statements) }],
-    });
+    const baseline = kanbienCoreServerPersistenceMigrationManifest(configuration.schema);
+    const manifest = profile.value === "baseline" ? baseline : kanbienCoreServerSchedulingContinuationManifest(configuration.schema);
+    const result = await createPostgreSqlMigrationRunner(configuration, { pool }, "core-server-persistence-v1")[instructions.value.operation](manifest);
     if (!result.ok) return rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage, migrationFailureClass(result.error), result.error.diagnosticRecord, result.error.relatedDiagnosticRecords);
     console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_MIGRATION_APPLIED" }));
   } catch (cause) {

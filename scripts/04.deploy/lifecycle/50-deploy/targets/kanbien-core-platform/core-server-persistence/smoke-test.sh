@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-18"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -352,7 +352,8 @@ assert module.current_reconciliation_task({**task, "taskDefinitionArn": definiti
 assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "b" * 32, definition) == "private-persistence-verifier-reconciliation-task-identity-invalid"
 PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
-import sys
+import copy, importlib.util, sys
+from pathlib import Path
 template = open(sys.argv[1], encoding="utf-8").read()
 assert "PubliclyAccessible: false" in template
 assert "DeletionProtection: true" in template
@@ -371,6 +372,11 @@ for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
     expected = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
     assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
 assert "GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup" in template, "the private verifier must have explicit egress to the candidate server"
+
+# Source safety only; the reusable scheduler owner retains these assertions.
+spec = importlib.util.spec_from_file_location("scheduling_control_safety", "scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py")
+scheduling_safety = importlib.util.module_from_spec(spec); spec.loader.exec_module(scheduling_safety)
+scheduling_safety.check_templates()
 PY
 python3 -B - "$ROOT" <<'PY'
 import contextlib, importlib.util, io, json, os, subprocess, sys

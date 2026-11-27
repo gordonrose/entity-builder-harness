@@ -15,6 +15,8 @@ export type PostgreSqlPersistenceOperation =
   | "read_schedule"
   | "list_due_schedules"
   | "handover_schedule"
+  | "block_schedule"
+  | "resume_schedule"
   | "create_outbox"
   | "write_facts"
   | "write_atomic"
@@ -56,7 +58,7 @@ export function postgreSqlPersistenceOperationError(
   const peers = diagnostic.facts.classification === "tls_trust_invalid" ? postgreSqlSecurityDiagnosticRecords(cause) : [];
   const hasNativeFacts = diagnostic.facts.classification !== "unknown" || diagnostic.facts.phase !== "unknown" || diagnostic.facts.code_status !== "absent";
   const native = capturePlatformPersistenceDiagnostic(() => persistenceObservedDiagnosticRecord(diagnostic.facts, operation));
-  const own = local ?? (delivery === "all" && !hasNativeFacts && !["create_schedule", "read_schedule", "list_due_schedules", "handover_schedule"].includes(operation) ? capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord({ operation: operation as Exclude<PostgreSqlPersistenceOperation, "create_schedule" | "read_schedule" | "list_due_schedules" | "handover_schedule">, phase: "invocation", boundary: "body", condition: "threw",
+  const own = local ?? (delivery === "all" && !hasNativeFacts && !["create_schedule", "read_schedule", "list_due_schedules", "handover_schedule", "block_schedule", "resume_schedule"].includes(operation) ? capturePlatformPersistenceDiagnostic(() => persistenceBoundaryDiagnosticRecord({ operation: operation as Exclude<PostgreSqlPersistenceOperation, "create_schedule" | "read_schedule" | "list_due_schedules" | "handover_schedule" | "block_schedule" | "resume_schedule">, phase: "invocation", boundary: "body", condition: "threw",
     effect: ["readiness", "restore_verification", "read_outbox", "list_outbox", "read_processing", "read_lineage", "read_schedule", "list_due_schedules"].includes(operation) ? "not-assessed" : "unknown" })) : native);
   // Selecting a source does not deliver it. A direct catch always reports its
   // observed location; the transaction caller explicitly reports its own first.

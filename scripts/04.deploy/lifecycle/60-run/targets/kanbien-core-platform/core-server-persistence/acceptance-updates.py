@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.persistence-acceptance-updates
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-11-19"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -87,9 +87,10 @@ def fresh_proofs(C, record, previous):
     require(C, isinstance(names, list) and names == list(dict.fromkeys(names)) and len(names) == 4
             and set(names) == {"migration-applied-state", "effective-privilege", "runtime-identity-initial-access", "rollback-final-read"},
             "acceptance-evidence-fresh-proof-set-invalid")
-    required = C.required_proofs(record["release"], None, None, selected=names)
+    profile = record.get("qualification_profile")
+    required = C.required_proofs(record["release"], None, None, selected=names, qualification_profile=profile)
     arguments = [name + "=" + str(C.ROOT / item["receipt"]) for name, item in proofs.items()]
-    observed = C.parse_proof_receipts(arguments, required, C.contract_deadlines())
+    observed = C.parse_proof_receipts(arguments, required, C.contract_deadlines(), qualification_profile=profile)
     require(C, observed == proofs, "acceptance-evidence-fresh-proof-mismatch")
     runtime = record["provider_observation"]["current_service"]
     after = max(C.parsed_time(runtime["started_at"]), C.parsed_time(previous["acceptance"]["accepted_at"]))
@@ -115,7 +116,9 @@ def fresh_proofs(C, record, previous):
 
 
 def validate(C, record, *, seen=None):
-    require(C, set(record) == {"schema", "target", "scope", "status", "evidence_class", "release", "acceptance",
+    C.validate_scheduling(record)
+    C.validate_scheduling_migrations(record)
+    require(C, set(record) - {"scheduling_qualification", "qualification_profile", "scheduling_migrations"} == {"schema", "target", "scope", "status", "evidence_class", "release", "acceptance",
             "qualification", "predecessor", "applicability", "fresh_tasks", "definitions", "provider_observation"}
             and record["schema"] == SCHEMA and record["target"] == C.TARGET and record["scope"] == C.SCOPE
             and record["evidence_class"] == C.EVIDENCE_CLASS
@@ -149,8 +152,9 @@ def collect(C, args):
     package = C.receipt(args.receipt)
     policy_value = policy(C)
     names = policy_value["fresh_tasks"]
-    required = C.required_proofs(package, None, None, selected=names)
-    observed = C.parse_proof_receipts(args.proof_receipt, required, C.contract_deadlines())
+    profile = getattr(args, "qualification_profile", None)
+    required = C.required_proofs(package, None, None, selected=names, qualification_profile=profile)
+    observed = C.parse_proof_receipts(args.proof_receipt, required, C.contract_deadlines(), qualification_profile=profile)
     database = C.source_database_posture()
     q = qualification(C, package, database)
     old = previous["qualification"]
@@ -171,6 +175,7 @@ def collect(C, args):
         "definitions": {"administration": outputs["CoreServerPersistenceAdministrationTaskDefinitionArn"],
                         "verifier": outputs["CoreServerPersistenceVerifierTaskDefinitionArn"]},
         "provider_observation": {"current_service": runtime, "current_health": health, "proofs": observed}}
+    C.attach_scheduling(record, args, database)
     validate(C, record)
     require(C, S.current(C.EVIDENCE_ROOT) == current, "acceptance-evidence-predecessor-mismatch")
     return record

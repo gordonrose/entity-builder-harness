@@ -207,6 +207,79 @@
         }
       },
       {
+        "code": "entity-smoke-target.proof-failed",
+        "version": 2,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "type": "enum",
+              "values": [
+                "create",
+                "read",
+                "observe-create",
+                "cleanup",
+                "lifecycle",
+                "ready",
+                "unready",
+                "scheduling-create",
+                "scheduling-observe-create",
+                "scheduling-delete",
+                "scheduling-restore"
+              ]
+            },
+            "step": {
+              "type": "enum",
+              "values": [
+                "configuration",
+                "release",
+                "liveness",
+                "readiness",
+                "create",
+                "read",
+                "update",
+                "list",
+                "archive",
+                "restore-archive",
+                "delete",
+                "restore-deleted",
+                "purge-eligibility"
+              ]
+            },
+            "condition": {
+              "type": "enum",
+              "values": [
+                "invalid-input",
+                "request-failed",
+                "request-deadline-exceeded",
+                "status-mismatch",
+                "invalid-response",
+                "missing-record",
+                "multiple-records",
+                "facts-mismatch",
+                "digest-mismatch"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "not-assessed",
+                "unknown"
+              ]
+            }
+          }
+        }
+      },
+      {
         "code": "entity-smoke-target.dependency-state-rejected",
         "version": 1,
         "classification": {

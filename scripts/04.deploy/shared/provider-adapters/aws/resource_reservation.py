@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -112,3 +112,29 @@ class ImmutableReservationStore:
         previous = self.read(phase, request)
         if previous is None: raise self.failure("reservation-unavailable")
         return previous, False
+
+    def records(self):
+        """Read all fixed originals before a caller selects its priced subset."""
+        no_symlinks(self.root)
+        if not self.root.exists(): return []
+        paths = sorted(self.root.glob("*.json"))
+        if len(paths) > 4096: raise self.failure("reservation-census-limit")
+        originals = {}
+        for path in paths:
+            no_symlinks(path)
+            try:
+                with path.open("rb") as stream: raw = stream.read(65537)
+                if len(raw) > 65536: raise ValueError()
+                value = json.loads(raw)
+                if not isinstance(value, dict): raise ValueError()
+                phase, request = value.get("phase"), value.get("request")
+                if self.path_for(phase, request) != path: raise ValueError()
+                checked = self.read(phase, request)
+                if checked != value: raise ValueError()
+            except (OSError, ValueError, TypeError, UnicodeError):
+                raise self.failure("reservation-census-invalid") from None
+            identity = checked["operation_id"]
+            if identity in originals and originals[identity] != checked:
+                raise self.failure("reservation-census-conflict")
+            originals[identity] = checked
+        return [originals[key] for key in sorted(originals)]

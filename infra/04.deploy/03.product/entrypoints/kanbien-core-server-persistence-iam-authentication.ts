@@ -4,7 +4,7 @@
 //   version: 4
 //   status: draft
 //   created_on: "2026-10-25"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -21,7 +21,7 @@ import { rdsIamAuthenticationToken, rdsIamAuthenticationTextRules, type PostgreS
 import { recordConfigSource, validateConfigSettings } from "@kanbien/core/config";
 import { persistenceConfigurationFailure, persistenceIamConfigurationDiagnostic } from "./shared/persistence/configuration";
 
-export type PersistenceIamAuthentication = { readonly username: string; readonly authenticationToken: () => Promise<string> };
+export type PersistenceIamAuthentication = { readonly username: string; readonly region: string; readonly authenticationToken: () => Promise<string> };
 
 export function persistenceIamAuthenticationResult(
   env: NodeJS.ProcessEnv,
@@ -43,14 +43,14 @@ export function persistenceIamAuthenticationResult(
   const localDelay = localDelayText === undefined ? 0 : Number(localDelayText);
   if (env["NODE_ENV"] === "test" && localToken !== undefined && Number.isInteger(localDelay) && localDelay >= 0 && localDelay <= 10_000) {
     return { ok: true as const, value: {
-      username,
+      username, region,
       authenticationToken: async () => {
         if (localDelay > 0) await new Promise<void>((resolve) => setTimeout(resolve, localDelay));
         return localToken;
       },
     } };
   }
-  return { ok: true as const, value: { username, authenticationToken: rdsIamAuthenticationToken({ region, hostname: configuration.host, port: configuration.port, username }) } };
+  return { ok: true as const, value: { username, region, authenticationToken: rdsIamAuthenticationToken({ region, hostname: configuration.host, port: configuration.port, username }) } };
 }
 
 /** Compatibility reader; production entrypoints retain the structured result. */

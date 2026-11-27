@@ -1,0 +1,39 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.image.scheduling-lambda-contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.package-candidates
+#   disciplines: [architecture, security, sre]
+#   kind: image-declaration
+#   purpose: Bind declared managed programs to reusable Lambda assembly and qualification policy.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.image.scheduling-lambda
+#     path: infra/04.deploy/03.product/image/scheduling-lambda/Dockerfile
+schema: deploy/managed-handler-image-contract/v1
+id: scheduling-lambda-image-family
+runnable_program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+program_selection: managed-handler
+command: [handler.handler]
+runtime:
+  family: aws-lambda-nodejs22
+  architecture: x86_64
+  user: '10001:10001'
+  writable_path: /tmp
+  timeout_seconds: 60
+runtime_base:
+  reference: public.ecr.aws/lambda/nodejs@sha256:468c53b1f8cdc6678e5377ccb87c73cf00005b0bad0ba1d03de8d89589b591f7
+  vulnerability_policy:
+    blocked_severities: [CRITICAL, HIGH]
+    required_evidence: published-ecr-scan
+    exception: explicit-approved-package-exception-only
+qualification:
+  interface: aws-lambda-runtime-api
+  network: none
+  filesystem: read-only-with-tmpfs
+  command: scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py
+  required: [initialization, configuration-rejection, warm-invocation, deadline-preservation, native-batch-settlement, safe-errors, cleanup]

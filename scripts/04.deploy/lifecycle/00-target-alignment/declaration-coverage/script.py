@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.declaration-coverage
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [agentic, architecture, sre]
@@ -97,6 +97,75 @@ def check_applicability(check: dict[str, Any], contract: dict[str, Any], image: 
             return "requirement-check-subject-mismatch"
     if set(binding) - {"kind", *values, *(field + "s" for field in values)}: return "requirement-check-applicability-unsupported"
     return None
+
+
+
+def requirement_subjects(requirement: dict[str, Any], contract: dict[str, Any], image: dict[str, Any],
+                         program_index: dict[str, Any], root: Path, reference, gap):
+    """Resolve explicit subjects from the existing index; never retarget a proof."""
+    if "subjects" not in requirement:
+        return [(contract, image)]
+    rows = requirement["subjects"]
+    if not isinstance(rows, list) or not rows:
+        gap("requirement-subjects-invalid")
+        return []
+    selected, identities = [], set()
+    program_contract = contract.get("program", {}).get("contract")
+    declared_programs, declared_images = program_index.get("runnable_programs"), program_index.get("image_contracts")
+    if not isinstance(declared_programs, list) or not isinstance(declared_images, list):
+        gap("requirement-subject-index-mismatch")
+        return []
+    for row in rows:
+        if (not isinstance(row, dict) or set(row) != {"program_id", "image_id", "image_contract"}
+                or any(not isinstance(row.get(key), str) or re.fullmatch(r"[a-z][a-z0-9-]{1,95}", row[key]) is None for key in ("program_id", "image_id"))
+                or not safe_path(row.get("image_contract"))):
+            gap("requirement-subject-invalid")
+            continue
+        identity = (row["program_id"], row["image_id"])
+        if identity in identities:
+            gap("requirement-subject-duplicate")
+            continue
+        identities.add(identity)
+        if not reference(row["image_contract"], "requirement-subject-image-missing"):
+            continue
+        family_path = within(root, row["image_contract"])
+        family = document(family_path) if family_path is not None else {}
+        programs = [item for item in declared_programs if isinstance(item, dict) and item.get("id") == row["program_id"]]
+        images = [item for item in declared_images if isinstance(item, dict) and item.get("id") == row["image_id"]]
+        if len(programs) != 1 or len(images) != 1:
+            gap("requirement-subject-index-mismatch")
+            continue
+        program, indexed_image = programs[0], images[0]
+        if indexed_image.get("program") != row["program_id"]:
+            gap("requirement-subject-image-program-mismatch")
+            continue
+        if family.get("schema") == "deploy/managed-handler-image-contract/v1":
+            if (family.get("runnable_program_contract") != program_contract or family.get("program_selection") != "managed-handler"
+                    or program.get("execution_kind") != "managed-handler" or indexed_image.get("command_mode") != "handler"
+                    or not isinstance(program.get("entrypoint"), str) or not program["entrypoint"].endswith(".js")
+                    or not isinstance(program.get("handler_export"), str) or re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", program["handler_export"]) is None):
+                gap("requirement-subject-managed-family-mismatch")
+                continue
+            command = [program["entrypoint"][:-3] + "." + program["handler_export"]]
+            if family.get("command") != command or indexed_image.get("command") != command:
+                gap("requirement-subject-handler-command-mismatch")
+                continue
+        elif family.get("schema") == "deploy/core-server-image-contract/v1":
+            if (family.get("id") != row["image_id"] or family.get("program_id") != row["program_id"]
+                    or family.get("runnable_program_contract") != program_contract or family.get("compiled_entrypoint") != program.get("entrypoint")
+                    or indexed_image.get("command_mode") != "exec" or not strings(family.get("command")) or not strings(indexed_image.get("command"))
+                    or indexed_image["command"][-len(family["command"]):] != family["command"]
+                    or not isinstance(family.get("payload"), dict) or family["payload"].get("allowed_program") != row["program_id"]):
+                gap("requirement-subject-image-program-mismatch")
+                continue
+        else:
+            gap("requirement-subject-image-schema-unsupported")
+            continue
+        for field in ("source_entrypoint", "configuration_boundary", "dependency_failure_boundary", "local_proof"):
+            reference(program.get(field), "requirement-subject-implementation-missing")
+        selected.append(({**contract, "program": {**contract.get("program", {}), "id": row["program_id"]}}, {**family, "id": row["image_id"]}))
+    return selected
+
 
 
 def inspect_declaration(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[str, Any]:
@@ -298,10 +367,16 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any], *, probe_c
         gap("scope-program-local-proof-missing")
     if program.get("local_proof") != selected_program.get("local_proof"):
         gap("scope-program-local-proof-mismatch")
-    for identity in checks:
-        issue = check_applicability(known[identity], contract, image, root)
-        if known[identity].get("capability") is not None: reference(known[identity]["capability"], "requirement-check-generic-capability-missing")
-        if issue: gap(issue, identity)
+    for requirement in requirements:
+        if not isinstance(requirement, dict): continue
+        subjects = requirement_subjects(requirement, contract, image, program_index, root, reference, gap)
+        for field in PROOF_STAGES:
+            for identity in requirement.get(field, []) if isinstance(requirement.get(field), list) else []:
+                if identity not in checks: continue
+                for subject_contract, subject_image in subjects:
+                    issue = check_applicability(known[identity], subject_contract, subject_image, root)
+                    if issue: gap(issue, identity)
+                if known[identity].get("capability") is not None: reference(known[identity]["capability"], "requirement-check-generic-capability-missing")
     acceptance = contract.get("acceptance")
     for identity in checks:
         check = known[identity]
@@ -313,6 +388,7 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any], *, probe_c
         else:
             reference(acceptance["route"], "acceptance-route-missing")
             helper = root / "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+            qualification_route = None
             if not helper.is_file(): gap("acceptance-route-validator-missing")
             else:
                 try:
@@ -321,20 +397,38 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any], *, probe_c
                     module = importlib.util.module_from_spec(loader)
                     loader.loader.exec_module(module)
                     result = module.inspect(contract_path, root, probe_commands=probe_commands)
+                    qualification_route = module.qualification_route
                     findings.extend(item for item in result.get("findings", []) if item not in findings)
                     for value in result.get("references", []): reference(value, "acceptance-route-reference-missing")
                     references.add(helper.relative_to(root).as_posix())
                 except (OSError, ValueError, TypeError, ImportError, AttributeError, SyntaxError):
                     gap("acceptance-route-validator-invalid")
             route = referenced_document(acceptance["route"])
-            collector = route.get("collector")
-            commands = route.get("commands")
-            collector_command = commands.get(collector) if isinstance(commands, dict) and isinstance(collector, str) else collector
-            if isinstance(collector_command, dict):
-                for identity in checks:
-                    check = known[identity]
-                    if check.get("stage") == "acceptance" and (check.get("acceptance_route") != acceptance["route"] or check.get("argv") != collector_command.get("argv")):
-                        gap("acceptance-check-route-mismatch", identity)
+            for identity in checks:
+                check = known[identity]
+                if check.get("stage") != "acceptance": continue
+                try:
+                    profiles = route.get("qualification_profiles", {})
+                    if not isinstance(profiles, dict): raise ValueError("profile-invalid")
+                    choices = set()
+                    for requirement in requirements:
+                        if not isinstance(requirement, dict) or identity not in requirement.get("run_proofs", []): continue
+                        matches = [name for name, selected in profiles.items() if isinstance(selected, dict)
+                                   and isinstance(selected.get("requirements"), dict)
+                                   and requirement.get("id") in selected["requirements"].values()]
+                        if len(matches) > 1: raise ValueError("profile-ambiguous")
+                        choices.add(matches[0] if matches else None)
+                    if len(choices) != 1: raise ValueError("profile-ambiguous")
+                    selected_profile = choices.pop()
+                    if selected_profile is not None and qualification_route is None: raise ValueError("profile-owner-unavailable")
+                    selected_route = qualification_route(route, selected_profile) if selected_profile is not None else route
+                    collector = selected_route.get("collector")
+                    commands = selected_route.get("commands")
+                    collector_command = commands.get(collector) if isinstance(commands, dict) and isinstance(collector, str) else collector
+                    if not isinstance(collector_command, dict) or check.get("acceptance_route") != acceptance["route"] or check.get("argv") != collector_command.get("argv"):
+                        raise ValueError("collector-mismatch")
+                except (ValueError, TypeError, AttributeError, ImportError, OSError):
+                    gap("acceptance-check-route-mismatch", identity)
     binding_path = contract_path.parent.parent / "10-workload-binding/workload-binding.yml"
     binding = document(binding_path)
     if not binding: gap("scope-workload-binding-missing")

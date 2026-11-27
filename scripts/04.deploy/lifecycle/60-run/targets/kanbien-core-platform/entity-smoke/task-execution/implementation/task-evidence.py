@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -35,9 +35,12 @@ def module(name, path):
 
 CONTROL = module("entity_smoke_evidence_control", (Path(__file__).resolve().parents[2] / "task-execution/implementation/task-control.py"))
 DIAGNOSTICS = module("entity_smoke_runtime_contract", ROOT / "scripts/repo/diagnostic-coverage/runtime_contract.py")
+SCHEDULING_STATE = module("entity_smoke_scheduling_state", ROOT / "scripts/04.deploy/shared/scheduling-database-state.py")
 OWN_CATALOGS = [ROOT / "infra/04.deploy/03.product/entrypoints/contracts/entity-smoke-target-diagnostics.v1.json",
                 ROOT / "apps/entity-smoke/contracts/diagnostics.v1.json", DIAGNOSTICS.PERSISTENCE_TASK_OPERATION_CATALOG]
 HTTP_CODES = {"create": "ENTITY_SMOKE_RECORD_CREATED", "read": "ENTITY_SMOKE_RECORD_RETRIEVED", "observe-create": "ENTITY_SMOKE_RECORD_RECONCILED", "cleanup": "ENTITY_SMOKE_SYNTHETIC_RECORD_LOGICALLY_DELETED", "lifecycle": "ENTITY_SMOKE_LIFECYCLE_PROVEN", "ready": "ENTITY_SMOKE_HEALTHY", "unready": "ENTITY_SMOKE_LIVE_NOT_READY"}
+HTTP_CODES.update({"scheduling-create": "ENTITY_SMOKE_SCHEDULING_RECORD_CREATED", "scheduling-observe-create": "ENTITY_SMOKE_SCHEDULING_RECORD_RECONCILED",
+                   "scheduling-delete": "ENTITY_SMOKE_SCHEDULING_RECORD_DELETED", "scheduling-restore": "ENTITY_SMOKE_SCHEDULING_RECORD_RESTORED"})
 HTTP_STEPS = {
     "create": ["release", "liveness", "readiness", "create", "read"],
     "read": ["release", "liveness", "readiness", "read"],
@@ -45,6 +48,10 @@ HTTP_STEPS = {
     "cleanup": ["release", "liveness", "readiness", "read", "delete"],
     "lifecycle": ["release", "liveness", "readiness", "create", "read", "update", "list", "archive", "restore-archive", "delete", "restore-deleted", "purge-eligibility"],
     "ready": ["release", "liveness", "readiness"], "unready": ["release", "liveness", "readiness"],
+    "scheduling-create": ["release", "liveness", "readiness", "create", "read"],
+    "scheduling-observe-create": ["release", "liveness", "readiness", "read"],
+    "scheduling-delete": ["release", "liveness", "readiness", "read", "archive", "delete"],
+    "scheduling-restore": ["release", "liveness", "readiness", "read", "archive", "delete", "restore-deleted"],
 }
 
 
@@ -124,6 +131,28 @@ def success(value, request, start, stop):
                 and (workload != "administration" or value["operation"] == "preflight"), "task-preflight-result-invalid")
         return {"verdict": "passed", "code": value["code"], "operation": "preflight"}
     if workload == "administration":
+        if operation == "observe-scheduling-proof":
+            require(set(value) == {"verdict", "code", "operation", "scheduling_observation"} and value.get("operation") == operation
+                    and value["code"] == CONTROL.SCHEDULING_PROOF.PROOF_OPERATIONS[operation], "task-result-invalid")
+            try:
+                observed = CONTROL.SCHEDULING_PROOF.proof_snapshot(value["scheduling_observation"], scope="entity-smoke", selection={"kind": "subject",
+                    "id": request["environment"]["PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID"],
+                    **({"due_at": request["environment"]["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"]} if "PERSISTENCE_SCHEDULING_PROOF_DUE_AT" in request["environment"] else {})},
+                    start=start.isoformat(), stop=stop.isoformat())
+            except ValueError: raise EvidenceFailure("task-scheduling-observation-invalid") from None
+            return {"verdict": "passed", "code": value["code"], "operation": operation, "scheduling_observation": observed}
+        if operation == SCHEDULING_STATE.PREFIX_OPERATION:
+            require(set(value) == {"verdict", "code", "operation", "migration_prefix"} and value.get("operation") == operation
+                    and value["code"] == SCHEDULING_STATE.PREFIX_RESULT, "task-result-invalid")
+            try: prefix = SCHEDULING_STATE.validate_prefix(value["migration_prefix"], minimum_applied_migrations=1, manifest_migration_count=7)
+            except ValueError: raise EvidenceFailure("task-result-invalid") from None
+            return {"verdict": "passed", "code": value["code"], "operation": operation, "migration_prefix": prefix}
+        if operation in SCHEDULING_STATE.RESULTS:
+            require(set(value) == {"verdict", "code", "operation", "database_state"} and value.get("operation") == operation
+                    and value["code"] == SCHEDULING_STATE.RESULTS[operation], "task-result-invalid")
+            try: state = SCHEDULING_STATE.validate(value["database_state"])
+            except ValueError: raise EvidenceFailure("task-result-invalid") from None
+            return {"verdict": "passed", "code": value["code"], "operation": operation, "database_state": state}
         codes = {"PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED", "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED"} if operation == "observe-migration-state" else {"ENTITY_SMOKE_ADMINISTRATION_CONFIRMED"}
         require(set(value) == {"verdict", "code", "operation"} and value.get("operation") == operation and value.get("code") in codes, "task-result-invalid")
         return {"verdict": "passed", "code": value["code"], "operation": operation}
@@ -134,6 +163,9 @@ def success(value, request, start, stop):
     fields = {"schema", "verdict", "operation", "code", "proof_label_sha256", "steps", "checked_at"}
     if digest_required: fields.add("record_digest")
     if workload == "verifier": fields.add("source_revision")
+    if workload == "verifier" and operation.startswith("scheduling-"):
+        fields.add("record_id")
+        if operation in {"scheduling-delete", "scheduling-restore"}: fields.update({"deleted_at", "restore_eligible_until", "due_at"})
     require(set(value) == fields and value.get("operation") == operation, "task-result-fields-invalid")
     require(value.get("proof_label_sha256") == hashlib.sha256(request["proof_label"].encode()).hexdigest(), "task-result-label-mismatch")
     checked = timestamp(value["checked_at"])
@@ -144,6 +176,14 @@ def success(value, request, start, stop):
             require(value["record_digest"] == request["environment"]["ENTITY_SMOKE_EXPECTED_DIGEST"], "task-result-digest-mismatch")
     if workload == "verifier":
         require(value["schema"] == "deploy/entity-smoke-task-proof/v1" and value["source_revision"] == request["source_revision"] and value["code"] == HTTP_CODES[operation] and value["steps"] == HTTP_STEPS[operation], "task-http-result-not-confirmed")
+        if operation.startswith("scheduling-"):
+            try:
+                CONTROL.SCHEDULING_PROOF.proof_identifier(value["record_id"])
+                if operation in {"scheduling-delete", "scheduling-restore"}:
+                    require(value["record_id"] == request["environment"]["ENTITY_SMOKE_EXPECTED_ID"], "task-scheduling-identity-mismatch")
+                    deleted, until, due = (timestamp(CONTROL.SCHEDULING_PROOF.proof_time(value[key])) for key in ("deleted_at", "restore_eligible_until", "due_at"))
+                    require(start.timestamp() - 60 <= deleted.timestamp() <= stop.timestamp() + 60 and deleted < until < due, "task-scheduling-time-invalid")
+            except ValueError: raise EvidenceFailure("task-scheduling-result-invalid") from None
     else:
         require(value["schema"] == "deploy/entity-smoke-database-proof/v1", "task-database-result-not-confirmed")
         expected_code = "ENTITY_SMOKE_RESTORED_RECORD_RETRIEVED" if workload == "restore-reader" else "ENTITY_SMOKE_IDENTIFIER_COLLISION_PROVEN" if operation == "collision" else "ENTITY_SMOKE_EFFECTIVE_PRIVILEGES_PROVEN"

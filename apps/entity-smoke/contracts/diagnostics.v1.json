@@ -118,6 +118,75 @@
             }
           }
         }
+      },
+      {
+        "code": "entity-smoke.test-entity.retention-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "transaction",
+                "delivery",
+                "subject",
+                "entity-id"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "mismatch",
+                "invalid-format"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "mutation-not-invoked"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "entity-smoke.test-entity.write-conflict",
+        "version": 1,
+        "classification": {
+          "failureKind": "conflict",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "user_correctable",
+          "retryable": false,
+          "userCorrectable": true
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "type": "enum",
+              "values": [
+                "changed-or-missing"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-saved"
+              ]
+            }
+          }
+        }
       }
     ]
   }

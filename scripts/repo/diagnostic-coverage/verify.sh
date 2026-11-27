@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.verification
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -66,6 +66,7 @@ case "$2" in
   entity-smoke) run_npm --ignore-scripts run app:entity-smoke:check ;;
   cloudwatch) run_npm --ignore-scripts run platform:adapter:aws:observability:cloudwatch:check ;;
   ecs-fargate) run_npm --ignore-scripts run platform:adapter:aws:runtime:ecs-fargate:check ;;
+  lambda) run_npm --ignore-scripts run platform:adapter:aws:runtime:lambda:check ;;
   dynamodb-persistence) run_npm --ignore-scripts run platform:adapter:aws:persistence:dynamodb:check ;;
   sqs-queue) run_npm --ignore-scripts run platform:adapter:aws:queue:sqs:check ;;
   server) run_npm --ignore-scripts run platform:server:check ;;

@@ -66,7 +66,7 @@ function response(result: { readonly ok: true; readonly value: unknown } | { rea
 
 function errorStatus(code: string): number {
   if (code === "TEST_ENTITY_NOT_FOUND") return 404;
-  if (code === "TEST_ENTITY_ID_CONFLICT") return 409;
+  if (code === "TEST_ENTITY_ID_CONFLICT" || code === "TEST_ENTITY_WRITE_CONFLICT") return 409;
   if (code === "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED") return 503;
   return ["TEST_ENTITY_VALIDATION_FAILED", "TEST_ENTITY_DELETED", "TEST_ENTITY_ALREADY_ARCHIVED", "TEST_ENTITY_NOT_ARCHIVED",
     "PERSISTENCE_RECORD_NOT_DELETED", "PERSISTENCE_RESTORE_WINDOW_EXPIRED", "PERSISTENCE_INVALID_RECORD_LIFECYCLE"].includes(code) ? 400 : 500;

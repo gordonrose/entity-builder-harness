@@ -372,6 +372,35 @@ async function main(): Promise<void> {
     equal(completionCommand.input.ExpressionAttributeValues?.[":outcome"]?.S, "succeeded");
   }
 
+  // Durable retry time takes precedence over the expired original lease.
+  const retryRecord = { ...processingClaim.value.record, state: "retry-eligible" as const, releasedAt: at(1), retryAt: at(120) };
+  const retryCommands: unknown[] = [];
+  let retryItem = processingRecordToItem(retryRecord);
+  const retryStore = createDynamoDbPlatformProcessingStore({ configuration, client: { send: async command => {
+    retryCommands.push(command); return command instanceof GetItemCommand ? { Item: retryItem } : {};
+  } } });
+  const early = accepted(await retryStore.claim({ outboxEntryId: entry.id, owner, acquiredAt: at(90), leaseDurationMs: 60_000 }));
+  equal(early.disposition, "retry-not-due"); equal(early.record.attempt, 1); equal(early.record.retryAt, at(120));
+  equal(retryCommands.length, 1, "not-due claims do not send a mutation");
+  const due = accepted(await retryStore.claim({ outboxEntryId: entry.id, owner, acquiredAt: at(120), leaseDurationMs: 60_000 }));
+  equal(due.disposition, "claimed"); equal(due.record.attempt, 2); equal(due.record.retryAt, undefined);
+  const retryUpdate = retryCommands.at(-1);
+  if (!(retryUpdate instanceof UpdateItemCommand)) throw Error("Expected retry claim update");
+  match(retryUpdate.input.ConditionExpression!, /attribute_not_exists\(#retryAt\) OR #retryAt <= :asOf/);
+  match(retryUpdate.input.UpdateExpression!, /REMOVE #releasedAt, #retryAt/);
+  equal(retryUpdate.input.ExpressionAttributeValues?.[":asOf"]?.S, at(120));
+  retryItem = processingRecordToItem(processingClaim.value.record);
+  const released = accepted(await retryStore.release({ outboxEntryId: entry.id, fence: processingClaim.value.record.lease!.fence, releasedAt: at(1), retryAt: at(120) }));
+  equal(released.retryAt, at(120));
+  const releaseUpdate = retryCommands.at(-1);
+  if (!(releaseUpdate instanceof UpdateItemCommand)) throw Error("Expected retry release update");
+  equal(releaseUpdate.input.ExpressionAttributeValues?.[":retryAt"]?.S, at(120));
+  const priorCommands = retryCommands.length;
+  equal((await retryStore.release({ outboxEntryId: entry.id, fence: processingClaim.value.record.lease!.fence, releasedAt: at(1), retryAt: at(0) })).ok, false);
+  equal(retryCommands.length, priorCommands, "invalid timing must not read or write the provider");
+  retryItem = { ...processingRecordToItem(retryRecord), retryAt: { N: "1" } };
+  equal((await retryStore.claim({ outboxEntryId: entry.id, owner, acquiredAt: at(90), leaseDurationMs: 60_000 })).ok, false, "invalid stored timing must not turn into immediate eligibility");
+
   const writerCommands: unknown[] = [];
   const writer = createDynamoDbPlatformPersistenceFactWriter({
     configuration,

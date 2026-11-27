@@ -1,0 +1,187 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: github.workflow.publish-kanbien-core-platform-scheduling
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.scheduling
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Qualify four independent managed images through the official Lambda runtime before immutable publication; never deploy or activate workloads.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   effects: [network, writes-files]
+#   used_by:
+#   - id: product.plan.reusable-aws-scheduling
+#     path: .agentic/03.product/plans/implementation/reusable-aws-scheduling.md
+name: Publish Kanbien Core Platform Scheduling
+on: { workflow_dispatch: {} }
+permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+concurrency: { group: kanbien-core-platform-scheduling-publication, cancel-in-progress: false }
+jobs:
+  qualify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: kanbien-core-platform
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - program: kanbien-core-server-persistence-scheduling-dispatch
+            scope: core-server-persistence
+            purpose: dispatch
+            repository: kanbien-core-platform/core-server
+            role: github-kanbien-core-platform-delivery
+            pipeline: core-scheduling-package-custody
+            policy_template: foundation.yml
+            policy_role: DeliveryRole
+          - program: kanbien-core-server-persistence-scheduling-worker
+            scope: core-server-persistence
+            purpose: worker
+            repository: kanbien-core-platform/core-server
+            role: github-kanbien-core-platform-delivery
+            pipeline: core-scheduling-package-custody
+            policy_template: foundation.yml
+            policy_role: DeliveryRole
+          - program: kanbien-entity-smoke-scheduling-dispatch
+            scope: entity-smoke
+            purpose: dispatch
+            repository: kanbien-core-platform/entity-smoke
+            role: github-kanbien-core-platform-entity-smoke-publisher
+            pipeline: entity-smoke-scheduling-package-custody
+            policy_template: entity-smoke-publication.yml
+            policy_role: FeaturePublisherRole
+          - program: kanbien-entity-smoke-scheduling-worker
+            scope: entity-smoke
+            purpose: worker
+            repository: kanbien-core-platform/entity-smoke
+            role: github-kanbien-core-platform-entity-smoke-publisher
+            pipeline: entity-smoke-scheduling-package-custody
+            policy_template: entity-smoke-publication.yml
+            policy_role: FeaturePublisherRole
+    env:
+      AWS_REGION: eu-west-1
+      AWS_ROLE_ARN: arn:aws:iam::337159794548:role/${{ matrix.role }}
+      ECR_REPOSITORY: ${{ matrix.repository }}
+      ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.repository }}
+      SCHEDULING_PROGRAM: ${{ matrix.program }}
+      CONFIGURATION_SELECTOR: ${{ matrix.scope }}.${{ matrix.purpose }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Enforce protected main source
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.2
+      - name: Enforce delivery-chain registration and contracts
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+      - name: Qualify declarations and actual candidate payload
+        id: qualification
+        run: |
+          python3 scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+          CONTRACT="infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/${{ matrix.pipeline }}.delivery-access.yml"
+          TEMPLATE="infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/${{ matrix.policy_template }}"
+          python3 scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py --contract "$CONTRACT" --template "$TEMPLATE" --role-logical-id "${{ matrix.policy_role }}" --provider-policy-source "${TEMPLATE}#${{ matrix.policy_role }}" --output "$RUNNER_TEMP/scheduling-delivery-policy-coverage.json"
+          python3 scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py --contract "$CONTRACT" --workflow .github/workflows/publish-kanbien-core-platform-scheduling.yml --provider-policy-coverage "$RUNNER_TEMP/scheduling-delivery-policy-coverage.json" --json
+          node --test scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler-test.mjs
+          python3 -B scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification-test.py
+          bash scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/script.sh --program "$SCHEDULING_PROGRAM" --tag "$SCHEDULING_PROGRAM:qualification"
+          python3 -B scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py --image "$SCHEDULING_PROGRAM:qualification" --program "$SCHEDULING_PROGRAM" --report "$RUNNER_TEMP/managed-runtime-qualification.json"
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image "$SCHEDULING_PROGRAM:qualification" --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml --input infra/04.deploy/03.product/image/scheduling-lambda/Dockerfile --input infra/04.deploy/03.product/image/scheduling-lambda/Dockerfile.dockerignore --input scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh --input scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/script.sh --input scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py --input scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/runtime-api-fixture.mjs --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler.mjs --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs --input scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies/prepare.mjs --input scripts/repo/workspace-build/declarations.mjs --input scripts/repo/workspace-build/compile.mjs --input scripts/repo/workspace-build/runtime-packages.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs.mjs --input scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --input infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --input scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml "$CONFIGURATION_SELECTOR"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
+      - name: Prove fixed delivery read access
+        id: access
+        run: |
+          bash scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh --repository "$ECR_REPOSITORY"
+          python3 scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py --operation reserve
+      - name: Retain pre-publication identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.program }}-reservation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/${{ matrix.program }}-publication-reservation.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/managed-runtime-qualification.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish immutable image
+        id: image
+        run: python3 scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py --operation publish
+      - name: Require clean ECR scan
+        id: scan
+        run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
+      - name: Generate SBOM
+        id: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ runner.temp }}/scheduling.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Attest image provenance
+        id: provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+      - name: Attest image SBOM
+        id: sbom-attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/scheduling.sbom.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+      - name: Write and validate safe package-custody receipt
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          QUALIFICATION_OUTCOME: ${{ steps.qualification.outcome }}
+          ACCESS_OUTCOME: ${{ steps.access.outcome }}
+          PUBLICATION_OUTCOME: ${{ steps.image.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
+        run: |
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-scheduling-candidate --provider-region-alias aws-eu-west-1 --candidate "$SCHEDULING_PROGRAM-candidate" --package-contract "$SCHEDULING_PROGRAM-image" --program "$SCHEDULING_PROGRAM" --scan-check ecr_scan --sbom "$RUNNER_TEMP/scheduling.sbom.spdx.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate "$SCHEDULING_PROGRAM-candidate" --expected-package-contract "$SCHEDULING_PROGRAM-image" --expected-program "$SCHEDULING_PROGRAM" --json
+      - name: Upload safe package-custody evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.program }}-package-custody-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/package-custody-receipt.json
+            ${{ runner.temp }}/scheduling.sbom.spdx.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/managed-runtime-qualification.json
+            ${{ runner.temp }}/ecr-scan.json
+            ${{ runner.temp }}/scheduling-delivery-policy-coverage.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Retain safe failed-operation evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.program }}-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/${{ matrix.program }}-publication-reservation.json
+            ${{ runner.temp }}/${{ matrix.program }}-publication-invoked.json
+            ${{ runner.temp }}/${{ matrix.program }}-publication-operation.json
+          if-no-files-found: ignore
+          overwrite: false
+          retention-days: 30

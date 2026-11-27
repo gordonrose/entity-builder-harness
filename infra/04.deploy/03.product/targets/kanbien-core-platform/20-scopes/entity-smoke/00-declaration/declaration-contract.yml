@@ -4,7 +4,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -902,7 +902,7 @@ health_recovery:
           workload: "entity-smoke-database-proof"
           target_workload: "entity-smoke-server"
         allowed_operations:
-          ["preflight","bootstrap","grant-runtime","observe-permissions","observe-migration-state","revoke-runtime","restore-runtime"]
+          ["preflight","bootstrap","grant-runtime","observe-permissions","observe-migration-state","revoke-runtime","restore-runtime","observe-scheduling-prefix","observe-scheduling-state","grant-scheduling-access","prove-scheduling-access","observe-scheduling-proof"]
         prohibited_operations:
           ["application-server-startup","ordinary-migration-execution","unrestricted-sql-console"]
         ordinary_migration_boundary: "schema-ownership-and-reviewed-ddl-only"
@@ -1123,4 +1123,50 @@ change_impact:
         - "entity-smoke-target-alignment"
       run_proofs:
         - "entity-smoke-acceptance"
+    - id: scheduling-dispatch-runtime-provider-proof
+      purpose: Bind the independent dispatch image to its exact program and reusable scheduler provider control.
+      owner: scheduling-platform
+      subjects:
+      - program_id: kanbien-entity-smoke-scheduling-dispatch
+        image_id: kanbien-entity-smoke-scheduling-dispatch-image
+        image_contract: infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+      required_by:
+      - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+      - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-dispatch.handler.ts
+      declarations:
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+      - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+      - infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+      expectation: Local control and actual provider wiring observations do not establish end-to-end scheduled business execution; M7 acceptance remains required and incomplete.
+      local_proofs: [runnable-program, managed-handler-payload, managed-handler-image-contracts, scheduling-provider-controls]
+      package_proofs: [scheduling-entity-dispatch-image]
+      target_proofs: [scheduling-entity-target]
+      run_proofs: [scheduling-entity-acceptance]
+    - id: scheduling-worker-runtime-provider-proof
+      purpose: Bind the independent worker image to its exact program and reusable scheduler provider control.
+      owner: scheduling-platform
+      subjects:
+      - program_id: kanbien-entity-smoke-scheduling-worker
+        image_id: kanbien-entity-smoke-scheduling-worker-image
+        image_contract: infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+      required_by:
+      - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+      - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-worker.handler.ts
+      declarations:
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+      - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+      - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+      - infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+      expectation: Local control and actual provider wiring observations do not establish end-to-end scheduled business execution; M7 acceptance remains required and incomplete.
+      local_proofs: [runnable-program, managed-handler-payload, managed-handler-image-contracts, scheduling-provider-controls]
+      package_proofs: [scheduling-entity-worker-image]
+      target_proofs: [scheduling-entity-target]
+      run_proofs: [scheduling-entity-acceptance]
 

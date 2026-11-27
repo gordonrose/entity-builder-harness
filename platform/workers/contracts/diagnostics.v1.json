@@ -456,6 +456,55 @@
             }
           }
         }
+      },
+      {
+        "code": "platform-worker.external-delivery-rejected",
+        "version": 1,
+        "classification": {
+          "failureKind": "validation",
+          "failureSource": "platform",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "durable-processing",
+                "outbox-store",
+                "outbox-record",
+                "message-type",
+                "message-version",
+                "tenant",
+                "payload",
+                "retry-time",
+                "completion-outcome",
+                "attempt-budget"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "absent",
+                "mismatch",
+                "not-due",
+                "exhausted",
+                "unexpected"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "handler-not-invoked",
+                "completion-not-established"
+              ]
+            }
+          }
+        }
       }
     ]
   }

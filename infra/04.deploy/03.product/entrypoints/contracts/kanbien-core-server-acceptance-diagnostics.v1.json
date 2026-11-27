@@ -61,6 +61,37 @@
             }
           }
         }
+      },
+      {
+        "code": "kanbien-core-server.acceptance.scheduling-proof-not-completed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "outcome": {
+              "type": "enum",
+              "values": [
+                "conflict",
+                "unavailable",
+                "uncertain"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "proof-not-confirmed"
+              ]
+            }
+          }
+        }
       }
     ]
   }

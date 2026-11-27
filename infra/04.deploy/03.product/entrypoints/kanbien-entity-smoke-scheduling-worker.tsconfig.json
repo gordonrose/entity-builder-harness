@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "declaration": false,
+    "exactOptionalPropertyTypes": true,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmitOnError": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "../../../../.cache/entity-scheduling-worker-build",
+    "rootDir": "../../../..",
+    "strict": true,
+    "target": "ES2022",
+    "baseUrl": "../../../..",
+    "types": ["node"]
+  },
+  "include": ["./kanbien-entity-smoke-scheduling-worker.handler.ts"]
+}

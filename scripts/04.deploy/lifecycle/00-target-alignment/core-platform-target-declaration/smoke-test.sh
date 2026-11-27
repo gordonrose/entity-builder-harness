@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 8
+#   version: 9
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-12"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -365,6 +365,12 @@ for error,code in [(OSError(canary),'declaration-observation-unavailable'),(Type
         assert module.main()==1 and later.call_count==0
     assert json.loads(output.getvalue())['findings']==[{'code':code}] and canary not in output.getvalue()
 profile=module.mapping(Path(sys.argv[1])/'infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml','fixture-invalid')
+access=module.mapping(Path(sys.argv[1])/'infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml','fixture-invalid')
+assert module.check_access_maintenance(access)['action']=='ecr:DescribeRepositories'
+access['maintenance']['delivery-repository-observation']['action']='ecr:*'
+try: module.check_access_maintenance(access)
+except module.DeclarationFailure as error: assert error.codes==('technical-access-maintenance-invalid',)
+else: raise AssertionError('broader maintenance permission accepted')
 for status in [[],{}]:
     profile['e0_required_facts'][0]['status']=status
     try: module.check_profile(profile)

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "emitDeclarationOnly": false,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmit": false,
+    "outDir": "../../../../../.cache/platform-adapter-aws-runtime-lambda-runtime",
+    "baseUrl": "../../../../..",
+    "rootDir": "../../../../..",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "tests/**/*-runtime.test.ts"]
+}

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -43,12 +43,13 @@ def checked_context(route, context, workload):
     return {**context, "checked": route.BINDING.inspect(context["provider"], workload, context["parameters"], context["resources"], context.get("binding_snapshot"))}
 
 
-def original_terminal(route, context, args):
+def original_terminal(route, context, args, *, selected=None):
     runner, steps, provider = route.RUNNER, route.STEPS, context["provider"]
-    selected = arguments(args, "verifier", "create")
+    selected = arguments(args, "verifier", "create") if selected is None else selected
+    require((selected.workload, selected.operation) in {("verifier", "create"), ("verifier", "scheduling-create")}, "feature-original-create-selection-invalid")
     request = steps.request(route, checked_context(route, context, "verifier"), selected)
     store = runner.CONTROL.AttemptStore(context["cache"] / "task-attempts")
-    reservation = store.read(steps.key(selected), request)
+    reservation = store.read(steps.key(selected, context.get("delivery")), request)
     require(reservation is not None, "feature-original-create-reservation-required")
     _, task = runner.CONTROL.reconcile_reserved(provider, reservation)
     containers = task.get("containers")

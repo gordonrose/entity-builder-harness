@@ -26,9 +26,13 @@ export type { RdsIamAuthenticationTokenOptions } from "./rds-iam-authentication"
 
 export {
   createPostgreSqlMigrationRunner,
+  readPostgreSqlMigrationPrefix,
   postgreSqlMigrationChecksum,
   postgreSqlPlatformScheduleHandoffMigration,
   postgreSqlPlatformScheduleMigration,
+  postgreSqlPlatformScheduleSubjectMigration,
+  postgreSqlPlatformScheduleControlMigration,
+  postgreSqlPlatformProcessingRetryMigration,
   postgreSqlPersistenceFoundationMigration,
 } from "./migrations";
 export type {

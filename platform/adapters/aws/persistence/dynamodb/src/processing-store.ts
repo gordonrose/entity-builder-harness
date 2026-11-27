@@ -11,6 +11,7 @@ import {
   platformLeaseExpired,
   platformPersistenceError,
   platformProcessingRecord,
+  validatePlatformProcessingRetryAt,
   type PlatformPersistenceError,
   type PlatformPersistenceFence,
   type PlatformProcessingClaimResult,
@@ -50,6 +51,7 @@ export function createDynamoDbPlatformProcessingStore(
         return { ok: false, error: reading.error("read_processing") };
       }
       if (record?.state === "completed") return success({ disposition: "already-completed", record });
+      if (record !== null && observed.at("selection", () => record.state === "retry-eligible" && record.retryAt !== undefined && Date.parse(record.retryAt) > Date.parse(input.acquiredAt))) return success({ disposition: "retry-not-due", record });
       if (record !== null && record.lease === undefined) {
         observed.reject("lease", "absent");
         return { ok: false, error: observed.error("claim_processing") };
@@ -83,7 +85,7 @@ export function createDynamoDbPlatformProcessingStore(
           await observed.send(options, () => new UpdateItemCommand({
             TableName: options.configuration.tableName,
             Key: processingKey(input.outboxEntryId),
-            UpdateExpression: "SET #state = :claimed, #attempt = :attempt, #leaseOwner = :leaseOwner, #leaseFence = :leaseFence, #leaseAcquiredAt = :leaseAcquiredAt, #leaseExpiresAt = :leaseExpiresAt REMOVE #releasedAt, #completionOutcome, #completedAt",
+            UpdateExpression: "SET #state = :claimed, #attempt = :attempt, #leaseOwner = :leaseOwner, #leaseFence = :leaseFence, #leaseAcquiredAt = :leaseAcquiredAt, #leaseExpiresAt = :leaseExpiresAt REMOVE #releasedAt, #retryAt, #completionOutcome, #completedAt",
             ConditionExpression: claimCondition(record),
             ExpressionAttributeNames: claimAttributeNames(),
             ExpressionAttributeValues: {
@@ -162,6 +164,8 @@ export function createDynamoDbPlatformProcessingStore(
     },
 
     release: async (input) => {
+      const retry = validatePlatformProcessingRetryAt(input, options);
+      if (!retry.ok) return retry;
       const observed = dynamoDbObservation(options, "release_processing");
       const reading = dynamoDbObservation(options, "read_processing");
       let record: PlatformProcessingRecord | null;
@@ -187,16 +191,18 @@ export function createDynamoDbPlatformProcessingStore(
         attempt: record.attempt,
         lease: record.lease!,
         releasedAt: input.releasedAt,
+        ...(retry.value === undefined ? {} : { retryAt: retry.value }),
       }));
       try {
         await observed.send(options, () => new UpdateItemCommand({
           TableName: options.configuration.tableName,
           Key: processingKey(input.outboxEntryId),
-          UpdateExpression: "SET #state = :retryEligible, #releasedAt = :releasedAt",
+          UpdateExpression: "SET #state = :retryEligible, #releasedAt = :releasedAt" + (retry.value === undefined ? " REMOVE #retryAt" : ", #retryAt = :retryAt"),
           ConditionExpression: "#state = :claimed AND #leaseFence = :fence AND #leaseExpiresAt > :releasedAt",
           ExpressionAttributeNames: {
             "#state": "state",
             "#releasedAt": "releasedAt",
+            "#retryAt": "retryAt",
             "#leaseFence": "leaseFence",
             "#leaseExpiresAt": "leaseExpiresAt",
           },
@@ -205,6 +211,7 @@ export function createDynamoDbPlatformProcessingStore(
             ":retryEligible": stringAttribute("retry-eligible"),
             ":fence": numberAttribute(input.fence),
             ":releasedAt": stringAttribute(input.releasedAt),
+            ...(retry.value === undefined ? {} : { ":retryAt": stringAttribute(retry.value) }),
           },
         }));
         return success(released);
@@ -245,6 +252,7 @@ async function resolveProcessingClaimRace(
   try {
     const record = await readProcessing(options, outboxEntryId, reading);
     if (record?.state === "completed") { observed.reconcile("already-completed"); return success({ disposition: "already-completed", record }); }
+    if (record !== null && observed.at("selection", () => record.state === "retry-eligible" && record.retryAt !== undefined && Date.parse(record.retryAt) > Date.parse(asOf))) return success({ disposition: "retry-not-due", record });
     if (record !== null && observed.at("selection", () => record.state === "claimed" && record.lease !== undefined && !platformLeaseExpired(record.lease, asOf))) {
       observed.reconcile("lease-active"); return success({ disposition: "lease-active", record });
     }
@@ -370,7 +378,7 @@ function leaseExpiredCompletion(observed?: DynamoDbObservation): Result<never, P
 
 function claimCondition(record: PlatformProcessingRecord): string {
   if (record.state === "retry-eligible") {
-    return "#state = :retryEligible AND #attempt = :priorAttempt AND #leaseFence = :priorFence";
+    return "#state = :retryEligible AND #attempt = :priorAttempt AND #leaseFence = :priorFence AND (attribute_not_exists(#retryAt) OR #retryAt <= :asOf)";
   }
   return "#state = :claimed AND #attempt = :priorAttempt AND #leaseFence = :priorFence AND #leaseExpiresAt <= :asOf";
 }
@@ -384,6 +392,7 @@ function claimAttributeNames(): Record<string, string> {
     "#leaseAcquiredAt": "leaseAcquiredAt",
     "#leaseExpiresAt": "leaseExpiresAt",
     "#releasedAt": "releasedAt",
+    "#retryAt": "retryAt",
     "#completionOutcome": "completionOutcome",
     "#completedAt": "completedAt",
   };

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.persistence-accepted-release.validate.impl
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -80,10 +80,21 @@ def validate_historical_legacy_record(path: Path, record: dict, root: Path, evid
     except Exception:
         return ['accepted-release-historical-succession-invalid']
 
-def validate(path: Path, root: Path = ROOT, evidence_class: str = 'live') -> list[str]:
+def validate(path: Path, root: Path = ROOT, evidence_class: str = 'live', qualification_profile=None) -> list[str]:
     try:
-        record = yaml.safe_load(path.read_text())
         if evidence_class == 'simulated' and not root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()): return ['accepted-release-simulation-root-invalid']
+        record = yaml.safe_load(path.read_text())
+        if qualification_profile not in {None, 'scheduling-a2-v1'}: return ['accepted-release-qualification-profile-invalid']
+        if qualification_profile is not None and (not isinstance(record, dict) or 'scheduling_qualification' not in record): return ['scheduling-proof-required']
+        if isinstance(record, dict) and ('scheduling_qualification' in record or 'qualification_profile' in record):
+            helper_path = IMPLEMENTATION_ROOT / 'scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py'
+            helper_spec = importlib.util.spec_from_file_location('retained_scheduling_proof', helper_path)
+            helper = importlib.util.module_from_spec(helper_spec); helper_spec.loader.exec_module(helper)
+            try:
+                helper.record_profile(record)
+                helper.validate(record['scheduling_qualification'], root=root, target=record['target'], scope=record['scope'],
+                    source=record['release']['source_revision'], primary_image=record['release']['image_digest'], historical=True, evidence_class=evidence_class)
+            except helper.ProofFailure as failure: return [failure.code]
         if isinstance(record, dict) and record.get('schema') == 'deploy/persistence-accepted-release/v1' and record.get('status') == ('accepted' if evidence_class == 'live' else 'rehearsed') and (evidence_class == 'live' or (path.parent / 'current-accepted-release.yml').exists()):
             return validate_historical_legacy_record(path, record, root, evidence_class)
         if not isinstance(record, dict) or record.get('evidence_class', 'live') != evidence_class or record.get('status') != ('accepted' if evidence_class == 'live' else 'rehearsed'): return ['accepted-release-evidence-class-invalid']
@@ -101,12 +112,13 @@ def validate(path: Path, root: Path = ROOT, evidence_class: str = 'live') -> lis
 def main():
     parser=argparse.ArgumentParser(add_help=False,exit_on_error=False)
     parser.add_argument('--record',type=Path);parser.add_argument('--root',type=Path,default=ROOT);parser.add_argument('--rehearsal-root',type=Path);parser.add_argument('--json',action='store_true');parser.add_argument('--validate-arguments',action='store_true')
+    parser.add_argument('--qualification-profile', choices=('scheduling-a2-v1',))
     try:
         args,unknown=parser.parse_known_args()
         if unknown or args.record is None: raise ValueError()
         if args.validate_arguments:
             print(json.dumps({'schema':'deploy/command-arguments-report/v1','verdict':'valid','findings':[]}));return 0
-        codes=validate(args.record,args.rehearsal_root or args.root,'simulated' if args.rehearsal_root else 'live')
+        codes=validate(args.record,args.rehearsal_root or args.root,'simulated' if args.rehearsal_root else 'live',args.qualification_profile)
     except (ValueError,argparse.ArgumentError): codes=['accepted-release-arguments-invalid']
     print(json.dumps({'schema':'deploy/accepted-release-validation-report/v1','verdict':'failed' if codes else 'validated','findings':[{'code':code} for code in codes]}));return int(bool(codes))
 if __name__=='__main__':raise SystemExit(main())

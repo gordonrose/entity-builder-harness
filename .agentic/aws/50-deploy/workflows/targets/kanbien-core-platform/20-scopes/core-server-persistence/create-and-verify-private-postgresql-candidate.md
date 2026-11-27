@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 9
+version: 10
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-11-19"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -213,6 +213,15 @@ controllers, all under
 `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/`:
 
 The derived restore must export its PostgreSQL and `iam-db-auth-error` logs.
+New scheduler-proof snapshots and clones also require the original shared
+cost admission before creation, under the
+[proof-only recovery resource rule](../../../../../../standards/operational-realization-applicability.md#scheduler-proof-only-recovery-resources).
+An uncertain clone creation is reconciled through its durable original;
+absence is not permission to create another copy. Clone cleanup remains
+separate from snapshot cleanup: retain the canonical recovery proof while the
+snapshot is available before considering deletion of that newly created proof
+snapshot. Existing and accepted recovery points remain protected.
+
 If its verifier rejects, the controller makes one bounded, read-only
 observation of both target-owned exports over the verifier's execution window.
 It retains one closed classification with an honest `complete`, `empty`,

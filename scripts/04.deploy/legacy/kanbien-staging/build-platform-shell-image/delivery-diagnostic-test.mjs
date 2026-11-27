@@ -4,7 +4,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-10-30"
-//   updated_on: "2026-11-26"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -180,14 +180,14 @@ async function verifyRelationalMigrationAndCleanup({ runtimeRoot, require, load,
     const result = resultKind === "failed" || resultKind === "error-accessor" ? {
       get ok() { okReads++; return false; },
       ...(resultKind === "failed" ? { error: cause } : {}),
-    } : { get ok() { okReads++; return true; }, get value() { valueReads++; return { get length() { lengthReads++; return resultKind === "succeeded" ? 2 : 1; } }; } };
+    } : { get ok() { okReads++; return true; }, get value() { valueReads++; return { get length() { lengthReads++; return resultKind === "succeeded" ? 3 : 1; } }; } };
     if (resultKind === "error-accessor") Object.defineProperty(result, "error", { get() { errorReads++; throw cause; } });
     const reference = "arn:aws:secretsmanager:eu-west-1:337159794548:secret:fixture-migration";
     const pool = { async query(statement) { assert.equal(this, pool); calls.push(statement.text); return { rows: [] }; }, async end() { assert.equal(this, pool); calls.push("end"); if (endFails) throw cleanup; } };
     patches.patch(task, "configurationFromEnvironment", () => ({ database: "platformsmoke", schema: "platform_smoke", runtimeSecretArn: reference, migrationSecretArn: reference }));
     patches.patch(task, "secretFromEnvironment", () => ({ username: "psmokemigrate", password: canary, host: "localhost", port: 5432 }));
     patches.patch(task, "connectionPool", () => pool);
-    patches.patch(migrations, "createPostgreSqlMigrationRunner", (_configuration, options) => { assert.equal(options.pool, pool); return { async apply(manifest) { calls.push("apply"); assert.equal(manifest.migrations.length, 2); return result; } }; });
+    patches.patch(migrations, "createPostgreSqlMigrationRunner", (_configuration, options) => { assert.equal(options.pool, pool); return { async apply(manifest) { calls.push("apply"); assert.equal(manifest.migrations.length, 3); assert.equal(manifest.migrations[2].id, "v0003_platform_processing_retry"); return result; } }; });
     const close = task.closePool, write = task.writeOutcome;
     patches.patch(task, "closePool", async (value) => { try { assert.equal(value, pool); await close(value); } finally { done.resolve(); } });
     patches.patch(task, "writeOutcome", (operation, outcome) => { calls.push("outcome"); outcomes.push({ operation, outcome }); write(operation, outcome); });
@@ -244,7 +244,7 @@ async function verifyRelationalMigrationInvocations({ runtimeRoot, require, load
       factories++; calls.push("runner"); assert.equal(options.pool, pool); assert.equal(tool, "stage6-staging");
       const runner = {};
       Object.defineProperty(runner, "apply", { get() { applySelections++; calls.push("apply-selection"); if (at === "apply-selection") throw raw;
-        return async function(manifest) { assert.equal(this, runner); assert.equal(manifest.migrations.length, 2); applies++; calls.push("apply"); throw raw; };
+        return async function(manifest) { assert.equal(this, runner); assert.equal(manifest.migrations.length, 3); assert.equal(manifest.migrations[2].id, "v0003_platform_processing_retry"); applies++; calls.push("apply"); throw raw; };
       } });
       return runner;
     });

@@ -1,0 +1,95 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.entity-smoke.scheduling-realization
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.scheduling
+#   disciplines: [architecture, security, sre]
+#   kind: deployment-contract
+#   purpose: Bind the scoped scheduling controller graph without claiming runtime proof before disabled resources exist.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.entity-smoke.scheduling-binding
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+schema: operational-realization-contract/v2
+id: entity-smoke-scheduling-control
+version: 1
+provider_boundary: normalized-facts-only
+artifacts:
+  - id: scheduling-controller-source
+    immutable_reference_mode: runtime-bound-sha256
+    entrypoint: scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py
+    assertions: [committed-source-closure, authenticated-package-source-match, connected-control-and-recovery-tests]
+identities:
+  - id: scheduling-operator
+    permissions: [inspect-declared-target, create-declared-disabled-resources, change-owned-controls, invoke-reserved-read-only-proof]
+configuration_inputs:
+  - id: scheduling-inputs
+    required_fields: [scope-identity, source-revision, phase, qualified-dispatcher-image, qualified-worker-image, template-hash, parameter-hash, network-preservation-hash, database-proof-hash, spend-envelope-hash, original-intent-hash]
+    optional_fields: [runtime-connection-proof-hash, monthly-cost-proof-hash, synthetic-proof-hash]
+    sensitivity: secret-reference-only
+connections:
+  - {id: provider-control-connection, source: scheduling-controller, destination: declared-resource-state, transport_security: verified}
+  - {id: reservation-connection, source: scheduling-controller, destination: immutable-attempt-store, transport_security: not-applicable}
+state_stores:
+  - id: declared-resource-state
+    semantics: [exact-initial-absence-or-owned-operation, preserved-legacy-identities-and-access, immutable-version-binding, disabled-before-proof, explicit-terminal-state]
+  - id: immutable-attempt-store
+    semantics: [exclusive-reservation-before-effect, flushed-original-intent, no-new-label-after-uncertainty, current-readback-before-dependent-effects]
+async_channels: []
+observability_profiles:
+  - id: safe-scheduling-control-reports
+    required_facts: [source-and-package-identity, scope-and-phase, original-operation-identity, finite-failure-code, known-or-uncertain-effect, measured-invocation-cost]
+recovery_plans:
+  - id: scheduling-reconciliation
+    entry_condition: original-reserved-operation-observed-terminal-or-unknown
+    cleanup: preserve-resources-evidence-and-unrelated-data-no-implicit-deletion
+    rollback: observe-original-operation-restore-only-declared-owned-controls-and-proof-fault-after-reviewed-terminal-state
+execution_units:
+  - id: scheduling-controller
+    artifact: scheduling-controller-source
+    identity: scheduling-operator
+    configuration_inputs: [scheduling-inputs]
+    connections: [provider-control-connection, reservation-connection]
+    state_stores: [declared-resource-state, immutable-attempt-store]
+    async_channels: []
+    observability_profile: safe-scheduling-control-reports
+    recovery_plan: scheduling-reconciliation
+edges:
+  - {from: scheduling-controller, to: scheduling-controller-source, purpose: executes}
+  - {from: scheduling-controller, to: scheduling-operator, purpose: assumes}
+  - {from: scheduling-controller, to: scheduling-inputs, purpose: reads-configuration}
+  - {from: scheduling-controller, to: provider-control-connection, purpose: connects}
+  - {from: provider-control-connection, to: declared-resource-state, purpose: reaches-state}
+  - {from: scheduling-controller, to: declared-resource-state, purpose: controls-declared-resources}
+  - {from: scheduling-controller, to: reservation-connection, purpose: connects}
+  - {from: reservation-connection, to: immutable-attempt-store, purpose: reaches-state}
+  - {from: scheduling-controller, to: immutable-attempt-store, purpose: reserves-original-operation}
+  - {from: scheduling-controller, to: safe-scheduling-control-reports, purpose: reports}
+  - {from: scheduling-controller, to: scheduling-reconciliation, purpose: reconciles}
+lifecycle:
+  states: [prepared, running, succeeded, failed, stopped]
+  terminal_states: [succeeded, failed, stopped]
+  transitions: [{from: prepared, to: running}, {from: running, to: succeeded}, {from: running, to: failed}, {from: running, to: stopped}]
+  retry: {mode: reviewed-recovery-only, requires_new_label: true, maximum_attempts: 1, permitted_from: [failed, stopped]}
+change_shape:
+  reviewed_change_summary_required: true
+  allowed_operation_classes: [create, update]
+  forbidden_operation_classes: [delete, replace, broaden-permission]
+assumptions:
+  - id: disabled-resources-are-not-runtime-proof
+    statement: controller-preflight-proves-initial-disabled-creation-not-application-execution-or-final-cost
+    required_proof: declared
+    actual_proof: declared
+gates:
+  - {id: source, prerequisites: [], may_mutate_live_target: false, evidence: [scheduling-source]}
+  - {id: artifact, prerequisites: [source], may_mutate_live_target: false, evidence: [scheduling-artifacts]}
+  - {id: semantic-integration, prerequisites: [source, artifact], may_mutate_live_target: false, evidence: [scheduling-semantics]}
+  - {id: live-read, prerequisites: [source, artifact, semantic-integration], may_mutate_live_target: false, evidence: [scheduling-current-alignment]}
+  - {id: change-set, prerequisites: [source, artifact, semantic-integration, live-read], may_mutate_live_target: false, evidence: [scheduling-reviewed-change]}
+  - {id: execution-preflight, prerequisites: [source, artifact, semantic-integration, live-read, change-set], may_mutate_live_target: false, evidence: [scheduling-phase-preflight]}
+  - {id: controlled-execution, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight], may_mutate_live_target: true, evidence: [scheduling-original-execution]}
+  - {id: recovery, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight, controlled-execution], may_mutate_live_target: true, evidence: [scheduling-original-reconciliation]}

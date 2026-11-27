@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 20
+version: 23
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-26"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [agentic, architecture, sre]
@@ -25,6 +25,91 @@ with each exact plan reviewed and bound before execution. "Separately reviewed"
 means an independently checked operation, not another user prompt when that
 operation is already covered. This does not revive retired incident executors,
 extend their historical exceptions, or waive ownership, proof and no-replay gates.
+
+## Foundation delivery repository observation access
+
+On 2026-11-27 the user explicitly approved this narrow harness route and the
+addition of `ecr:DescribeRepositories` to the existing foundation `DeliveryRole`
+policy `publish-core-image`, on the existing `ExistingRepositoryArn` only, for
+`kanbien-core-platform` in account `337159794548`, `eu-west-1`. The existing
+publisher needs this read to prove current immutable tags and scan-on-push;
+source settings or a successful image lookup do not replace that observation.
+
+The [owning workflow](../50-deploy/workflows/targets/kanbien-core-platform/10-foundation/update-delivery-observation-access.md)
+and its declared controller provide this permission-only proof path. Exact
+committed predecessor/successor source comparison, actual foundation/role reads,
+local connected proof, immutable intent, reviewed change set and original-token
+terminal readback replace runtime-image and application-data proof only for this
+operation. This is not a successful generic realization report: the generic
+compiler and its rejection of unowned permission broadening remain unchanged.
+
+The entire proposed template must differ only by that one action. The change
+set must modify only the role's `Policies` property with explicit nonreplacement.
+Preserve all parameters with `UsePreviousValue`, including opaque NoEcho values;
+never send defaults or copy a masked value as a replacement. Preserve resource
+incarnations, role ID/ARN, trust, other inline policies and attached policies.
+Capture only safe hashes of parameter/policy observations in the private intent.
+
+The controller retains one canonical adoption intent and separate immutable
+prepare/execute reservations. A retained reservation is observe-only, including
+after response loss or a pre-submission guard failure. Require concrete approval
+bound to the exact retained plan before each initial submission. Success needs
+the original execution token's root `UPDATE_COMPLETE` event, current exact
+successor template and actual policy plus unchanged parameter/resource/role
+identity checks. Missing evidence is uncertainty; rollback remains failure.
+No automatic inverse update, repeated submission, inline IAM command, role or
+repository creation, other permission change or application operation is allowed.
+The recorded explicit authority and ordinary source/check/inventory gates still
+apply. This does not reactivate any retired incident executor below.
+
+## Disabled scheduling resources and bounded runtime proof
+
+The user approved this ordering on 2026-11-27 for the two declared scheduling
+scopes of `kanbien-core-platform`, account `337159794548`, `eu-west-1`.
+The [scheduling workflow](../50-deploy/workflows/targets/kanbien-core-platform/50-runtime/deploy-disabled-scheduling.md)
+keeps the generic realization gates intact while distinguishing the controller's
+initial resource creation from execution of the new application runtimes.
+
+Initial creation may establish the shared private queue endpoint and the
+declared functions, queues, roles, alarms and immutable versions with both
+automatic controls disabled. The controller must first prove its own complete
+source/artifact/semantic/live-read/change-set/preflight prerequisites, current
+shared-VPC compatibility, qualified package identities, scoped migration and
+permission evidence, and an explicit finite proof-spend envelope within the
+remaining US$10 allowance. Its preflight does not claim execution of a function
+that does not yet exist. Unknown consumers or changed legacy access block the
+private-DNS change; stopped legacy services must not be repaired or scaled.
+
+After exact original-operation readback, a reserved synchronous invocation of
+the closed read-only preflight request may prove the new runtime's actual
+database identity and, for the worker only, its queue connection. It must not
+compose application jobs, create reminders or alter business rows. Match the
+invocation version, immutable image/source/configuration, original operation ID,
+request ID, time, actual endpoint addresses and provider billing/log evidence.
+An uncertain invocation is reconciled through its original logs, never replayed.
+
+Bounded synthetic execution may then enable a worker and the minute trigger
+under the finite proof envelope, with exact new synthetic ownership and no
+unrelated scoped work. Final business acceptance is an output of that phase,
+not a fictitious prerequisite for its first invocation. Leaving the controls
+enabled requires complete runtime/recovery/alert proof and a measured combined
+31-day projection no greater than US$25 at 100,000 jobs per month, including
+shared-network, database, logging, retry and storage increments.
+
+The sole controlled delivery fault is the declared false-default
+`DenyDispatcherSend` condition: deny `SendMessage` only from the selected new
+dispatcher role to its own new job queue. Both automatic controls must be off
+before injecting or restoring it. Retain the exact QueuePolicy-only UPDATE and
+original fault/recovery intents; permit one reserved dispatch of an identified
+synthetic outbox entry. Restore the exact false state before enabling controls
+or accepting the release. This is ordinary controlled execution with all gates,
+not an exemption, arbitrary queue-policy editor or permission broadening.
+
+Preserve all unrelated parameters with `UsePreviousValue`. Activation changes
+only the selected controls, not images, identities, routes or database settings.
+No inline IAM edits, destructive queue probes, arbitrary Lambda events, resource
+replacement, automatic rollback or new attempt after an unresolved submission
+are authorized. Rule adoption alone does not satisfy the executable gates.
 
 ## Entity-smoke controller-only repair checkpoints
 
@@ -597,6 +682,45 @@ remain outside this rule and need their own governed recovery decision.
 The owning [restore route](../../../scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route.py)
 and resource control implement the bounds. Local fixtures establish their
 exercised protocol behavior, not provider ownership, AWS execution or acceptance.
+
+## Scheduler proof-only recovery resources
+
+On 2026-11-27 the user explicitly approved cleanup of only the disposable
+database copies and manual snapshots newly created for the two-scope scheduler
+proof on `kanbien-core-platform`. This extends neither general retention nor
+the historical Entity-smoke cleanup rule above. Source databases, existing or
+accepted recovery snapshots, unrelated resources and application rows are
+never targets. The original scheduling cost reservation must independently
+identify each newly created resource; a familiar name, matching tag or old
+native reservation alone cannot establish this authority.
+
+Use the existing native snapshot/restore owners and immutable reservations.
+Creation is admitted under the existing shared cost lock before submission,
+using the actual source storage/class and the fixed target restore template.
+Reserve a conservative two-hour cleanup target per original clone under the
+unchanged USD 10 total ceiling. Price the two accepted recovery snapshots as
+retained storage separately. The clone target is not an AWS TTL or a cap on accrued liability.
+Unknown creation/deletion remains charged; positive deletion does not refund
+the original allowance or open a new budget. An overrun continues to accrue,
+blocks new paid work and requires escalation, but must not prevent safe cleanup.
+
+Cleanup follows successful proof or positively terminal failure, promptly after
+retaining the original task/provider evidence. Before its one delete submission,
+the owning controller must prove the original creation and exact incarnation,
+the complete owned resource set, no active or unresolved dependent task or
+restore operation, and the approved concrete cleanup plan. Unknown creation,
+partial unidentifiable resources or lost dependent-task outcomes require
+reconciliation of that original; they never authorize another create/delete or
+a new label. Retain a delete reservation before submission and independently
+observe exact absence afterward. Failed-proof cleanup is not successful
+readback, recovery qualification or acceptance.
+
+Keep snapshot deletion separate from clone deletion. Successful accepted
+recovery snapshots remain retained; collecting proof does not retire them.
+Cleanup must not relabel an accepted backup as a disposable proof snapshot,
+and historical accepted records remain unchanged. A command whose
+closed implementation cannot establish these predicates stays blocked even
+though this bounded authority exists.
 
 ## Bounded PostgreSQL Stage 6 Applicability
 

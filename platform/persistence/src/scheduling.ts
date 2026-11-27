@@ -8,9 +8,9 @@ import {
   type Result,
   type UuidGenerator,
 } from "@kanbien/core/shared";
-import type { OutboxEntry, OutboxEntryId } from "@kanbien/core/persistence";
+import type { OutboxEntry, OutboxEntryId, RecordReference } from "@kanbien/core/persistence";
 import type { PlatformJobName } from "@kanbien/platform-contracts";
-import { persistenceScheduleRejectionDiagnosticRecord } from "./diagnostics";
+import { persistenceScheduleRejectionDiagnosticRecord, persistenceScheduleControlRejectionDiagnosticRecord } from "./diagnostics";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
 import { platformOutboxRecord, type PlatformOutboxRecord } from "./types";
 
@@ -18,13 +18,15 @@ import { platformOutboxRecord, type PlatformOutboxRecord } from "./types";
 export type PlatformScheduleId = EntityId<"PlatformScheduleId">;
 
 /** A reminder either still waits for its due time or has one outbox record. */
-export type PlatformScheduleState = "waiting" | "delivery-created";
+export type PlatformScheduleState = "waiting" | "delivery-created" | "blocked-job-unavailable" | "blocked-invalid-row";
 
 export interface PlatformSchedule {
   readonly id: PlatformScheduleId;
   readonly jobName: PlatformJobName;
   readonly dueAt: ISODateTime;
   readonly state: PlatformScheduleState;
+  /** Optional typed target; job owners validate its meaning before any effect. */
+  readonly subject?: RecordReference;
   /** Present only after the reminder has been handed to the outbox. */
   readonly outboxEntryId?: OutboxEntryId;
 }
@@ -32,6 +34,7 @@ export interface PlatformSchedule {
 export type PlatformScheduleHandover =
   | { readonly disposition: "outbox-created"; readonly schedule: PlatformSchedule; readonly outbox: PlatformOutboxRecord }
   | { readonly disposition: "outbox-already-created"; readonly schedule: PlatformSchedule }
+  | { readonly disposition: "blocked"; readonly schedule: PlatformSchedule }
   | { readonly disposition: "not-due"; readonly schedule: PlatformSchedule };
 
 /**
@@ -41,6 +44,7 @@ export type PlatformScheduleHandover =
 export function createPlatformSchedule(input: {
   readonly jobName: PlatformJobName;
   readonly dueAt: string;
+  readonly subject?: RecordReference;
 }, uuidGenerator: UuidGenerator): Result<PlatformSchedule> {
   const dueAt = isoDateTime(input.dueAt);
   if (!dueAt.ok) return dueAt;
@@ -53,6 +57,7 @@ export function createPlatformSchedule(input: {
     jobName: input.jobName,
     dueAt: dueAt.value,
     state: "waiting",
+    ...(input.subject === undefined ? {} : { subject: { ...input.subject } }),
   });
 }
 
@@ -63,7 +68,12 @@ export function createPlatformSchedule(input: {
 export interface PlatformScheduleStore {
   create(schedule: PlatformSchedule): Promise<Result<PlatformSchedule, PlatformPersistenceError>>;
   get(id: PlatformScheduleId): Promise<PlatformSchedule | null>;
-  listDue(input: { readonly asOf: ISODateTime; readonly limit: number }): Promise<Result<readonly PlatformSchedule[], PlatformPersistenceError>>;
+  /** blockInvalid explicitly permits bounded isolation; omission keeps a read-only, fail-closed scan. */
+  listDue(input: { readonly asOf: ISODateTime; readonly limit: number; readonly blockInvalid?: true }): Promise<Result<readonly PlatformSchedule[], PlatformPersistenceError>>;
+  /** Retain an unavailable job without letting it occupy every future due scan. */
+  blockDue(input: { readonly scheduleId: PlatformScheduleId; readonly asOf: ISODateTime }): Promise<Result<PlatformSchedule, PlatformPersistenceError>>;
+  /** Explicit repair only, after the selected runtime's registration has been fixed. */
+  resumeBlocked(scheduleId: PlatformScheduleId): Promise<Result<PlatformSchedule, PlatformPersistenceError>>;
   /**
    * Make the durable handoff once. The future due-runner supplies an outbox
    * entry after resolving this schedule's already-registered job; this store
@@ -125,6 +135,23 @@ export function createInMemoryPlatformScheduleStore(): PlatformScheduleStore {
         .map(copyPlatformSchedule));
     },
 
+    async blockDue({ scheduleId, asOf }) {
+      const schedule = schedules.get(scheduleId);
+      if (schedule === undefined) return missingSchedule("block");
+      const next: PlatformSchedule = schedule.state === "waiting" && Date.parse(schedule.dueAt) <= Date.parse(asOf)
+        ? { ...schedule, state: "blocked-job-unavailable" } : schedule;
+      schedules.set(scheduleId, next);
+      return ok(copyPlatformSchedule(next));
+    },
+
+    async resumeBlocked(scheduleId) {
+      const schedule = schedules.get(scheduleId);
+      if (schedule === undefined) return missingSchedule("resume");
+      const next: PlatformSchedule = schedule.state === "blocked-job-unavailable" || schedule.state === "blocked-invalid-row" ? { ...schedule, state: "waiting" } : schedule;
+      schedules.set(scheduleId, next);
+      return ok(copyPlatformSchedule(next));
+    },
+
     async handoverDue({ scheduleId, asOf, outboxEntry }) {
       const schedule = schedules.get(scheduleId);
       if (schedule === undefined) return err(platformPersistenceError({
@@ -134,6 +161,7 @@ export function createInMemoryPlatformScheduleStore(): PlatformScheduleStore {
         diagnosticRecord: persistenceScheduleRejectionDiagnosticRecord({ operation: "handover", field: "schedule", condition: "not-found", effect: "local-state-unchanged" }),
       }));
       if (schedule.state === "delivery-created") return ok({ disposition: "outbox-already-created", schedule: copyPlatformSchedule(schedule) });
+      if (schedule.state === "blocked-job-unavailable" || schedule.state === "blocked-invalid-row") return ok({ disposition: "blocked", schedule: copyPlatformSchedule(schedule) });
       if (Date.parse(schedule.dueAt) > Date.parse(asOf)) return ok({ disposition: "not-due", schedule: copyPlatformSchedule(schedule) });
       if (outbox.has(outboxEntry.id)) return err(platformPersistenceError({
         code: "PLATFORM_PERSISTENCE_DUPLICATE_OUTBOX_ENTRY",
@@ -151,8 +179,15 @@ export function createInMemoryPlatformScheduleStore(): PlatformScheduleStore {
   };
 }
 
+function missingSchedule(operation: "block" | "resume") {
+  return err(platformPersistenceError({ code: "PLATFORM_PERSISTENCE_SCHEDULE_NOT_FOUND",
+    defaultMessage: "Schedule was not found.", messageKey: "platform.persistence.schedule.not_found",
+    diagnosticRecord: persistenceScheduleControlRejectionDiagnosticRecord(operation),
+  }));
+}
+
 function copyPlatformSchedule(schedule: PlatformSchedule): PlatformSchedule {
-  return { ...schedule };
+  return { ...schedule, ...(schedule.subject === undefined ? {} : { subject: { ...schedule.subject } }) };
 }
 
 function copyOutboxRecord(record: PlatformOutboxRecord): PlatformOutboxRecord {

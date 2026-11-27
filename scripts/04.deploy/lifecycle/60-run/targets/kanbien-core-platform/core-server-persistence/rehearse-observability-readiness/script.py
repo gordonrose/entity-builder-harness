@@ -4,14 +4,16 @@
 The controller deliberately has three resumable stages. It retains provider
 facts at each completed stage, so an ECS stopped-task retention window cannot
 turn a completed observation into a reason to repeat an IAM revocation.
+The explicit scheduler selection supports human notification confirmation only;
+it does not enter those readiness-failure or credential-recovery stages.
 """
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -250,14 +252,46 @@ def persist(receipt_type: str, source: dict[str, str], observation: dict[str, An
     return module.persist(value)
 
 
-def report(verdict: str, *codes: str, facts: dict[str, Any] | None = None) -> int:
-    body: dict[str, Any] = {"schema": "deploy/persistence-observability-rehearsal-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
+def report(verdict: str, *codes: str, facts: dict[str, Any] | None = None, scope: str = "core-server-persistence") -> int:
+    body: dict[str, Any] = {"schema": "deploy/persistence-observability-rehearsal-report/v1", "target": "kanbien-core-platform", "scope": scope, "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if verdict == "blocked" and CHILD_CHECKPOINT is not None:
         facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
     if facts:
         body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
     return 0 if verdict in {"prepared", "recorded"} else 1
+
+
+def scheduling_notification(args) -> int:
+    """Record only the human's exact scheduler episode, never readiness revoke.
+
+    The returned packet belongs in the existing scheduler acceptance material;
+    it is not an acceptance decision or a new alert journal. That owner must
+    still bind the expected runtime and original fault operation independently.
+    """
+    module = receipts()
+    control = module.scheduling_runtime().control_owner()
+    try:
+        raw = args.scheduler_alert.read_bytes()
+        if len(raw) > 262144:
+            raise RehearsalFailure("observability-rehearsal-scheduler-packet-too-large")
+        packet = json.loads(raw)
+        if not isinstance(packet, dict) or not isinstance(packet.get("expected"), dict) or packet["expected"].get("scope") != args.scheduler_scope:
+            raise RehearsalFailure("observability-rehearsal-scheduler-selection-mismatch")
+        expected, failure = packet["expected"], packet.get("failure")
+        module.validate_scheduling_alert(packet, expected=expected, failure=failure, require_notification=False)
+        delivery = iso(args.operator_delivery_confirmed_at, "observability-rehearsal-delivery-confirmation-invalid")
+        binding = control.load_binding("kanbien-core-platform", args.scheduler_scope)
+        topic = "arn:aws:sns:" + binding["provider"]["region"] + ":" + binding["provider"]["account_id"] + ":kanbien-core-platform-observability-alerts"
+        if expected["topic_arn"] != topic:
+            raise RehearsalFailure("observability-rehearsal-scheduler-selection-mismatch")
+        confirmed = module.confirm_scheduling_alert(control.Provider(binding), packet, expected=expected, failure=failure,
+            operator_delivery_confirmed_at=delivery, recorded_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        return report("recorded", "observability-rehearsal-scheduler-notification-recorded", facts={"scheduling_alert": confirmed}, scope=args.scheduler_scope)
+    except module.ReceiptError as error:
+        return report("blocked", str(error), scope=args.scheduler_scope)
+    except (control.Failure, control.ADMISSION.AdmissionFailure) as error:
+        return report("blocked", error.code, scope=args.scheduler_scope)
 
 
 class RehearsalArgumentParser(argparse.ArgumentParser):
@@ -276,15 +310,24 @@ def main() -> int:
     parser.add_argument("--notification-receipt")
     parser.add_argument("--subscription-confirmed-at")
     parser.add_argument("--operator-delivery-confirmed-at")
+    parser.add_argument("--scheduler-scope", choices=("core-server-persistence", "entity-smoke"))
+    parser.add_argument("--scheduler-alert", type=Path)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     try:
         args, unknown = parser.parse_known_args()
-        if unknown or args.receipt is None or args.operation is None:
+        selected_scheduler = args.scheduler_scope is not None or args.scheduler_alert is not None
+        if unknown or args.operation is None or (not selected_scheduler and args.receipt is None):
+            raise RehearsalFailure("observability-rehearsal-arguments-invalid")
+        if selected_scheduler and (args.scheduler_scope is None or args.scheduler_alert is None
+                or args.operation != "record-notification" or args.operator_delivery_confirmed_at is None
+                or any(value is not None for value in (args.receipt, args.failure_receipt, args.notification_receipt, args.subscription_confirmed_at))):
             raise RehearsalFailure("observability-rehearsal-arguments-invalid")
         if args.validate_arguments:
             print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []}))
             return 0
+        if selected_scheduler:
+            return scheduling_notification(args)
         image_digest = candidate(args.receipt)
         if args.operation == "prepare-failure":
             source = retained_source("KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", image_digest, not_before=datetime.now(timezone.utc) - timedelta(minutes=15))

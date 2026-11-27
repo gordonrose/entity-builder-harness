@@ -5,7 +5,7 @@
 #   version: 20
 #   status: active
 #   created_on: "2026-10-29"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -3084,6 +3084,55 @@ used_by:
         self.catalog['checks']['local']['argv'] = ['bash', 'scripts/local.sh; echo unsafe']; self.save()
         self.assertIn('check-argv-invalid', self.codes(self.run_plan(execute=True)))
         self.assertIn('changed-path-invalid', self.codes(self.run_plan(paths=['../outside'])))
+
+
+    def test_direct_catalog_interpreters_execute_and_bind_runtime_identity(self):
+        cases = [
+            ('python3', '.py', '#', 'from pathlib import Path\nPath("direct-counts").open("a").write("python3\\n")\n'),
+            ('node', '.mjs', '//', 'import { appendFileSync } from "node:fs";\nappendFileSync("direct-counts", "node\\n");\n'),
+            ('node', '.js', '//', 'require("node:fs").appendFileSync("direct-counts", "node-js\\n");\n'),
+        ]
+        for interpreter, suffix, comment, body in cases:
+            with self.subTest(interpreter=interpreter, suffix=suffix):
+                command = self.root / ('scripts/direct' + suffix)
+                command.write_text(comment + ' agentic-artifact:\n' + comment + '   schema: agentic-artifact/v3\n'
+                    + comment + '   id: fixture.direct\n' + comment + '   effects: [read-only, writes-files]\n' + body)
+                check = self.catalog['checks']['local']
+                check['argv'] = [interpreter, command.relative_to(self.root).as_posix()]
+                check['inputs'] = [*check['inputs'], check['argv'][1]]
+                check['runtime']['tools'] = [interpreter]
+                check['runtime']['node_packages'] = []
+                self.save()
+                self.assertEqual(selection.validate_check(self.root, 'local', check), [])
+                report = self.run_plan(paths=['src/main.ts'], execute=True, boundary='commit')
+                self.assertEqual(report['verdict'], 'passed', report['findings'])
+                self.assertIn('local', report['execution_summary']['executed_check_ids'])
+                self.assertEqual(self.run_plan(paths=['src/main.ts'], execute=True, boundary='commit')['execution_summary']['reused_check_ids'], ['local'])
+        self.assertEqual((self.root / 'direct-counts').read_text().splitlines(), ['python3', 'node', 'node-js'])
+
+
+    def test_direct_interpreter_rejections_preserve_closed_command_boundaries(self):
+        check = copy.deepcopy(self.catalog['checks']['local'])
+        check['runtime'].update(tools=['bash', 'node', 'python3'], node_packages=[])
+        for argv in (['python', 'scripts/check.py'], ['sh', 'scripts/local.sh'], ['python3', 'scripts/local.sh'],
+                     ['node', 'scripts/check.py'], ['bash', 'scripts/check.js'], ['python3', '-c', 'private-canary'],
+                     ['node', '-e', 'private-canary'], ['python3', 'scripts/private-canary.py;false'],
+                     ['node', 'scripts/private-canary.mjs', 'private-canary$()']):
+            with self.subTest(argv=argv):
+                findings = selection.validate_check(self.root, 'local', {**check, 'argv': argv})
+                self.assertEqual(findings, [{'code': 'check-argv-invalid', 'check_id': 'local'}])
+                self.assertNotIn('private-canary', json.dumps(findings))
+        command = self.root / 'scripts/direct.py'
+        command.write_text('# agentic-artifact:\n#   schema: agentic-artifact/v3\n#   id: fixture.direct\n#   effects: [read-only, writes-files]\n')
+        link = self.root / 'scripts/linked.py'; link.symlink_to(command)
+        for path in ('../private-canary.py', '/private-canary.py', 'scripts/linked.py'):
+            self.assertEqual(selection.validate_check(self.root, 'local', {**check, 'argv': ['python3', path]}),
+                             [{'code': 'required-check-command-missing', 'check_id': 'local'}])
+        direct = {**check, 'argv': ['python3', 'scripts/direct.py']}
+        self.assertEqual(selection.validate_check(self.root, 'local', {**direct, 'runtime': {'tools': ['bash'], 'environment': []}}),
+                         [{'code': 'check-runtime-contract-invalid', 'check_id': 'local'}])
+        self.assertEqual(selection.validate_check(self.root, 'local', {**direct, 'effects': ['read-only']}),
+                         [{'code': 'check-effects-mismatch', 'check_id': 'local'}])
 
 
 

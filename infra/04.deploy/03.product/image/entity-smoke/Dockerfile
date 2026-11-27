@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [architecture, security, sre]
@@ -37,6 +37,8 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke.tsconfig.json .
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 COPY scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/prepare-runtime.mjs
 COPY scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs ./scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs

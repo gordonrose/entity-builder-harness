@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-control-custody
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -155,6 +155,8 @@ def capture(route, A, name, receipt, graph, binding, cache, controller):
 def validate_connections(A, value):
     """Connect already owner-validated receipts; no provider or current file IO."""
     tasks, controls, runtime = value["tasks"], value["controls"], value["runtime"]
+    selected_tasks = A.tasks(value.get("qualification_profile"))
+    A.database_result(tasks["migration-state"]["operation"]["packet"]["receipt"]["result"], value.get("qualification_profile"))
     timestamp = A.T.RUNNER.EVIDENCE.timestamp
     binding, basis = value["binding"], value["controller_basis"]
     successor = value.get("schema") == "deploy/entity-smoke-collected-acceptance/v4"
@@ -186,7 +188,7 @@ def validate_connections(A, value):
     if transition is not None:
         A.C.TRANSITION.validate(A.C, transition, {key: item for key, item in binding.items() if key != "record_digest"})
     for name, pair in tasks.items():
-        workload = A.TASKS[name][1]
+        workload = selected_tasks[name][1]
         for task in pair.values():
             selected = task["packet"]
             attempt, arn = selected["reservation"]["operation_id"], selected["receipt"]["task"]["arn"]

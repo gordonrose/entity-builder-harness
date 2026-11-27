@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -289,10 +289,14 @@ def graph(phase):
     value["state_stores"][0]["semantics"] = ["completed-original-record-snapshot", "exact-isolated-clone-template-and-lineage", "single-reserved-provider-effect", "separate-reader-and-cleanup-proof"]
     value["change_shape"]["allowed_operation_classes"] = ["create" if phase == "deploy" else "delete"]
     value["change_shape"]["forbidden_operation_classes"] = ["update", "replace", "broaden-permission", "delete" if phase == "deploy" else "create"]
-    if phase == "cleanup":
+    if phase in {"cleanup", "cleanup-failed"}:
         value["change_shape"]["disposable_restore_cleanup"] = {
             "original_readback_required": True, "positive_ownership_required": True,
             "explicit_execution_approval_required": True, "preserve_source_and_shared_resources": True}
+        if phase == "cleanup-failed":
+            cleanup = value["change_shape"]["disposable_restore_cleanup"]
+            cleanup.pop("original_readback_required")
+            cleanup.update(original_terminal_failure_required=True, no_unresolved_dependents_required=True)
     value["assumptions"] = [{"id": "clone-is-not-acceptance", "statement": "creation-requires-separate-original-record-read-and-owned-cleanup-before-acceptance", "required_proof": "declared", "actual_proof": "declared"}]
     C.GATE.validate_contract(value)
     return value
@@ -330,7 +334,7 @@ class Provider(C.Provider):
         try:
             require(self.capability is not None and not self.consumed, "restore-provider-operation-prohibited")
             phase, store, request, payload, guard = self.capability
-            selected = {"restore-change-set": "create-change-set", "execute-restore": "execute-change-set", "delete-restore": "delete-stack"}[phase]
+            selected = {"restore-change-set": "create-change-set", "execute-restore": "execute-change-set", "delete-restore": "delete-stack", "delete-failed-restore": "delete-stack"}[phase]
             require((service, operation) == ("cloudformation", selected) and store.read(phase, request) is not None, "restore-effect-reservation-required")
             require(R.CONTROL.canonical(parameters) == R.CONTROL.canonical(payload()), "restore-submission-does-not-match-plan")
             guard()
@@ -350,25 +354,62 @@ def cleanup_request(value, captured):
             "reader_task_arn": step["receipt"]["task"]["arn"], "reader_receipt_sha256": RESTORE.digest(step["receipt"])}
 
 
+def failed_reader(value, args, provider, *, retain=True):
+    """Capture the original admitted failed restore-read, not a replacement task."""
+    deployed = deployment(value, args, provider, observe=False)
+    child = reader_context(value, deployed)
+    selected = SimpleNamespace(**{**vars(args), "proof_stage": "isolated-restore", "workload": "restore-reader", "operation": "restore-read", "phase": "operation"})
+    preflight = SimpleNamespace(**{**vars(selected), "phase": "preflight"})
+    require(TASK.STEPS.observe_packet(TASK.dependencies(), child, preflight, provider, historical=True) is not None,
+        "restore-failed-reader-admission-required")
+    request = TASK.STEPS.request(TASK.dependencies(), child, selected)
+    attempts = TASK.RUNNER.CONTROL.AttemptStore(child["cache"] / "task-attempts")
+    reservation = attempts.read(TASK.STEPS.key(selected), request)
+    require(reservation is not None, "restore-failed-reader-original-required")
+    require(C.RESOURCE.timestamp(reservation["reserved_at"]) >= C.RESOURCE.timestamp(deployed["observed_at"]), "restore-reader-predates-clone-completion")
+    for original in attempts.reservations():
+        if original["request"]["definition"] != request["definition"]: continue
+        _, task = TASK.RUNNER.CONTROL.reconcile_reserved(provider, original)
+        require(task.get("lastStatus") == "STOPPED", "restore-failed-reader-unresolved-dependent")
+    TASK.RUNNER.PREFLIGHT.read_admission(child["cache"] / "task-receipts", reservation)
+    evidence = RESTORE.failed_reader(adapted(provider), value["restore_binding"], value["restore_parameters"], deployed["result"]["facts"], reservation)
+    require(C.RESOURCE.timestamp(evidence["terminal"]["stopped_at"]) >= C.RESOURCE.timestamp(deployed["observed_at"]), "restore-reader-predates-clone-completion")
+    path = value["cache"] / "restore-failed-reader.json"
+    retained = {"schema": "deploy/entity-smoke-failed-restore-reader/v1", "parent_sha256": C.digest_file(value["cache"] / "restore-deploy-receipt.json"), "evidence": evidence}
+    if not retain or not R.write_exclusive(path, retained): require(C.read_json(path) == retained, "restore-failed-reader-evidence-changed")
+    return {"context": child, "step": evidence, "deployed": deployed}
+
+
+def failed_cleanup_request(value, captured):
+    facts, evidence = captured["deployed"]["result"]["facts"], captured["step"]
+    return {"binding": value["restore_binding"], "stack_arn": facts["stack_arn"], "restored_resource_id": facts["restored_resource_id"], "resources_sha256": facts["resources_sha256"],
+        "reader_task_arn": evidence["terminal"]["task_arn"], "reader_receipt_sha256": RESTORE.digest(evidence)}
+
+
 def completed_cleanup(value, args, provider):
+    return _completed_cleanup(value, args, provider, failed=False)
+
+
+def _completed_cleanup(value, args, provider, *, failed):
     """Read retained gated cleanup and actual absence, with no deletion path."""
-    path = value["cache"] / "restore-cleanup-receipt.json"
+    phase, native_phase = ("cleanup-failed", "delete-failed-restore") if failed else ("cleanup", "delete-restore")
+    path = value["cache"] / ("restore-" + phase + "-receipt.json")
     R.CONTROL.no_symlinks(path)
     require(path.is_file(), "restore-cleanup-completion-required")
     receipt = C.read_json(path)
     require(isinstance(receipt, dict) and set(receipt) == {"schema", "packet", "result", "observed_at", "realization_evidence", "realization_evidence_sha256", "restored_data_readback"}
-            and receipt["schema"] == "deploy/entity-smoke-restore-cleanup-receipt/v1" and receipt["restored_data_readback"] is False, "restore-cleanup-receipt-invalid")
-    captured = reader(value, args, provider)
-    expected = cleanup_request(value, captured)
+            and receipt["schema"] == "deploy/entity-smoke-restore-" + phase + "-receipt/v1" and receipt["restored_data_readback"] is False, "restore-cleanup-receipt-invalid")
+    captured = failed_reader(value, args, provider, retain=False) if failed else reader(value, args, provider)
+    expected = failed_cleanup_request(value, captured) if failed else cleanup_request(value, captured)
     packet = receipt["packet"]
     require(isinstance(packet, dict) and set(packet) == {"schema", "plan", "request", "plan_sha256"}
             and packet["schema"] == "deploy/entity-smoke-restore-plan-packet/v1" and isinstance(packet["plan"], dict)
             and packet["plan_sha256"] == C.DEPLOY.fingerprint(packet["plan"]), "restore-cleanup-plan-invalid")
     plan = packet["plan"]
-    require(packet["request"] == expected and plan.get("phase") == "cleanup" and plan.get("binding") == value["restore_binding"]
+    require(packet["request"] == expected and plan.get("phase") == phase and plan.get("binding") == value["restore_binding"]
             and plan.get("target") == C.RESOURCE.CLUSTER and plan.get("scope") == "entity-smoke"
             and plan.get("request_sha256") == C.DEPLOY.fingerprint(expected)
-            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("restore-cleanup", C.digest_file(path), value["artifact"])
+            and plan.get("controller_sha256") == C.CONTROL_COMPLETION.controller("restore-" + phase, C.digest_file(path), value["artifact"])
             and plan.get("snapshot_sha256") == C.digest_file(value["cache"] / "snapshot-receipt.json")
             and plan.get("history_sha256") == C.digest_file(value["cache"] / "credential-history.json")
             and plan.get("configuration_sha256") == C.DEPLOY.fingerprint(value["restore_parameters"])
@@ -378,35 +419,68 @@ def completed_cleanup(value, args, provider):
             and type(plan.get("resource_count")) is int and plan["resource_count"] == len(RESTORE.RESOURCE_TYPES)
             and all(plan.get(key) is False for key in ("task_launch", "source_mutation", "automatic_retry", "scope_acceptance")), "restore-cleanup-binding-mismatch")
     # Validate the exact bounded cleanup graph, not a generic deletion waiver.
-    declaration = TASK.GRAPH.retained(C, graph("cleanup"), graph_sha256=plan.get("graph_sha256"))
+    declaration = TASK.GRAPH.retained(C, graph(phase), graph_sha256=plan.get("graph_sha256"))
     require(plan.get("graph_sha256") == C.DEPLOY.fingerprint(declaration), "restore-cleanup-graph-mismatch")
     store = R.ResourceStore(value["cache"] / "attempts")
-    active = C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store, declaration)
-    for retained in (active, value["cache"] / "restore-cleanup-plans" / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
+    active = value["cache"] / ("restore-" + phase + "-plan.json") if failed else C.TRANSITION.cleanup_plan_path(C, value["cache"], packet, store, declaration)
+    for retained in (active, value["cache"] / ("restore-" + phase + "-plans") / (packet["plan_sha256"].removeprefix("sha256:") + ".json")):
         R.CONTROL.no_symlinks(retained)
         require(C.read_json(retained) == packet, "restore-cleanup-plan-not-retained")
-    reservation = store.read("delete-restore", expected)
+    reservation = store.read(native_phase, expected)
     require(reservation is not None, "restore-cleanup-journal-required")
     result = receipt["result"]
     require(isinstance(result, dict) and result.get("status") == "completed" and result.get("reservation") == reservation,
             "restore-cleanup-terminal-result-required")
-    require(C.RESOURCE.timestamp(reservation["reserved_at"]) >= C.RESOURCE.timestamp(captured["step"]["receipt"]["collected_at"])
+    terminal_time = captured["step"]["terminal"]["stopped_at"] if failed else captured["step"]["receipt"]["collected_at"]
+    require(C.RESOURCE.timestamp(reservation["reserved_at"]) >= C.RESOURCE.timestamp(terminal_time)
             and C.RESOURCE.timestamp(receipt["observed_at"]) >= C.RESOURCE.timestamp(reservation["reserved_at"]), "restore-cleanup-order-invalid")
-    gate_reference(receipt, value["cache"], "restore-cleanup", packet["plan_sha256"])
+    gate_reference(receipt, value["cache"], "restore-" + phase, packet["plan_sha256"])
     # Unlike cleanup_restore, observe_cleanup has no reserve/submission call.
-    current = RESTORE.observe_cleanup(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"],
-                                      captured["step"]["reservation"], captured["step"]["receipt"])
+    observer = RESTORE.observe_failed_cleanup if failed else RESTORE.observe_cleanup
+    current = observer(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"],
+        captured["step"]["reservation"], captured["step"] if failed else captured["step"]["receipt"])
     require(current == result and current.get("facts", {}).get("absence_observed") is True
             and current["facts"].get("source_mutation") is False, "restore-cleanup-current-absence-not-confirmed")
     return {"receipt": receipt, "reader": captured, "required_after": receipt["observed_at"]}
 
 
+def scheduling_resource_cleanup(original, *, receipt_path, proof_label, expected_predecessor, provider):
+    """Reobserve only a selected original's native gated cleanup; never submit."""
+    require(isinstance(original, dict) and original.get("phase") == "execute-restore", "restore-cost-original-invalid")
+    request = original.get("request")
+    R.validate_request("execute-restore", request)
+    binding = request["binding"]
+    require(binding["proof_label"] == proof_label, "restore-cost-original-binding-mismatch")
+    # The budget supplies its existing root-relative qualified package selector,
+    # not a caller-chosen cache or resource name.
+    require(isinstance(receipt_path, str) and not Path(receipt_path).is_absolute()
+        and ".." not in Path(receipt_path).parts and str(Path(receipt_path)) == receipt_path,
+        "restore-cost-package-reference-invalid")
+    args = SimpleNamespace(receipt=C.ROOT / receipt_path, proof_label=proof_label,
+        expected_predecessor=expected_predecessor, expected_digest=binding["record_digest"],
+        mode="plan", phase="cleanup", approved_plan=None, wait_seconds=0)
+    namespace = C.delivery_cache(proof_label)
+    if "recovery_id" in binding: namespace = namespace / "releases" / binding["recovery_id"]
+    R.CONTROL.no_symlinks(namespace)
+    store = R.ResourceStore(namespace / "attempts")
+    require(store.read("execute-restore", request) == original, "restore-cost-original-not-retained")
+    failed = (namespace / "restore-cleanup-failed-receipt.json").exists()
+    receipt = namespace / ("restore-cleanup-failed-receipt.json" if failed else "restore-cleanup-receipt.json")
+    R.CONTROL.no_symlinks(receipt)
+    if not receipt.exists(): return None
+    value = source(args, provider, source_proof=False)
+    require(value["cache"] == namespace and value["restore_binding"] == binding,
+        "restore-cost-original-binding-mismatch")
+    return _completed_cleanup(value, args, provider, failed=failed)["receipt"]
+
+
 def prepare(args, provider, *, source_proof=True):
     value = source(args, provider, source_proof=source_proof)
     store = R.ResourceStore(value["cache"] / "attempts")
-    captured = reader(value, args, provider) if args.phase == "cleanup" else None
-    request = cleanup_request(value, captured) if captured is not None else RESTORE.request(value["restore_binding"], value["restore_parameters"])
-    if captured is not None and store.read("delete-restore", request) is None:
+    failed = args.phase == "cleanup-failed"
+    captured = failed_reader(value, args, provider) if failed else reader(value, args, provider) if args.phase == "cleanup" else None
+    request = failed_cleanup_request(value, captured) if failed else cleanup_request(value, captured) if captured is not None else RESTORE.request(value["restore_binding"], value["restore_parameters"])
+    if captured is not None and store.read("delete-failed-restore" if failed else "delete-restore", request) is None:
         deployed = deployment(value, args, provider)
         BINDING.inspect(C, TASK.BINDING, RESTORE, provider, value["restore_binding"], value["restore_parameters"], deployed["result"]["facts"], value["parameters"]["PrivateSubnetIds"].split(","))
     declaration = graph(args.phase)
@@ -466,7 +540,7 @@ def run(args, provider):
         book.validate("execution-preflight", count, operation_class=operation)
         require(C.source_digest() == value["artifact"], "restore-source-changed-before-submission")
     book.gate("execution-preflight"); book.validate("execution-preflight", count, operation_class=operation)
-    phase = "delete-restore" if args.phase == "cleanup" else "restore-change-set" if args.mode == "review" else "execute-restore"
+    phase = "delete-failed-restore" if args.phase == "cleanup-failed" else "delete-restore" if args.phase == "cleanup" else "restore-change-set" if args.mode == "review" else "execute-restore"
     if phase == "execute-restore":
         review = C.read_json(value["cache"] / "restore-review-receipt.json")
         require(isinstance(review, dict) and review.get("packet") == packet and isinstance(review.get("result"), dict)
@@ -490,7 +564,9 @@ def run(args, provider):
         elif phase == "execute-restore": result = RESTORE.execute_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], effect_request["change_set_arn"], effect_request["stack_arn"])
         else:
             captured = prepared["captured"]
-            if reconciling_cleanup:
+            if phase == "delete-failed-restore":
+                result = RESTORE.cleanup_failed_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"])
+            elif reconciling_cleanup:
                 result = RESTORE.observe_cleanup(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"]["receipt"])
             else:
                 result = RESTORE.cleanup_restore(adapted(provider), store, value["restore_binding"], value["restore_parameters"], captured["deployed"]["result"]["facts"], captured["step"]["reservation"], captured["step"]["receipt"], historical_reader=True)
@@ -514,7 +590,7 @@ def parse(arguments=None):
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.error = lambda _message: (_ for _ in ()).throw(RestoreFailure("restore-arguments-invalid"))
     parser.add_argument("--mode", choices=("plan", "review", "execute"), required=True)
-    parser.add_argument("--phase", choices=("deploy", "cleanup"), required=True)
+    parser.add_argument("--phase", choices=("deploy", "cleanup", "cleanup-failed"), required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--expected-digest", required=True)
@@ -525,7 +601,7 @@ def parse(arguments=None):
     parser.add_argument("--validate-arguments", action="store_true")
     args = parser.parse_args(arguments)
     require(re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) and re.fullmatch(r"[a-f0-9]{64}", args.expected_digest) and 0 <= args.wait_seconds <= 60
-            and not (args.phase == "cleanup" and args.mode == "review"), "restore-arguments-invalid")
+            and not (args.phase != "deploy" and args.mode == "review"), "restore-arguments-invalid")
     require(args.mode == "plan" and args.approved_plan is None or args.mode != "plan" and isinstance(args.approved_plan, str) and re.fullmatch(r"sha256:[a-f0-9]{64}", args.approved_plan), "restore-approved-plan-required")
     return args
 

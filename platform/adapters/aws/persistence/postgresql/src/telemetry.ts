@@ -9,7 +9,7 @@ import { postgreSqlPersistenceProviderFailureClass, type PostgreSqlPersistenceOp
 
 export type PostgreSqlPersistenceTelemetryOutcome = "succeeded" | "failed" | "rolled_back";
 /** Command diagnostics do not yet describe schedule-store telemetry callbacks. */
-export type PostgreSqlPersistenceTelemetryOperation = Exclude<PostgreSqlPersistenceOperation, "create_schedule" | "read_schedule" | "list_due_schedules" | "handover_schedule">;
+export type PostgreSqlPersistenceTelemetryOperation = Exclude<PostgreSqlPersistenceOperation, "create_schedule" | "read_schedule" | "list_due_schedules" | "handover_schedule" | "block_schedule" | "resume_schedule">;
 
 export interface PostgreSqlPersistenceTelemetry {
   readonly operation: PostgreSqlPersistenceTelemetryOperation;

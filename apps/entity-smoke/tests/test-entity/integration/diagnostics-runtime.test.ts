@@ -24,7 +24,7 @@ async function main(): Promise<void> {
   let saves = 0;
   const repository = inMemoryTestEntityRepository();
   const deps: TestEntityServiceDependencies = {
-    repository: { ...repository, create(entity) { saves++; return repository.create(entity); }, save(entity) { saves++; return repository.save(entity); } },
+    repository: { ...repository, create(entity) { saves++; return repository.create(entity); }, save(entity, expected) { saves++; return repository.save(entity, expected); } },
     clock: fixedClock(new Date("2026-11-06T12:00:00Z")), lifecyclePolicy: policy.value,
     uuidGenerator: { generate() { generated++; return ok("a0b1c2d3-e4f5-4a67-8b90-123456789abc" as UUID); } },
   };
@@ -138,7 +138,7 @@ async function main(): Promise<void> {
         clock: { now() { clockCalls++; throw new Error("UUID failure must precede time generation."); } },
         repository: { get: unexpectedRepositoryCall, create: unexpectedRepositoryCall,
           save: unexpectedRepositoryCall, listByStatus: unexpectedRepositoryCall,
-          listArchivedDeleted: unexpectedRepositoryCall, purgeArchivedDeleted: unexpectedRepositoryCall },
+          purgeArchivedDeleted: unexpectedRepositoryCall },
         uuidGenerator: { generate() { generatorCalls++; sourceResult = systemUuidGenerator.generate(); return sourceResult; } },
       });
       equal(result.ok, false, condition);

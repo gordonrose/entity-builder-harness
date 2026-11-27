@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runnable-program-build-validation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: testing
 #   disciplines: [architecture, security]
@@ -42,12 +42,14 @@ class BuildValidationTests(unittest.TestCase):
         self.legacy = yaml.safe_load((HERE / 'fixtures/valid-contract.yml').read_text())
         program = self.document['runnable_programs'][0]
         program.update(build={'kind': 'workspace-typescript', 'typescript_project': 'project.json'},
+                       source_entrypoint='program.ts',
                        approved_dependencies=['application'], observed_dependencies=['application'], forbidden_dependencies=[])
         self.document['dependency_bindings'] = {'application': {'workspace_package': '@different/ledger'}}
         self.put('package.json', {'workspaces': ['packages/*']})
         self.put('packages/ledger/package.json', {'name': '@different/ledger', 'exports': {'.': './src/index.ts'}})
         self.put('packages/ledger/src/index.ts', 'export const value = 1;\n')
         self.put('project.json', {'include': ['packages/ledger/src']})
+        self.put('program.ts', 'export const handler = async () => true;\n')
         self.save()
 
     def put(self, path, value):

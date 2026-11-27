@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.recovery-steps
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -22,6 +22,8 @@ from types import SimpleNamespace
 
 SPEC = importlib.util.spec_from_file_location("entity_smoke_recovery_steps_state", (Path(__file__).resolve().parents[2] / "recovery-and-replacement/recovery-state/recovery-state.py"))
 STATE = importlib.util.module_from_spec(SPEC); SPEC.loader.exec_module(STATE)
+_PROFILE_SPEC = importlib.util.spec_from_file_location("entity_smoke_recovery_profile", Path(__file__).resolve().parents[5] / "release-succession/scheduling-proof.py")
+SCHEDULING = importlib.util.module_from_spec(_PROFILE_SPEC); _PROFILE_SPEC.loader.exec_module(SCHEDULING)
 
 
 class RecoveryStepFailure(Exception):
@@ -35,7 +37,10 @@ def require(allowed, code):
 
 
 def supported(args):
-    return getattr(args, "proof_stage", "baseline") == "initial-recovery" and (args.workload, args.operation) in {("verifier", "read"), ("administration", "observe-migration-state")}
+    try: selected = SCHEDULING.database_proof(getattr(args, "qualification_profile", None))
+    except SCHEDULING.ProofFailure as failure: raise RecoveryStepFailure(failure.code) from None
+    return (getattr(args, "proof_stage", "baseline"), args.workload, args.operation) in {
+        ("initial-recovery", "verifier", "read"), (selected["stage"], "administration", selected["operation"])}
 
 
 def failures():
@@ -109,7 +114,7 @@ def prerequisites(route, context, args, provider):
     timestamp = runner.EVIDENCE.timestamp
     after, packets = value["required_after"], value["packets"]
     if args.workload == "administration":
-        selected = SimpleNamespace(**{**vars(args), "workload": "verifier", "operation": "read", "phase": "operation"})
+        selected = SimpleNamespace(**{**vars(args), "workload": "verifier", "operation": "read", "phase": "operation", "proof_stage": "initial-recovery"})
         checked = route.BINDING.inspect(provider, "verifier", context["parameters"], context["resources"], context.get("binding_snapshot"))
         read = steps.observe_packet(route, {**context, "checked": checked}, selected, provider, historical=True)
         if read is None: raise steps.PrerequisiteMissing("initial-recovery-original-read")
@@ -121,4 +126,9 @@ def prerequisites(route, context, args, provider):
 
 def validate_result(args, receipt):
     if supported(args) and args.phase == "operation" and args.workload == "administration":
-        require(receipt["result"].get("code") == "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED", "recovery-migration-history-not-applied")
+        owner = SCHEDULING
+        try:
+            selected = owner.database_proof(getattr(args, "qualification_profile", None))
+            require(receipt["result"].get("code") == selected["result_code"], "recovery-migration-history-not-applied")
+            if getattr(args, "qualification_profile", None) is not None: owner.complete_database_state(receipt["result"].get("database_state"))
+        except owner.ProofFailure as failure: raise RecoveryStepFailure(failure.code) from None

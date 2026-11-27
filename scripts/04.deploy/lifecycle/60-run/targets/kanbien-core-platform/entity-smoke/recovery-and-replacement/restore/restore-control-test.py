@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -28,6 +28,7 @@ SPEC = importlib.util.spec_from_file_location("entity_smoke_restore_control_test
 M = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(M)
 R = M.RESOURCE
+R.reserve_resource_cost = lambda store, phase, request: store.reserve(phase, request)
 CANARY = "credential-row-provider-canary"
 BINDING = {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64, "configuration_contract_sha256": "sha256:" + "c" * 64,
            "permission_contract_sha256": "sha256:" + "d" * 64, "dependency_incarnation_sha256": "sha256:" + "e" * 64,
@@ -104,7 +105,12 @@ class Provider:
             assert parameters["tasks"] == [self.task["taskArn"]]
             return {"tasks": [copy.deepcopy(self.task)]}
         if operation == "list-tasks":
+            if "startedBy" in parameters:
+                assert parameters["startedBy"] == self.reader_reservation["operation_id"]
+                return {"taskArns": [self.task["taskArn"]]}
             return {"taskArns": [self.task["taskArn"]] if parameters["family"].endswith("-restore-reader") and parameters["desiredStatus"] == "STOPPED" else []}
+        if operation == "get-log-events":
+            return {"events": [], "nextForwardToken": "fixed-reader-log-end"}
         if operation == "describe-task-definition":
             assert parameters["taskDefinition"] == DEFINITION
             if self.deleted: return {"taskDefinition": {"taskDefinitionArn": DEFINITION, "status": "INACTIVE"}}
@@ -264,6 +270,35 @@ def run():
         wrong = {**PARAMETERS, "SourceSnapshotArn": "arn:aws:rds:eu-west-1:337159794548:snapshot:unowned"}
         fails(lambda: M.prepare_restore(provider, owner, BINDING, wrong), "restore-parameters-invalid")
         assert provider.calls == []
+        provider, owner = Provider(), store("failed-reader")
+        prepare(provider, owner); deployment = execute(provider, owner)
+        provider.task["containers"][0]["exitCode"] = 1
+        evidence = M.failed_reader(provider, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation)
+        assert evidence["terminal"]["failure_basis"] == "nonzero-exit" and evidence["report"] == {}
+        forged = copy.deepcopy(evidence); forged["terminal"]["exit_code"] = 2
+        fails(lambda: M.cleanup_failed_restore(provider, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, forged), "restore-failed-reader-evidence-changed")
+        assert not any(op == "delete-stack" for _, op, _ in provider.calls)
+        # Cost admission is independently tested by its owner; this controlled
+        # provider branch supplies it only after proving it is mandatory.
+        admission = R.resource_cleanup_admission
+        fails(lambda: M.cleanup_failed_restore(provider, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, evidence), "resource-cleanup-cost-admission-not-confirmed")
+        def admitted(store, binding, stack_arn, *, required=False):
+            assert required is True and binding == BINDING and stack_arn == STACK_ARN
+        R.resource_cleanup_admission = admitted
+        provider.lost = "delete-stack"
+        call = lambda: M.cleanup_failed_restore(provider, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, evidence)
+        fails(call, "restore-cleanup-submission-uncertain-reconcile-only")
+        provider.lost = None
+        assert call()["status"] == "completed"
+        assert call()["status"] == "completed"
+        assert sum(op == "delete-stack" for _, op, _ in provider.calls) == 1
+        intent = M.failed_cleanup_identity(provider, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, evidence)[3]
+        assert owner.read("delete-failed-restore", intent) is not None and owner.read("delete-restore", intent) is None
+        assert M.observe_failed_cleanup(provider, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, evidence)["facts"]["absence_observed"] is True
+        R.resource_cleanup_admission = admission
+        fails(lambda: M.observe_cleanup(provider, owner, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation, provider.reader_receipt), "restore-cleanup-journal-required")
+        provider.task["lastStatus"] = "RUNNING"
+        fails(lambda: M.failed_reader(provider, BINDING, PARAMETERS, deployment["facts"], provider.reader_reservation), "restore-failed-reader-terminal-required")
         assert all(CANARY not in path.read_text() for path in root.rglob("*.json"))
     print(json.dumps({"schema": "deploy/entity-smoke-restore-control-fixture/v1", "verdict": "passed", "provider_observation": False,
                       "cases": ["exact-create-review", "review-stack-without-deployed-body", "single-execution", "retained-reader-before-cleanup", "observed-owned-absence", "read-only-observer-no-reserve-or-mutation", "read-only-observer-no-journal-no-io", "read-only-orphan-pending", "read-only-unknown-not-absence", "read-only-deletion-still-pending", "lost-review-no-replay", "lost-execution-no-replay", "lost-cleanup-no-replay", "pending-execution-resume", "unsafe-change-shape-rejected", "execution-lineage", "source-reader-route-rejected", "stopping-reader-blocks-delete", "orphan-remains-pending", "unknown-not-absence", "no-unreviewed-execution", "no-foreign-snapshot"]}))

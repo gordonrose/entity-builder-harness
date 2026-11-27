@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./diagnostics.v1.json": "./src/diagnostics.v1.json",
+    "./lambda-batch-diagnostics.v1.json": "./src/lambda-batch-diagnostics.v1.json",
     "./configuration/diagnostics.v1.json": "./src/configuration/contract/reporting/diagnostics.v1.json"
   },
   "types": "./src/index.ts",

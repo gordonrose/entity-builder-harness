@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -28,6 +28,9 @@ if not __debug__: raise SystemExit("ENTITY_SMOKE_RESOURCE_CONTROL_ASSERTIONS_DIS
 SPEC = importlib.util.spec_from_file_location("entity_smoke_resource_control_test", (Path(__file__).resolve().parents[2] / "controls-and-readiness/implementation/resource-control.py"))
 M = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(M)
+# This native protocol fixture controls the independent priced-admission seam;
+# real budget inputs and the global lock are exercised by their owning tests.
+M.reserve_resource_cost = lambda store, phase, request: store.reserve(phase, request)
 CANARY = "credential-row-provider-canary"
 PREFIX = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"
 ORIGINAL, SUCCESSOR = PREFIX + "1" * 32, PREFIX + "2" * 32

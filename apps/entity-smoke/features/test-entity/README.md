@@ -12,6 +12,7 @@ insert it. It is handwritten, not generated code or a generic CRUD framework.
 | `domain/services/` | one named file per create/read/list/update/archive/restore/delete/purge-assessment use case |
 | `persistence/` | repository contract, local in-memory test double and provider-neutral relational implementation |
 | `transport/http.ts` | private smoke-command adaptation; business rules remain in services |
+| `transport/retention-job.ts` | checks the saved delivery and reminder references before selecting one entity for cleanup |
 | `migrations/` | ordered app-owned schema source, consumed by target composition |
 | `index.ts` | deliberate exports only; implementation stays in its owning files |
 
@@ -32,6 +33,63 @@ not itself hide a record from this repository's ordinary reads: it changes the
 separate `visibility` attribute. The in-memory repository is local-test
 infrastructure only.
 
+## One reminder, one entity
+
+Deleting an archived entity now saves two things together: its deleted state and
+one future reminder. For example, deletion at `12:00:00.000Z` creates a reminder
+due at `12:05:00.001Z`: the extra millisecond respects the strict “more than five
+minutes” rule. If the recovery period is longer, the reminder waits until one
+millisecond after that period instead; both restrictions must have expired.
+The reminder carries the feature-owned reference
+`{ kind: "entity-smoke.test-entity", id: "<entity UUID>" }`; it does not contain
+arbitrary arguments supplied by an HTTP caller.
+
+[deleteTestEntityService](domain/services/delete-test-entity.ts) uses the supplied
+`TestEntityDeletionTransaction` whenever reminders are configured. The
+[PostgreSQL target](../../../../infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts)
+implements that contract with one database transaction and a locked entity read.
+The entity update and reminder insert either commit together or roll back
+together. Missing transaction support rejects deletion before mutation; the
+in-memory repository is not a substitute for this database guarantee.
+
+All mutation services also pass the original row to `repository.save(next,
+expected)`. The save compares every stored field with that original snapshot.
+If another operation has changed or removed the row, it saves nothing and returns
+`TEST_ENTITY_WRITE_CONFLICT` (HTTP 409). This stops an older edit from undoing a
+newer deletion, including when both operations used the same timestamp. A
+conflict during deletion rolls back the new reminder as well; no automatic retry
+replays the user's command.
+
+The app mount registers `entity-smoke.test-entity.purge-expired`. Its handler uses
+`TestEntityRetentionDelivery`, the supplied read access to saved delivery and
+schedule records, to follow this chain:
+
+```text
+queue message's outbox ID
+  -> saved outbox record's schedule reference
+  -> saved schedule's entity reference and due time
+  -> that entity's current deletion state
+  -> conditional deletion of that one entity
+```
+
+Platform's shared `loadPlatformScheduleDelivery` checks the outbox/schedule
+links; the feature does not duplicate those checks.
+[purgeExpiredTestEntityService](domain/services/purge-expired-test-entities.ts)
+checks that the row is still archived and deleted, that its current deletion
+produces this reminder's due time, and that retention and recovery periods have
+expired. The final repository DELETE checks those conditions again so a change
+between reading and deleting cannot remove a newer deletion. A restored entity,
+a later deletion, or an already-removed entity is a harmless no-op. Other rows,
+even if eligible for cleanup, are not inspected or removed.
+
+A legacy reminder without an entity reference is rejected; there is no fallback
+to scanning the table. Missing feature configuration or invalid entity references
+produce the safe `entity-smoke.test-entity.retention-rejected` diagnostic. Invalid
+delivery references retain Platform's shared diagnostic. Neither includes supplied
+IDs or row values. Database failures and failed cleanup results remain job failures,
+not successful delivery. This feature does not start a timer or provision AWS
+resources; platform delivery and target deployment own those responsibilities.
+
 ## Relational storage
 
 The relational implementation exists, but it does not select an AWS service,
@@ -39,9 +97,9 @@ open a database connection, load credentials or run migrations itself.
 
 | File | What it does |
 | --- | --- |
-| [repository.ts](persistence/repository.ts) | Defines the feature's get/create/save/status-list operations. Raw get retains deleted facts for restoration; ordinary service get filters them out. |
+| [repository.ts](persistence/repository.ts) | Defines get/create/save/status-list and targeted conditional purge. `TestEntityPurgeCondition` supplies the expected deletion time, current time and retention duration. Raw get retains deleted facts for restoration; ordinary service get filters them out. |
 | [relational/contracts.ts](persistence/relational/contracts.ts) | Defines `TestEntityRelationalExecutor`: target-supplied execution of SQL text plus separately bound values, returning rows or the selected error. |
-| [relational/repository.ts](persistence/relational/repository.ts) | Implements `relationalTestEntityRepository(executor)`: INSERT-only creation, UPDATE-only saving and indexed reads. It neither upserts nor retries failures. |
+| [relational/repository.ts](persistence/relational/repository.ts) | Implements `relationalTestEntityRepository(executor, options)`: INSERT-only creation, UPDATE-only saving, indexed reads and conditional deletion. `lockForMutation` is used only inside the target's deletion transaction. It neither upserts nor retries failures. |
 | [relational/mapping.ts](persistence/relational/mapping.ts) | Internally converts entities to parameters and validates returned rows, including bigint text, dates, nullable arrays and lifecycle facts. Invalid rows produce the feature's stored-record diagnostic rather than an unchecked branded entity. |
 | [in-memory.ts](persistence/in-memory.ts) | Supplies `inMemoryTestEntityRepository` for local tests; ID collisions cannot overwrite the original and saving cannot recreate a missing record. |
 
@@ -109,6 +167,11 @@ and in-memory dependencies, not a real server/database. The separate
 [composition fixture](../../../../scripts/04.deploy/lifecycle/20-build/entity-smoke-composition/runtime-test.mjs)
 also exercises an actual local server and its internal diagnostic delivery.
 Neither establishes packaged-image, real PostgreSQL or live AWS acceptance.
+The [retention delivery cases](../../tests/test-entity/integration/retention-cleanup-job-runtime.test.ts)
+exercise malformed delivery references, old reminders, concurrent state changes,
+duplicate deliveries and preservation of unrelated eligible rows. The composition
+fixture also checks one-client transaction ordering and rollback with controlled
+database responses; only a real PostgreSQL test can establish database durability.
 
 The [feature boundary](../../../../.agentic/03.product/feature/standards/feature-boundary.md)
 and [pilot plan](../../../../.agentic/03.product/feature/plans/implementation/first-persistence-feature-pilot.md)

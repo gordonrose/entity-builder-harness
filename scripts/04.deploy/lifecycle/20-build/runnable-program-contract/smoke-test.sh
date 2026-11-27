@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.runnable-program-contract
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -133,6 +133,27 @@ from pathlib import Path
 import copy, json, subprocess, sys, yaml
 original=yaml.safe_load(Path(sys.argv[1]).read_text())
 entry=original['runnable_programs'][0]['entrypoint']
+handler=copy.deepcopy(original)
+handler['runnable_programs'][0].update(execution_kind='managed-handler', handler_export='handler')
+handler['image_contracts'][0].update(command_mode='handler', command=[entry.rsplit('.',1)[0]+'.handler'])
+def handler_case(document, expected):
+    path=Path(sys.argv[2])/'managed-handler.yml'; path.write_text(yaml.safe_dump(document))
+    result=subprocess.run([sys.executable,'-B','scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py','--contract',str(path),'--json'],capture_output=True,text=True)
+    report=json.loads(result.stdout)
+    assert (result.returncode,report['findings']) == ((0,[]) if expected is None else (1,[{'code':expected}]))
+handler_case(handler,None)
+for field,value in [('handler_export','a.b'),('entrypoint','artifacts/../private.js'),('runtime_executable','python3')]:
+    rejected=copy.deepcopy(handler); rejected['runnable_programs'][0][field]=value
+    handler_case(rejected,'program-handler-invalid')
+for command in [['node',entry],['unexpected.handler'],[entry.rsplit('.',1)[0]+'.handler','extra']]:
+    rejected=copy.deepcopy(handler); rejected['image_contracts'][0]['command']=command
+    handler_case(rejected,'image-command-invalid')
+rejected=copy.deepcopy(original); rejected['image_contracts'][0]['command_mode']='handler'
+handler_case(rejected,'image-command-invalid')
+rejected=copy.deepcopy(original); rejected['runnable_programs'][0]['handler_export']='handler'
+handler_case(rejected,'program-handler-invalid')
+rejected=copy.deepcopy(handler); rejected['runnable_programs'][0]['execution_kind']='shell'
+handler_case(rejected,'program-execution-kind-invalid')
 for command in [['echo',entry],['sh',entry],['node','--eval','0',entry]]:
     document=copy.deepcopy(original);document['image_contracts'][0]['command']=command
     path=Path(sys.argv[2])/'runtime-mismatch.yml';path.write_text(yaml.safe_dump(document))

@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -23,6 +23,7 @@ fresh alignment and explicit concrete creation/deletion authority before it
 supplies a provider. All resource mutation calls below are single-submission.
 """
 import hashlib
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
@@ -220,7 +221,8 @@ def execute_restore(provider, store, binding, parameters, change_set_arn, stack_
         return CHANGES.execute(provider, store, phase="execute-restore", request=intent,
             arguments={"StackName": stack_arn, "ChangeSetName": change_set_arn}, precondition=precondition,
             observe=lambda execution: observe_restore(provider, store, binding, parameters, change_set_arn, stack_arn),
-            passthrough=(RESOURCE.SubmissionNotStarted,))
+            passthrough=(RESOURCE.SubmissionNotStarted,),
+            reserve=lambda: RESOURCE.reserve_resource_cost(store, "execute-restore", intent))
     except CHANGES.ChangeSetFailure:
         raise RESOURCE.ResourceFailure("restore-execution-uncertain-reconcile-only") from None
 
@@ -263,8 +265,8 @@ def absent(provider, service_name, operation, **parameters):
     return False
 
 
-def cleanup_identity(binding, parameters, deployment, reader_reservation, reader_receipt):
-    """Validate retained ownership/readback without provider calls or writes."""
+def cleanup_resources(binding, parameters, deployment):
+    """Validate complete exact ownership without claiming successful readback."""
     stack_name, _, identifier = parameters_for(binding, parameters)
     # Existing retained restore receipts predate engine_version. Cleanup still
     # requires their exact owned resources and successful reader; never rewrite them.
@@ -276,6 +278,12 @@ def cleanup_identity(binding, parameters, deployment, reader_reservation, reader
     for logical in ("RestoreReaderExecutionRole", "RestoreReaderTaskRole"):
         require(re.fullmatch(r"[A-Za-z0-9+=,.@_-]{1,64}", resources[logical]["physical_id"]) is not None, "restore-cleanup-physical-identity-invalid")
     require(re.fullmatch(r"arn:aws:ecs:" + RESOURCE.REGION + ":" + RESOURCE.ACCOUNT + r":task-definition/kanbien-core-platform-entity-smoke-restore-reader:[1-9][0-9]*", resources["RestoreReaderTaskDefinition"]["physical_id"]) is not None, "restore-cleanup-physical-identity-invalid")
+    return stack_name, identifier, resources
+
+
+def cleanup_identity(binding, parameters, deployment, reader_reservation, reader_receipt):
+    """Validate retained ownership/readback without provider calls or writes."""
+    stack_name, identifier, resources = cleanup_resources(binding, parameters, deployment)
     # The complete retained reader remains a prerequisite on every invocation,
     # including after deletion. Do not replace it with exit code/health alone.
     try: retained = RESOURCE.EVIDENCE.validate_retained(reader_receipt, reader_reservation)
@@ -283,6 +291,35 @@ def cleanup_identity(binding, parameters, deployment, reader_reservation, reader
     require(retained["workload"] == "restore-reader" and retained["operation"] == "restore-read" and retained["source_revision"] == binding["source_revision"] and retained["image_digest"] == binding["image_digest"] and retained["result"].get("record_digest") == binding["record_digest"] and retained["task"]["definition"] == resources["RestoreReaderTaskDefinition"]["physical_id"], "restore-reader-identity-not-confirmed")
     intent = {"binding": binding, "stack_arn": deployment["stack_arn"], "restored_resource_id": deployment["restored_resource_id"], "resources_sha256": deployment["resources_sha256"], "reader_task_arn": retained["task"]["arn"], "reader_receipt_sha256": digest(retained)}
     return stack_name, identifier, resources, intent, retained
+
+
+def failed_reader(provider, binding, parameters, deployment, reservation):
+    """Reobserve the actual original stopped task and bounded logs, never launch."""
+    _, _, resources = cleanup_resources(binding, parameters, deployment)
+    request = RESOURCE.CONTROL.validate_request(reservation["request"])
+    expected_incarnation = digest({"resource_id": deployment["restored_resource_id"], "database": parameters["RestoredDatabaseName"], "schema": "entity_smoke"})
+    require(request["workload"] == "restore-reader" and request["environment"].get("ENTITY_SMOKE_DATABASE_PROOF_OPERATION") == "restore-read"
+        and request["environment"].get("ENTITY_SMOKE_EXPECTED_DIGEST") == binding["record_digest"]
+        and request["definition"] == resources["RestoreReaderTaskDefinition"]["physical_id"]
+        and request["source_revision"] == binding["source_revision"] and request["image_digest"] == binding["image_digest"]
+        and request["dependency_incarnation_sha256"] == expected_incarnation,
+        "restore-failed-reader-identity-not-confirmed")
+    _, task = RESOURCE.CONTROL.reconcile_reserved(provider, reservation)
+    require(task.get("lastStatus") == "STOPPED", "restore-failed-reader-terminal-required")
+    logs = RESOURCE.EVIDENCE.read_logs(provider, request, task["taskArn"])
+    try: RESOURCE.EVIDENCE.collect(task, reservation, logs, datetime.now(timezone.utc).isoformat())
+    except RESOURCE.EVIDENCE.TerminalTaskFailure as failure:
+        return {"reservation": reservation, "terminal": failure.terminal, "report": RESOURCE.EVIDENCE.failure_report(failure)}
+    raise RESOURCE.ResourceFailure("restore-failed-reader-terminal-required")
+
+
+def failed_cleanup_identity(provider, binding, parameters, deployment, reservation, evidence):
+    stack_name, identifier, resources = cleanup_resources(binding, parameters, deployment)
+    require(failed_reader(provider, binding, parameters, deployment, reservation) == evidence,
+        "restore-failed-reader-evidence-changed")
+    intent = {"binding": binding, "stack_arn": deployment["stack_arn"], "restored_resource_id": deployment["restored_resource_id"],
+        "resources_sha256": deployment["resources_sha256"], "reader_task_arn": evidence["terminal"]["task_arn"], "reader_receipt_sha256": digest(evidence)}
+    return stack_name, identifier, resources, intent
 
 
 def observe_cleanup(provider, store, binding, parameters, deployment, reader_reservation, reader_receipt):
@@ -294,6 +331,10 @@ def observe_cleanup(provider, store, binding, parameters, deployment, reader_res
     """
     stack_name, identifier, resources, intent, _ = cleanup_identity(binding, parameters, deployment, reader_reservation, reader_receipt)
     reservation = store.read("delete-restore", intent)
+    return observe_cleanup_resources(provider, deployment, stack_name, identifier, resources, reservation)
+
+
+def observe_cleanup_resources(provider, deployment, stack_name, identifier, resources, reservation):
     require(reservation is not None, "restore-cleanup-journal-required")
     try: stack = only(provider("cloudformation", "describe-stacks", StackName=deployment["stack_arn"]), "Stacks")
     except RESOURCE.ResourceMissing: stack = None
@@ -324,6 +365,7 @@ def cleanup_restore(provider, store, binding, parameters, deployment, reader_res
     """Existing approved execution/reconciliation path; not an acceptance reader."""
     require(type(historical_reader) is bool, "restore-reader-observation-mode-invalid")
     stack_name, identifier, resources, intent, retained = cleanup_identity(binding, parameters, deployment, reader_reservation, reader_receipt)
+    RESOURCE.resource_cleanup_admission(store, binding, deployment["stack_arn"])
     previous = store.read("delete-restore", intent)
     if previous is None:
         stack = restore_stack(provider, binding, parameters)
@@ -339,3 +381,28 @@ def cleanup_restore(provider, store, binding, parameters, deployment, reader_res
         except RESOURCE.SubmissionNotStarted: raise
         except Exception: raise RESOURCE.ResourceFailure("restore-cleanup-submission-uncertain-reconcile-only") from None
     return observe_cleanup(provider, store, binding, parameters, deployment, reader_reservation, reader_receipt)
+
+
+def cleanup_failed_restore(provider, store, binding, parameters, deployment, reader_reservation, evidence):
+    """Delete only a positively owned clone after authenticated terminal failure."""
+    stack_name, identifier, resources, intent = failed_cleanup_identity(provider, binding, parameters, deployment, reader_reservation, evidence)
+    RESOURCE.resource_cleanup_admission(store, binding, deployment["stack_arn"], required=True)
+    previous = store.read("delete-failed-restore", intent)
+    RESOURCE.require_other_tasks_terminal(provider)
+    if previous is None:
+        stack = restore_stack(provider, binding, parameters)
+        require(stack.get("StackId") == deployment["stack_arn"] and stack.get("StackStatus") == "CREATE_COMPLETE" and resource_map(provider, stack) == resources, "restore-cleanup-ownership-not-confirmed")
+        database = only(provider("rds", "describe-db-instances", DBInstanceIdentifier=identifier), "DBInstances")
+        require(database.get("DBInstanceIdentifier") == identifier and database.get("DbiResourceId") == deployment["restored_resource_id"] and database.get("DeletionProtection") is False, "restore-cleanup-database-identity-not-confirmed")
+        exact_tags(provider("rds", "list-tags-for-resource", ResourceName=database.get("DBInstanceArn")).get("TagList"), binding)
+    reservation, fresh = store.reserve("delete-failed-restore", intent)
+    if fresh:
+        try: provider("cloudformation", "delete-stack", StackName=deployment["stack_arn"], ClientRequestToken=reservation["operation_id"])
+        except RESOURCE.SubmissionNotStarted: raise
+        except Exception: raise RESOURCE.ResourceFailure("restore-cleanup-submission-uncertain-reconcile-only") from None
+    return observe_cleanup_resources(provider, deployment, stack_name, identifier, resources, reservation)
+
+
+def observe_failed_cleanup(provider, store, binding, parameters, deployment, reader_reservation, evidence):
+    stack_name, identifier, resources, intent = failed_cleanup_identity(provider, binding, parameters, deployment, reader_reservation, evidence)
+    return observe_cleanup_resources(provider, deployment, stack_name, identifier, resources, store.read("delete-failed-restore", intent))

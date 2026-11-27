@@ -44,10 +44,43 @@ if (concurrent[0]!.ok && !concurrent[1]!.ok) {
   });
   deepEqual(await collisionRepository.get(concurrent[0]!.value.id), concurrent[0]!.value);
   const empty = inMemoryTestEntityRepository();
-  const missingSave = await empty.save(concurrent[0]!.value);
+  const missingSave = await empty.save(concurrent[0]!.value, concurrent[0]!.value);
   equal(missingSave.ok, false);
-  if (!missingSave.ok) equal(missingSave.error.code, "TEST_ENTITY_NOT_FOUND");
+  if (!missingSave.ok) equal(missingSave.error.code, "TEST_ENTITY_WRITE_CONFLICT");
   equal(await empty.get(concurrent[0]!.value.id), null, "saving cannot recreate a missing record");
+}
+
+// A stale full-row edit cannot undo deletion, archive/restore, or even an
+// attribute edit made in the same millisecond. Every service passes its read.
+for (const operation of ["update", "archive", "restore-archive", "delete", "restore-deleted"] as const) {
+  const currentRepository = inMemoryTestEntityRepository();
+  const currentDeps = { ...deps, repository: currentRepository };
+  const first = await createTestEntityService(input, currentDeps);
+  if (!first.ok) throw first.error;
+  if (operation !== "archive") await archiveTestEntityService(first.value.id, currentDeps);
+  if (operation === "restore-deleted") await deleteTestEntityService(first.value.id, currentDeps);
+  let savedAfterIntervention;
+  const staleDeps = { ...currentDeps, repository: { ...currentRepository, get: async (id: typeof first.value.id) => {
+    const before = await currentRepository.get(id);
+    if (before === null) throw new Error("Missing concurrency fixture.");
+    if (operation === "delete") await updateTestEntityService(id, { notes: ["same-clock concurrent change"] }, currentDeps);
+    else if (operation === "restore-deleted") {
+      await restoreLogicallyDeletedTestEntityService(id, currentDeps);
+      await deleteTestEntityService(id, { ...currentDeps, clock: fixedClock(new Date("2026-11-06T12:00:00.001Z")) });
+    } else await deleteTestEntityService(id, currentDeps);
+    savedAfterIntervention = await currentRepository.get(id);
+    return before;
+  } } };
+  const result = operation === "update" ? await updateTestEntityService(first.value.id, { label: "stale edit" }, staleDeps)
+    : operation === "archive" ? await archiveTestEntityService(first.value.id, staleDeps)
+    : operation === "restore-archive" ? await restoreTestEntityService(first.value.id, staleDeps)
+    : operation === "delete" ? await deleteTestEntityService(first.value.id, staleDeps)
+    : await restoreLogicallyDeletedTestEntityService(first.value.id, staleDeps);
+  equal(result.ok, false, operation); if (result.ok) throw new Error("Expected stale save rejection.");
+  equal(result.error.code, "TEST_ENTITY_WRITE_CONFLICT");
+  deepEqual(result.error.diagnosticRecord, { schema: "core/diagnostic-record/v1", code: "entity-smoke.test-entity.write-conflict",
+    definitionVersion: 1, detail: { condition: "changed-or-missing", effect: "not-saved" } });
+  deepEqual(await currentRepository.get(first.value.id), savedAfterIntervention, "a rejected stale service does not overwrite the intervening operation");
 }
 console.log("apps/entity-smoke test-entity runtime test passed.");
 }

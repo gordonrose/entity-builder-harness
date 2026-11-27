@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -274,7 +274,11 @@ def route_proof_members(checks, roots, bodies):
             fail('delivery-aggregate-member-cycle', identity); continue
         check = checks[identity]
         argv, declared_effects, stage = check.get('argv'), check.get('effects'), check.get('stage')
-        if not isinstance(argv, list) or len(argv) < 2 or argv[0] != 'bash' or any(not isinstance(arg, str) or not arg or any(token in arg for token in '\n\r\0;|&`$') for arg in argv):
+        interpreters = {'bash': ('.sh',), 'node': ('.mjs', '.js'), 'python3': ('.py',)}
+        if (not isinstance(argv, list) or len(argv) < 2
+                or any(not isinstance(arg, str) or not arg or any(token in arg for token in '\n\r\0;|&`$') for arg in argv)
+                or argv[0] not in interpreters or not argv[1].endswith(interpreters[argv[0]])
+                or argv[1].startswith(('/', '-')) or '..' in Path(argv[1]).parts):
             fail('delivery-proof-command-invalid', identity); continue
         if argv[1] not in bodies:
             fail('delivery-proof-command-missing', identity); continue

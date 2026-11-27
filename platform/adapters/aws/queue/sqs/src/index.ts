@@ -1,4 +1,8 @@
 export { adapterMetadata } from "./metadata";
+export { sqsDiagnosticCatalog } from "./diagnostics";
+export { createPlatformSqsLambdaBatchHandler, sqsLambdaBatchDiagnostic, sqsLambdaBatchDiagnosticCatalog,
+  type PlatformSqsLambdaRecordDisposition, type PlatformSqsLambdaBatchOptions,
+  type PlatformSqsLambdaBatchResponse, type PlatformSqsLambdaBatchHandler } from "./lambda-batch";
 export { createAwsSdkPlatformSqsQueueFromConfiguration } from "./queue";
 export { createAwsSdkPlatformSqsWorkerQueueFromConfiguration } from "./worker";
 export { sqsSenderRequirements, sqsWorkerRequirements, sqsReceiveWaitConstraint, sqsVisibilityTimeoutConstraint,

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.infrastructure-route
-#   version: 8
+#   version: 9
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -525,6 +525,7 @@ identity_paths = []
 dependency_paths = [REAL_ROOT / "scripts/04.deploy/shared/provider-adapters/aws" / name for name in ("cli.py", "tasks.py", "resource_reservation.py", "snapshots.py", "change_sets.py", "ecr-scan.py", "foundation-checks.py")]
 dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
 dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
+dependency_paths.append(REAL_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py")
 dependency_paths.append(Path(M.LOCAL_QUALIFICATION.__file__))
 dependency_paths.extend([Path(M.ALIGN.INPUT_OWNER.__file__), Path(M.ALIGN.INPUT_OWNER.PATHS.__file__),
                          *(REAL_ROOT / reference for reference in M.ALIGN.INPUTS["references"])])
@@ -586,13 +587,17 @@ old_controller = str(scope / "script.py")
 new_controller = str(scope / "orchestration" / "commands" / "script.py")
 new_helper = str(scope / "task-execution" / "implementation" / "task-control.py")
 test_only = str(scope / "task-execution" / "tests" / "fixture.py")
+scheduling_owner = "scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py"
 for inventory, expected, excluded in (
-    ([old_controller, new_helper, test_only], {old_controller}, {new_helper, test_only}),
-    ([new_controller, new_helper, test_only], {new_controller, new_helper}, {old_controller, test_only}),
+    ([old_controller, new_helper, test_only], {old_controller}, {new_helper, test_only, scheduling_owner}),
+    ([new_controller, new_helper, test_only], {new_controller, new_helper}, {old_controller, test_only, scheduling_owner}),
+    ([new_controller, new_helper, test_only, scheduling_owner], {new_controller, new_helper, scheduling_owner}, {old_controller, test_only}),
 ):
     reads = []
     def historical_command(argv):
-        if "--name-only" in argv: return "\n".join(inventory)
+        if "--name-only" in argv:
+            assert str(scope) + "/" in argv and scheduling_owner in argv
+            return "\n".join(inventory)
         assert argv[:3] == ["git", "ls-tree", "-z"] and argv[3] == revision
         return "".join("100644 blob " + "b" * 40 + "\t" + name + "\0" for name in argv[5:])
     def historical_blob(argv, **options):

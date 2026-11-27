@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -32,8 +32,14 @@ class ProviderFailure(Exception):
 
 
 def create(provider, store, *, phase, request, arguments, precondition,
-           validate_reservation, observe, passthrough=()):
-    reservation, fresh = store.reserve(phase, request)
+           validate_reservation, observe, passthrough=(), reserve=None):
+    # A source-owned admission callback may wrap the same native reservation;
+    # it cannot replace the provider token or make an existing original fresh.
+    previous = store.read(phase, request) if reserve is not None else None
+    reservation, fresh = (store.reserve(phase, request) if reserve is None else reserve())
+    if reserve is not None and (type(fresh) is not bool or previous is not None and fresh
+            or store.read(phase, request) != reservation):
+        raise SnapshotFailure("reservation-not-retained")
     validate_reservation(reservation)
     if fresh:
         precondition(reservation)

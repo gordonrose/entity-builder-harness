@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.deployment-artifact-placement-and-naming
-version: 3
+version: 4
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-11-25"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -183,6 +183,14 @@ remain in `.agentic/04.deploy/standards/` and `workflows/`; validate these with
 `cross-phase-standard` or `cross-phase-workflow`. Provider-wide AWS standards
 use `.agentic/aws/standards/` and kind `aws-standard`. These kinds do not replace
 the lifecycle kinds for artifacts that have one primary phase.
+
+Runnable composition sources retain the existing
+`infra/04.deploy/03.product/entrypoints/` home (`program-entrypoint`), with
+their top-level `<program>.tsconfig.json` build declarations
+(`program-build-contract`). Immutable image declarations retain
+`infra/04.deploy/03.product/image/<candidate>/Dockerfile` and
+`Dockerfile.dockerignore` or `image-contract.yml` (`image-declaration`). These kinds validate those existing
+homes; they do not authorize arbitrary source, scripts or nested image engines.
 
 Existing paths remain valid until a governed migration moves them. This standard
 does not authorise a blanket rename.

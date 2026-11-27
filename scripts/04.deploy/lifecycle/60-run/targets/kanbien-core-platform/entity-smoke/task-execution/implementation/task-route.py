@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -52,11 +52,16 @@ READS = C.READS
 EFFECTS = {
     "preflight": "read-only-connection-observation", "ready": "read-only-http-observation", "unready": "read-only-http-observation",
     "observe-permissions": "read-only-permission-observation", "observe-migration-state": "read-only-migration-observation",
+    "observe-scheduling-prefix": "read-only-migration-prefix-observation", "observe-scheduling-state": "read-only-scheduling-state-observation",
+    "grant-scheduling-access": "fixed-scheduling-role-grants", "prove-scheduling-access": "rolled-back-scheduling-denial-probes",
     "read": "read-only-original-record-observation", "observe-create": "read-only-original-record-observation",
     "bootstrap": "fixed-role-and-schema-provisioning", "grant-runtime": "fixed-feature-dml-grants", "apply": "checksummed-feature-migration",
     "revoke-runtime": "fixed-runtime-login-revocation", "restore-runtime": "fixed-runtime-login-restoration",
     "permissions": "rolled-back-denial-probes", "collision": "rolled-back-collision-probe",
     "create": "new-labelled-synthetic-record", "lifecycle": "labelled-synthetic-lifecycle-exercise", "cleanup": "labelled-synthetic-logical-delete",
+    "scheduling-create": "new-labelled-synthetic-record", "scheduling-observe-create": "read-only-original-record-observation",
+    "scheduling-delete": "original-synthetic-archive-and-logical-delete", "scheduling-restore": "original-synthetic-delete-and-immediate-restore",
+    "observe-scheduling-proof": "read-only-exact-synthetic-scheduling-snapshot",
 }
 
 
@@ -79,6 +84,40 @@ def require(value, code):
 
 def dependencies():
     return SimpleNamespace(C=C, RUNNER=RUNNER, BINDING=BINDING, GRAPH=GRAPH, STEPS=STEPS, FEATURE=FEATURE, RECOVERY=RECOVERY, CREDENTIAL=CREDENTIAL, COMPLETION=COMPLETION, ACCEPTANCE=ACCEPTANCE, IMAGE_REPAIR=IMAGE_REPAIR, re=re, owned_stack=owned_stack, dependencies=dependencies)
+
+
+def scheduling_reservation_census(proof_label, task_definition_arns):
+    """Read the fixed initial/successor namespaces; never trust caller folders."""
+    try:
+        require(isinstance(task_definition_arns, (list, tuple)) and bool(task_definition_arns)
+            and len(set(task_definition_arns)) == len(task_definition_arns)
+            and all(isinstance(value, str) and re.fullmatch(r"arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT
+                + r":task-definition/kanbien-core-platform-entity-smoke-[a-z-]+:[1-9][0-9]*", value) for value in task_definition_arns), "task-cost-definition-selection-invalid")
+        root = C.delivery_cache(proof_label)
+        RUNNER.CONTROL.no_symlinks(root)
+        namespaces = [root]
+        releases = root / "releases"
+        RUNNER.CONTROL.no_symlinks(releases)
+        if releases.exists():
+            selected = sorted(releases.iterdir())
+            require(len(selected) <= 4096, "task-cost-census-bound-exceeded")
+            for path in selected:
+                RUNNER.CONTROL.no_symlinks(path)
+                require(path.is_dir() and re.fullmatch(r"[a-f0-9]{64}", path.name), "task-cost-namespace-invalid")
+                namespaces.append(path)
+        originals = {}
+        for namespace in namespaces:
+            for reserved in RUNNER.CONTROL.AttemptStore(namespace / "task-attempts").reservations():
+                identity, request = reserved["operation_id"], reserved["request"]
+                retained = RUNNER.read_receipt(RUNNER.receipt_path(namespace / "task-receipts", request, reserved), reserved)
+                item = {"operation_id": identity, "task_definition_arn": request["definition"], "reserved_at": reserved["reserved_at"],
+                    "request_sha256": reserved["request_sha256"], "task_arn": None if retained is None else retained["task"]["arn"]}
+                require(identity not in originals or originals[identity] == item, "task-cost-census-identity-conflict")
+                originals[identity] = item
+        require(len(originals) <= 4096, "task-cost-census-bound-exceeded")
+        return [value for _, value in sorted(originals.items()) if value["task_definition_arn"] in task_definition_arns]
+    except TaskRouteFailure: raise
+    except Exception: raise TaskRouteFailure("task-cost-census-not-confirmed") from None
 
 
 class Provider(C.Provider):
@@ -203,11 +242,12 @@ def prepare(args, provider, *, retained_source_evidence=None):
     expected = BINDING.expected_task(args.workload, selected, resources, binding_snapshot)
     roles = [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]
     actor = operator(provider, checked["definition"], roles)
-    stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
+    identity_stage = STEPS.identity_stage(args)
+    stage_suffix = "" if identity_stage == "baseline" else ":" + identity_stage
     if proof_stage == "activation": stage_suffix += ":" + artifact
     preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
     if delivery:
-        preflight_label = C.delivery_preflight_label(delivery, proof_stage, args.workload, args.operation)
+        preflight_label = C.delivery_preflight_label(delivery, identity_stage, args.workload, args.operation)
     else:
         preflight_label = IMAGE_REPAIR.recovery_label({"cache": cache, "binding": binding, "checked": checked}, args, preflight_label)
         preflight_label = C.TRANSITION.recovery_preflight(C, {"cache": cache, "binding": binding}, args, preflight_label)
@@ -221,24 +261,35 @@ def prepare(args, provider, *, retained_source_evidence=None):
             "roles_sha256": checked["roles_sha256"], "network_sha256": checked["network_sha256"], "callee_bindings_sha256": C.DEPLOY.fingerprint(callees), "package_custody_reference": receipt["receipt_reference"],
             "task_count": 1, "automatic_retry": False}
     if delivery: safe.update(schema="deploy/entity-smoke-task-plan/v2", delivery=delivery)
+    if STEPS.qualification_profile(args) is not None: safe["qualification_profile"] = STEPS.qualification_profile(args)
+    if proof_stage == "scheduling-proof":
+        safe.update(scheduling_case=args.scheduling_case, scheduling_snapshot=args.scheduling_snapshot, scheduling_selection_sha256=None)
+    if getattr(args, "scheduling_control_phase", None) is not None:
+        safe["scheduling_control_phase"] = args.scheduling_control_phase
     declaration = C.yaml.safe_load((C.CONTRACT.parent / "declaration-contract.yml").read_text())
     deadlines = {row["id"].removeprefix("entity-smoke-"): row["completion"]["deadline_seconds"] for row in declaration["health_recovery"]["workloads"] if "completion" in row}
     context = {"report": {"plan": safe}, "book": book, "cache": cache, "binding": binding, "checked": checked,
                "parameters": selected, "resources": resources, "artifact": artifact, "custody": receipt, "callees": callees, "completion_deadlines": deadlines, "binding_snapshot": binding_snapshot,
                "retained_source_evidence": retained_source_evidence}
     if delivery: context["delivery"] = delivery
-    STEPS.select_preflight(dependencies(), context, args, provider)
+    if proof_stage != "scheduling-proof": STEPS.select_preflight(dependencies(), context, args, provider)
     # Missing prior work is visible in a plan, not manufactured as success.
     missing = None
     try: prerequisites = STEPS.prerequisites(dependencies(), context, args, provider)
     except STEPS.PrerequisiteMissing as failure:
         prerequisites, missing = None, failure.item
+    if proof_stage == "scheduling-proof" and prerequisites is not None:
+        STEPS.select_preflight(dependencies(), context, args, provider)
+    if proof_stage == "scheduling-qualification":
+        safe["scheduling_manifest_sha256"] = context.get("scheduling_lineage", {}).get("manifest_sha256")
+    if proof_stage == "scheduling-proof" and context.get("scheduling_selection") is not None:
+        safe["scheduling_selection_sha256"] = C.DEPLOY.fingerprint(context["scheduling_selection"])
     custody = STEPS.prerequisite_custody(C, prerequisites) if delivery else prerequisites
     safe["prerequisites_sha256"] = None if prerequisites is None else C.DEPLOY.fingerprint(custody)
     safe["pending_prerequisite"] = missing
-    safe["execution_route_available"] = (STEPS.selected(args) is not None or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
+    safe["execution_route_available"] = (STEPS.selected(args) is not None or STEPS.scheduling_preparation(args) or proof_stage == "scheduling-proof" or FEATURE.supported(args) or RECOVERY.supported(args) or CREDENTIAL.supported(args) or ACCEPTANCE.supported(args)) and prerequisites is not None
     context["prerequisites"] = prerequisites
-    safe["request_sha256"] = C.DEPLOY.fingerprint(STEPS.request(dependencies(), context, args))
+    safe["request_sha256"] = None if proof_stage == "scheduling-proof" and prerequisites is None else C.DEPLOY.fingerprint(STEPS.request(dependencies(), context, args))
     if delivery and "preflight_renewal" in safe:
         STEPS.validate_renewal(dependencies(), safe, binding, delivery, args)
     selected_digest = C.DEPLOY.fingerprint(safe)
@@ -257,6 +308,26 @@ def plan(args, provider):
     return prepare(args, provider)["report"]
 
 
+def observe_scheduling_proof_receipt(args, provider, *, required_after, source_revision, image_digest):
+    """Authenticate an original synthetic phase through the real task owner.
+
+    This is not a passed flag or activation authority. The outer scheduler
+    collector evaluates the resulting facts and retains the original packet.
+    """
+    require(STEPS.stage(args) == "scheduling-proof" and args.phase == "operation", "task-scheduling-selection-invalid")
+    context = prepare(args, provider)
+    binding = context["binding"]
+    require((binding["source_revision"], binding["image_digest"]) == (source_revision, image_digest), "task-scheduling-binding-mismatch")
+    packet = STEPS.observe_packet(dependencies(), context, args, provider, historical=False)
+    require(packet is not None, "task-scheduling-proof-required")
+    task, result = packet["receipt"]["task"], packet["receipt"]["result"]
+    require(RUNNER.EVIDENCE.timestamp(task["created_at"]) >= RUNNER.EVIDENCE.timestamp(required_after), "task-scheduling-proof-order-invalid")
+    return {"operation": args.operation, "case": args.scheduling_case, "snapshot": args.scheduling_snapshot,
+            "result": result, "binding": {key: binding[key] for key in ("source_revision", "image_digest", "dependency_incarnation_sha256")},
+            "task": {key: task[key] for key in ("arn", "definition", "created_at", "started_at", "stopped_at")},
+            "receipt_sha256": C.DEPLOY.fingerprint(packet), "packet": packet}
+
+
 def execute(args, provider):
     context = prepare(args, provider)
     report, book = context["report"], context["book"]
@@ -264,6 +335,11 @@ def execute(args, provider):
     require(args.approved_plan == report["plan_sha256"], "task-approved-plan-mismatch")
     if not safe["execution_route_available"]:
         raise TaskRouteFailure("task-prerequisite-required", safe["pending_prerequisite"]) if safe["pending_prerequisite"] is not None else TaskRouteFailure("task-execution-prerequisites-not-connected")
+    if STEPS.scheduling_migration(args):
+        prior = context["prerequisites"]["packets"]["observe-scheduling-prefix"]
+        if prior["receipt"]["result"]["migration_prefix"]["state"] == "complete":
+            return {"verdict": "observed", "code": "task-scheduling-migration-already-complete", "plan_sha256": report["plan_sha256"],
+                "migration_submitted": False, "effect": "fresh-prefix-confirmed-no-mutation", "prefix_receipt_sha256": C.DEPLOY.fingerprint(prior)}
     runner, deps = RUNNER, dependencies()
     step_path = STEPS.path(context, args)
     if context.get("delivery") and COMPLETION.path(step_path).is_file():
@@ -352,10 +428,12 @@ def execute(args, provider):
     try:
         completed = runner.run_owned_task(provider, store, key, request, context["cache"] / "task-receipts",
                                           required_after=context["prerequisites"]["required_after"], preflight=preflight,
-                                          revocation=context["prerequisites"]["revocation"] if negative else None, on_progress=progress)
+                                          revocation=context["prerequisites"]["revocation"] if negative else None, on_progress=progress,
+                                          cost_required=STEPS.stage(args).startswith("scheduling-") or STEPS.qualification_profile(args) is not None)
     except runner.EVIDENCE.TerminalTaskFailure as failure:
         raise CurrentTaskFailure(failure) from None
     reservation = store.read(key, request)
+    STEPS.validate_qualification_result(args, completed["receipt"], safe.get("scheduling_manifest_sha256"))
     try: RECOVERY.validate_result(args, completed["receipt"])
     except RECOVERY.RecoveryStepFailure:
         provider.effect = "terminal-task-observed-proof-not-confirmed"
@@ -384,8 +462,13 @@ def parse(arguments=None):
     parser.add_argument("--proof-label", required=True)
     parser.add_argument("--workload", choices=tuple(GRAPH.ROOT_UNITS), required=True)
     parser.add_argument("--operation", required=True)
+    parser.add_argument("--migration-profile", choices=("baseline", "scheduling"), default="baseline")
+    parser.add_argument("--qualification-profile", choices=(STEPS.SCHEDULING.PROFILE,))
     parser.add_argument("--phase", choices=("preflight", "operation"), default="operation")
-    parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance", "rollback"), default="baseline")
+    parser.add_argument("--proof-stage", choices=("baseline", "activation", "server-replacement", "initial-recovery", "credential-recovery", "acceptance", "rollback", "scheduling-preparation", "scheduling-migration", "scheduling-qualification", "scheduling-proof"), default="baseline")
+    parser.add_argument("--scheduling-case", choices=tuple(sorted(STEPS.SCHEDULING.CASES)))
+    parser.add_argument("--scheduling-snapshot", choices=STEPS.SCHEDULING.SNAPSHOTS)
+    parser.add_argument("--scheduling-control-phase", choices=STEPS.SCHEDULING_STATE_PHASES)
     parser.add_argument("--expected-digest")
     parser.add_argument("--expected-predecessor")
     parser.add_argument("--rollback-receipt", type=Path)
@@ -395,11 +478,14 @@ def parse(arguments=None):
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--approved-plan")
     args = parser.parse_args(arguments)
+    require(args.migration_profile == "baseline" or STEPS.scheduling_migration(args), "task-migration-profile-invalid")
     require(re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) is not None
             and args.operation in C.RESOURCE.CONTROL.OPERATIONS[args.workload][1] and args.operation in EFFECTS, "task-arguments-invalid")
     require(args.expected_digest is None or re.fullmatch(r"[a-f0-9]{64}", args.expected_digest) is not None, "task-arguments-invalid")
     require(args.expected_predecessor is None or re.fullmatch(r"release-[a-f0-9]{24}", args.expected_predecessor) is not None, "task-predecessor-invalid")
     STEPS.stage(args)
+    require(not (STEPS.scheduling_preparation(args) or STEPS.scheduling_migration(args)) or args.expected_digest is None, "task-scheduling-record-selection-prohibited")
+    require(args.proof_stage != "scheduling-proof" or args.expected_digest is None, "task-scheduling-record-selection-prohibited")
     require((args.proof_stage == "rollback" and args.expected_predecessor is not None and args.rollback_receipt is not None and args.rollback_compatibility_id is not None)
             or (args.proof_stage != "rollback" and args.rollback_receipt is None and args.rollback_compatibility_id is None), "task-rollback-selection-invalid")
     require(args.operation not in {"read", "cleanup", "collision"} or args.expected_digest is not None, "task-original-record-digest-required")

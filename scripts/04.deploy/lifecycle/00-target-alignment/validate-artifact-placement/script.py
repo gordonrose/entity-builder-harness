@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.validate-artifact-placement
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -33,6 +33,9 @@ from pathlib import PurePosixPath
 
 
 KIND_PATTERNS = {
+    "program-entrypoint": r"^infra/04\.deploy/03\.product/entrypoints/(?:[a-z0-9]+(?:-[a-z0-9]+)*/)*[a-z0-9]+(?:[-.][a-z0-9]+)*\.ts$",
+    "program-build-contract": r"^infra/04\.deploy/03\.product/entrypoints/[a-z0-9]+(?:-[a-z0-9]+)*\.tsconfig\.json$",
+    "image-declaration": r"^infra/04\.deploy/03\.product/image/[a-z0-9]+(?:-[a-z0-9]+)*/(?:Dockerfile|Dockerfile\.dockerignore|image-contract\.yml)$",
     "cross-phase-workflow": r"^\.agentic/04\.deploy/workflows/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
     "cross-phase-standard": r"^\.agentic/04\.deploy/standards/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
     "aws-standard": r"^\.agentic/aws/standards/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",

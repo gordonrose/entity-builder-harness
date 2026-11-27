@@ -4,7 +4,7 @@ id: deploy.schema.change-impact.v1.guide
 version: 2
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-10-25"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -45,6 +45,19 @@ target or run obligations: every supported deployable scope must retain at least
 one check for each of those stages. Synthetic scopes retain those obligations
 as deferred and can prove genuine dependency-specific non-applicability (for
 example no persistence). No required check or existing declaration can be waived.
+
+Optional requirement `subjects` identify additional independently packaged programs
+inside an existing scope. Each object contains exactly `program_id`, `image_id`
+and `image_contract`. The existing runnable index remains authoritative for the
+program/image association. A managed-handler image-family contract describes the
+shared recipe, not a replacement package identity; the selected indexed handler
+and command must match that recipe. Missing subjects preserve existing scope
+behavior. Empty, duplicate, unknown or mismatched subjects are gaps.
+
+Each proof must apply to every subject of its requirement. Use separate
+requirements when dispatcher and worker images qualify independently; shared
+local checks may explicitly cover both. This does not turn HTTP proof into
+handler proof or remove required package, target and acceptance stages.
 
 The executable coverage checker verifies paths, unique requirement identities,
 proof references, category/stage agreement, consumer references and established

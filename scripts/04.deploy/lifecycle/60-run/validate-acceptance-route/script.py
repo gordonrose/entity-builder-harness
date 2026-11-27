@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -37,6 +37,14 @@ def proof_policy():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def qualification_route(route, profile=None):
+    path = Path(__file__).parents[1] / 'release-succession/scheduling-proof.py'
+    spec = importlib.util.spec_from_file_location('acceptance_scheduling_profile', path)
+    owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+    try: return owner.selected_route(route, profile)
+    except owner.ProofFailure: raise ValueError('acceptance-input-qualification-profile-invalid') from None
 
 
 def document(path: Path) -> dict:
@@ -103,6 +111,14 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
         specifications = route.get('ordinary_update_inputs')
         if not isinstance(specifications, dict):
             raise ValueError('acceptance-input-ordinary-update-unsupported')
+    profile = data.get('qualification_profile')
+    qualification_route(route, profile)
+    if profile is not None:
+        profiles = route.get('qualification_profiles', {})
+        selected = profiles.get(profile) if isinstance(profile, str) and isinstance(profiles, dict) else None
+        if not isinstance(selected, dict) or not isinstance(selected.get('inputs'), dict) or not isinstance(specifications, dict) or set(specifications) & set(selected['inputs']):
+            raise ValueError('acceptance-input-qualification-profile-invalid')
+        specifications = {**specifications, **selected['inputs']}
     if data.get('schema') != 'deploy/acceptance-inputs/v1' or data.get('target') != route.get('target') or data.get('scope') != route.get('scope') or not isinstance(values, dict) or not isinstance(specifications, dict):
         raise ValueError('acceptance-inputs-identity-invalid')
     if set(values) != set(specifications): raise ValueError('acceptance-inputs-set-invalid')
@@ -176,6 +192,27 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
         if not isinstance(expected, str) or route.get(field) != expected: gap('acceptance-route-subject-mismatch', field)
     inputs = route.get('inputs')
     if not isinstance(inputs, dict): gap('acceptance-route-inputs-invalid'); inputs = {}
+    profiles = route.get('qualification_profiles', {})
+    if not isinstance(profiles, dict): gap('acceptance-route-qualification-profile-invalid'); profiles = {}
+    for identity, profile in profiles.items():
+        migration_inputs = {'scheduling_prefix_receipt', 'scheduling_apply_receipt'} if 'migration-applied-state' in route.get('proofs', {}) else set()
+        if identity != 'scheduling-a2-v1' or not isinstance(profile, dict) or set(profile) != {'requirements', 'inputs', 'database_proof'} or not isinstance(profile.get('requirements'), dict) or set(profile['requirements']) != {'dispatch', 'worker'} or not isinstance(profile.get('inputs'), dict) or set(profile['inputs']) != {'scheduling_receipt', 'scheduling_packages'} | migration_inputs:
+            gap('acceptance-route-qualification-profile-invalid', identity); continue
+        try: qualification_route(route, identity)
+        except ValueError:
+            gap('acceptance-route-qualification-profile-invalid', identity); continue
+        if any(not isinstance(value, str) or not value for value in profile['requirements'].values()) or len(set(profile['requirements'].values())) != 2:
+            gap('acceptance-route-qualification-subject-invalid', identity); continue
+        requirements = contract.get('change_impact', {}).get('requirements', [])
+        for selected in profile['requirements'].values():
+            matches = [item for item in requirements if isinstance(item, dict) and item.get('id') == selected]
+            if len(matches) != 1 or not isinstance(matches[0].get('subjects'), list) or len(matches[0]['subjects']) != 1:
+                gap('acceptance-route-qualification-subject-invalid', identity)
+        additional = profile['inputs']
+        if not all(isinstance(value, dict) for value in additional.values()) or additional['scheduling_receipt'].get('kind') != 'path' or additional['scheduling_packages'].get('kind') != 'receipt-map' or additional['scheduling_packages'].get('receipts') != ['dispatch', 'worker']:
+            gap('acceptance-route-qualification-profile-invalid', identity)
+        if migration_inputs and (additional['scheduling_prefix_receipt'].get('kind') != 'path' or additional['scheduling_apply_receipt'].get('kind') != 'optional-path'):
+            gap('acceptance-route-qualification-profile-invalid', identity)
     values = {}
     for key, spec in inputs.items():
         if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'optional-path', 'proof-map', 'receipt-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:

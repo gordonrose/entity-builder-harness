@@ -4,7 +4,7 @@
 //   version: 3
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -38,6 +38,8 @@ const borrowed = new Set([
   "shared/persistence/configuration.ts", "shared/persistence/role-credential.ts",
   "shared/persistence/operation-diagnostics.ts",
   "shared/persistence/configuration-implementation.ts",
+  "shared/persistence/scheduling-administration.ts",
+  "kanbien-core-server-persistence-iam-authentication.ts",
 ].map(name => "infra/04.deploy/03.product/entrypoints/" + name));
 const ownSource = /^infra\/04\.deploy\/03\.product\/entrypoints\/(?:entity-smoke\/[^/]+\.ts|kanbien-entity-smoke(?:-migration|-administration|-verifier|-database-proof)?\.main\.ts)$/;
 function ownerOf(source) {

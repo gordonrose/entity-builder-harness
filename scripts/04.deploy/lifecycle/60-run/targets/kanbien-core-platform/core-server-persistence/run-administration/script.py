@@ -26,6 +26,12 @@ SUCCESS = {
     "revoke-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED",
     "restore-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED",
     "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
+    "grant-scheduling-access": "PERSISTENCE_SCHEDULING_ACCESS_GRANTED",
+    "observe-scheduling-state": "PERSISTENCE_SCHEDULING_STATE_CONFIRMED",
+    "observe-scheduling-prefix": "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED",
+    "prove-scheduling-access": "PERSISTENCE_SCHEDULING_PRIVILEGE_PROVEN",
+    "seed-scheduling-proof": "PERSISTENCE_SCHEDULING_PROOF_SEEDED",
+    "observe-scheduling-proof": "PERSISTENCE_SCHEDULING_PROOF_OBSERVED",
     "observe-migration-state": (
         "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED",
         "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
@@ -56,6 +62,12 @@ OPERATIONS = (
     "restore-runtime",
     "prove-effective-privilege",
     "observe-migration-state",
+    "grant-scheduling-access",
+    "observe-scheduling-state",
+    "observe-scheduling-prefix",
+    "prove-scheduling-access",
+    "seed-scheduling-proof",
+    "observe-scheduling-proof",
 )
 # These operations observe an already-present state.  Retrying after a host
 # interruption must reuse a terminal receipt for the exact current task
@@ -117,7 +129,7 @@ def current_task(task: dict[str, object], requested: str, definition: str) -> st
     return "ok" if task.get("lastStatus") == "STOPPED" else "persistence-administration-reconciliation-task-not-terminal"
 
 
-def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, str]:
+def accepted_log(task: dict[str, object], operation: str) -> tuple[dict[str, object] | None, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return None, "persistence-administration-evidence-unavailable"
@@ -126,17 +138,46 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, s
     messages = [item.get("message") for item in events.get("events", []) if isinstance(item, dict)] if ok and isinstance(events, dict) else []
     expected = SUCCESS[operation]
     allowed = {expected} if isinstance(expected, str) else set(expected)
+    synthetic_results = []
     for message in messages:
         try:
             record = json.loads(message) if isinstance(message, str) else None
         except (json.JSONDecodeError, TypeError):
             continue
-        if isinstance(record, dict) and set(record) == {"verdict", "code"} and record.get("verdict") == "accepted" and isinstance(record.get("code"), str) and record.get("code") in allowed:
-            return record["code"], "ok"
+        fields = {"verdict", "code"} | ({"database_state"} if operation in RECEIPTS.SCHEDULING_STATE.RESULTS else set())
+        if operation == RECEIPTS.SCHEDULING_STATE.PREFIX_OPERATION: fields.add("migration_prefix")
+        if operation in RECEIPTS.SCHEDULING_PROOF.PROOF_OPERATIONS:
+            fields.add("scheduling_seed" if operation == "seed-scheduling-proof" else "scheduling_observation")
+        if isinstance(record, dict) and set(record) == fields and record.get("verdict") == "accepted" and isinstance(record.get("code"), str) and record.get("code") in allowed:
+            if "database_state" in fields:
+                try: RECEIPTS.SCHEDULING_STATE.validate(record["database_state"])
+                except ValueError: return None, "persistence-administration-not-confirmed"
+            if "migration_prefix" in fields:
+                try: RECEIPTS.SCHEDULING_STATE.validate_prefix(record["migration_prefix"], minimum_applied_migrations=2, manifest_migration_count=7)
+                except ValueError: return None, "persistence-administration-not-confirmed"
+            if operation in RECEIPTS.SCHEDULING_PROOF.PROOF_OPERATIONS:
+                try:
+                    rows = task["overrides"]["containerOverrides"]
+                    if len(rows) != 1 or rows[0]["name"] != "persistence-administration": raise ValueError()
+                    environment = {row["name"]: row["value"] for row in rows[0]["environment"]}
+                    if len(environment) != len(rows[0]["environment"]): raise ValueError()
+                    expected = {"PERSISTENCE_ADMINISTRATION_OPERATION", "PERSISTENCE_SCHEDULING_PROOF_ID"}
+                    if operation == "seed-scheduling-proof": expected.add("PERSISTENCE_SCHEDULING_PROOF_DUE_AT")
+                    if set(environment) != expected or environment["PERSISTENCE_ADMINISTRATION_OPERATION"] != operation: raise ValueError()
+                    if operation == "seed-scheduling-proof":
+                        seed = RECEIPTS.SCHEDULING_PROOF.proof_seed(record["scheduling_seed"])
+                        if (seed["schedule_id"], seed["due_at"]) != (environment["PERSISTENCE_SCHEDULING_PROOF_ID"], environment["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"]): raise ValueError()
+                    else:
+                        RECEIPTS.SCHEDULING_PROOF.proof_snapshot(record["scheduling_observation"], scope="core-server-persistence",
+                            selection={"kind": "schedule", "id": environment["PERSISTENCE_SCHEDULING_PROOF_ID"]}, start=task["startedAt"], stop=task["stoppedAt"])
+                except (ValueError, KeyError, TypeError): return None, "persistence-administration-not-confirmed"
+            if operation in RECEIPTS.SCHEDULING_PROOF.PROOF_OPERATIONS: synthetic_results.append(record)
+            else: return record, "ok"
+    if len(synthetic_results) == 1: return synthetic_results[0], "ok"
     return None, code if not ok else "persistence-administration-not-confirmed"
 
 
-def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
+def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None, scheduling_binding=None) -> int:
     terminal = {}
     def unsuccessful(code, *, facts=None):
         return report("failed" if terminal else "blocked", code, facts={**(facts or {}), **terminal})
@@ -203,15 +244,22 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
                 except Exception:
                     continue
         return unsuccessful("persistence-administration-unsuccessful-completion", facts=known_facts)
-    result_code, code = accepted_log(task, operation)
-    if result_code is None:
+    result, code = accepted_log(task, operation)
+    if result is None:
         return report("blocked", code)
+    result_code = result["code"]
     digest = MIGRATION.image_digest(task.get("taskDefinitionArn"))
     arn = task.get("taskArn")
     if not isinstance(digest, str) or not isinstance(arn, str):
         return report("blocked", "persistence-administration-receipt-identity-unavailable")
     try:
-        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        context = {"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}
+        if "database_state" in result: context["database_state"] = result["database_state"]
+        if "migration_prefix" in result: context["migration_prefix"] = result["migration_prefix"]
+        for field in ("scheduling_seed", "scheduling_observation"):
+            if field in result: context[field] = result[field]
+        if scheduling_binding is not None: context["scheduling_binding"] = RECEIPTS.validate_scheduling_binding(scheduling_binding())
+        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context=context, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         path = RECEIPTS.persist(receipt)
         if on_receipt is not None: on_receipt(path)
     except Exception:
@@ -260,6 +308,198 @@ def reused_observation(path: Path, receipt: dict[str, object], operation: str) -
     return report("accepted", "persistence-administration-reconciled-retained-receipt", facts={"operation": operation, "safe_result_code": task["result_code"], "administration_task": task_id, "completion_deadline_seconds": deadline_seconds, "completion_duration_seconds": duration_seconds, "proof_receipt": relative})
 
 
+def operation_binding(accept_callback):
+    return MIGRATION.task_operations().BoundOperation(root=ROOT, proof_type="administration", family="kanbien-core-platform-persistence-administration",
+        container="persistence-administration", selector="PERSISTENCE_ADMINISTRATION_OPERATION", results=SUCCESS,
+        aws=MIGRATION.aws, report=report, accept=accept_callback, receipts=RECEIPTS)
+
+
+def scheduling_reservation_census(task_definition_arns):
+    """All four native maintenance task owners, including unknown originals."""
+    operations = MIGRATION.task_operations()
+    verifier = RECEIPTS.owner("core_cost_verifier", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py")
+    restore = RECEIPTS.owner("core_cost_restore", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py")
+    restore.ROOT = ROOT
+    values = [*operation_binding(None).reservation_census(task_definition_arns),
+        *MIGRATION.operation_binding(None).reservation_census(task_definition_arns),
+        *operations.reservation_census(ROOT, "private-persistence-verifier", verifier.SUCCESS, verifier.load_operation, task_definition_arns),
+        *restore.scheduling_reservation_census(task_definition_arns)]
+    if len({value["operation_id"] for value in values}) != len(values):
+        raise operations.OperationFailure("reservation-census-identity-conflict")
+    return sorted(values, key=lambda value: value["operation_id"])
+
+
+def _validate_scheduling_packet(packet, *, expected_binding, required_after, state=False, preparation=False):
+    """Pure native journal/receipt validation for a self-contained proof bundle."""
+    try:
+        if not isinstance(packet, dict) or set(packet) != {"journal", "receipt"}: raise ValueError()
+        proof = RECEIPTS.validate(packet["receipt"])
+        operation, task, context = proof["operation"], proof["task"], proof["context"]
+        allowed = RECEIPTS.SCHEDULING_STATE.RESULTS if preparation else {"observe-scheduling-state"} if state else RECEIPTS.SCHEDULING_PROOF.PROOF_OPERATIONS
+        if operation not in allowed or state and preparation: raise ValueError()
+        controller = operation_binding(None)
+        journal = controller.load(None, operation, document=packet["journal"])
+        if controller.completion(journal, receipt=proof) != proof: raise ValueError()
+        binding = RECEIPTS.validate_scheduling_binding(expected_binding)
+        if (journal["request"].get("scheduling_binding") != binding or context.get("scheduling_binding") != binding
+                or journal["request"]["admission"] is not None or task["exit_code"] != 0
+                or task["result_code"] != SUCCESS[operation]
+                or proof["provenance"].get("evidence_class") != RECEIPTS.EVIDENCE_CLASS
+                or proof["provenance"]["controller"] != "run-administration"
+                or proof["provenance"]["collection_method"] != "ecs-terminal-task+task-definition+safe-log"
+                or Path(journal["proof_receipt"]).is_absolute() or ".." in Path(journal["proof_receipt"]).parts): raise ValueError()
+        start, stop, boundary, collected = (MIGRATION.timestamp(item) for item in (task["started_at"], task["stopped_at"], required_after, proof["provenance"]["collected_at"]))
+        if any(item is None for item in (start, stop, boundary, collected)) or not boundary <= start <= stop <= collected or context["completion_duration_seconds"] > context["completion_deadline_seconds"]: raise ValueError()
+        field = "database_state" if state or preparation else "scheduling_seed" if operation == "seed-scheduling-proof" else "scheduling_observation"
+        environment = {row["name"]: row["value"] for row in journal["request"]["overrides"]["containerOverrides"][0]["environment"]}
+        selection = None if state or preparation else {"kind": "schedule", "id": environment["PERSISTENCE_SCHEDULING_PROOF_ID"]}
+        if operation == "seed-scheduling-proof": selection["due_at"] = environment["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"]
+        return {"operation": operation, "result": {field: context[field]}, "selection": selection, "binding": binding,
+            "task": {key: task[key] for key in ("arn", "definition", "started_at", "stopped_at")},
+            "receipt_sha256": "sha256:" + journal["proof_sha256"], "packet": packet}
+    except Exception:
+        raise RECEIPTS.ReceiptError("persistence-scheduling-proof-packet-invalid") from None
+
+
+def _observe_scheduling_receipt(path, *, qualified_path, required_after, source_revision, image_digest, state=False, preparation=False):
+    """Read original task/logs and retain its native current-or-history journal.
+
+    No task is submitted, no journal is created, and an older observation is
+    not rebound to the current mutable journal after a subsequent observation.
+    """
+    try:
+        original = Path(path).absolute()
+        if any(item.is_symlink() for item in (original, *original.parents)) or not original.resolve().is_relative_to(RECEIPTS.RECEIPTS.resolve()) or original.stat().st_size > 1048576: raise ValueError()
+        proof = RECEIPTS.validate(json.loads(original.read_bytes()))
+        qualified = RECEIPTS.qualified_maintenance(qualified_path)
+        if (qualified["source_revision"], qualified["image_digest"]) != (source_revision, image_digest): raise ValueError()
+        outputs, _ = MIGRATION.outputs(STACK)
+        definition = outputs.get("CoreServerPersistenceAdministrationTaskDefinitionArn") if isinstance(outputs, dict) else None
+        binding = MIGRATION.scheduling_database_binding(qualified, outputs, ((definition, "core_runtime"),))
+        task = proof["task"]
+        if task["definition"] != definition: raise ValueError()
+        ok, described, _ = MIGRATION.aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", task["arn"])
+        rows = described.get("tasks") if ok and isinstance(described, dict) else None
+        if not isinstance(rows, list) or len(rows) != 1 or described.get("failures"): raise ValueError()
+        actual = rows[0]
+        operation_id = actual.get("startedBy")
+        if not isinstance(operation_id, str) or re.fullmatch(r"kp-[a-f0-9]{32}", operation_id) is None: raise ValueError()
+        operations = MIGRATION.task_operations()
+        git = operations.subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], check=True, capture_output=True, text=True).stdout.strip()
+        directory = Path(git) / "persistence-administration"
+        controller = operation_binding(None)
+        current = directory / (proof["operation"] + ".json")
+        journal = controller.load(current, proof["operation"])
+        if journal["operation_id"] != operation_id:
+            journal = controller.load(directory / "history" / (operation_id + ".json"), proof["operation"])
+        if journal["proof_receipt"] != original.relative_to(ROOT).as_posix(): raise ValueError()
+        packet = {"journal": journal, "receipt": proof}
+        checked = _validate_scheduling_packet(packet, expected_binding=binding, required_after=required_after, state=state, preparation=preparation)
+        controller.exact(actual, journal)
+        if (actual.get("lastStatus") != "STOPPED" or not MIGRATION.task_exit(actual)
+                or MIGRATION.timestamp(actual.get("startedAt")) != MIGRATION.timestamp(task["started_at"])
+                or MIGRATION.timestamp(actual.get("stoppedAt")) != MIGRATION.timestamp(task["stopped_at"])
+                or MIGRATION.duration(actual) != proof["context"]["completion_duration_seconds"]): raise ValueError()
+        result, _ = accepted_log(actual, proof["operation"])
+        if result != {"verdict": "accepted", "code": task["result_code"], **checked["result"]}: raise ValueError()
+        return checked
+    except Exception:
+        raise RECEIPTS.ReceiptError("persistence-scheduling-proof-not-confirmed") from None
+
+
+def validate_scheduling_proof_packet(packet, *, expected_binding, required_after):
+    return _validate_scheduling_packet(packet, expected_binding=expected_binding, required_after=required_after)
+
+
+def observe_scheduling_proof_receipt(path, *, qualified_path, required_after, source_revision, image_digest):
+    return _observe_scheduling_receipt(path, qualified_path=qualified_path, required_after=required_after,
+        source_revision=source_revision, image_digest=image_digest)
+
+
+def _reobserve_scheduling_packet(packet, *, qualified_path, expected_binding, required_after, preparation=False):
+    """Authenticate supplied original custody without accepting a caller task path."""
+    try:
+        checked = _validate_scheduling_packet(packet, expected_binding=expected_binding, required_after=required_after, preparation=preparation)
+        qualified = Path(qualified_path)
+        if qualified.is_absolute() or not qualified.parts or any(part in {".", ".."} for part in qualified.parts): raise ValueError()
+        observed = _observe_scheduling_receipt(ROOT / packet["journal"]["proof_receipt"], qualified_path=ROOT / qualified,
+            required_after=required_after, source_revision=expected_binding["source_revision"], image_digest=expected_binding["image_digest"], preparation=preparation)
+        if observed != checked: raise ValueError()
+        return observed
+    except Exception:
+        raise RECEIPTS.ReceiptError("persistence-scheduling-proof-not-confirmed") from None
+
+
+def reobserve_scheduling_proof_packet(packet, *, qualified_path, expected_binding, required_after):
+    return _reobserve_scheduling_packet(packet, qualified_path=qualified_path, expected_binding=expected_binding, required_after=required_after)
+
+
+def validate_scheduling_preparation_packet(packet, *, expected_binding, required_after):
+    return _validate_scheduling_packet(packet, expected_binding=expected_binding, required_after=required_after, preparation=True)
+
+
+def observe_scheduling_preparation_receipt(path, *, qualified_path, required_after, source_revision, image_digest):
+    return _observe_scheduling_receipt(path, qualified_path=qualified_path, required_after=required_after,
+        source_revision=source_revision, image_digest=image_digest, preparation=True)
+
+
+def reobserve_scheduling_preparation_packet(packet, *, qualified_path, expected_binding, required_after):
+    return _reobserve_scheduling_packet(packet, qualified_path=qualified_path, expected_binding=expected_binding,
+        required_after=required_after, preparation=True)
+
+
+def observe_scheduling_state_receipt(path, *, qualified_path, required_after, source_revision, image_digest):
+    """Current native inventory observation; no zero-work or grant replay claim."""
+    checked = _observe_scheduling_receipt(path, qualified_path=qualified_path, required_after=required_after,
+        source_revision=source_revision, image_digest=image_digest, state=True)
+    now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    policy = RECEIPTS.owner("core_inventory_freshness", "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
+    if policy.observation_expired(checked["task"]["stopped_at"], now, MIGRATION.timestamp):
+        raise RECEIPTS.ReceiptError("persistence-scheduling-state-observation-expired")
+    return {"schema": "kanbien/scheduling-database-observation/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence",
+        **{key: checked[key] for key in ("binding", "task", "receipt_sha256", "packet")},
+        "database_state": checked["result"]["database_state"], "required_after": required_after,
+        "checked_at": now}
+
+
+def scheduling_database_readiness(qualified_path, receipt_paths, *, required_after, source_revision, image_digest):
+    """Fresh original state/grant/privilege evidence for initial empty activation.
+
+    The caller supplies its retained phase boundary, not a user-selected time.
+    This reader performs observations only; it never launches or retries tasks.
+    """
+    try:
+        if type(receipt_paths) is not dict or set(receipt_paths) != {"state", "grant", "prove"}: raise ValueError()
+        qualified = RECEIPTS.qualified_maintenance(qualified_path)
+        if (qualified["source_revision"], qualified["image_digest"]) != (source_revision, image_digest): raise ValueError()
+        outputs, _ = MIGRATION.outputs(STACK)
+        if not isinstance(outputs, dict): raise ValueError()
+        definition = outputs.get("CoreServerPersistenceAdministrationTaskDefinitionArn")
+        binding = MIGRATION.scheduling_database_binding(qualified, outputs, ((definition, "core_runtime"),))
+        seconds, now = deadline(), datetime.now(timezone.utc)
+        if seconds is None: raise ValueError()
+        observations = {}
+        for name, operation in (("state", "observe-scheduling-state"), ("grant", "grant-scheduling-access"), ("prove", "prove-scheduling-access")):
+            path = Path(receipt_paths[name]).absolute()
+            if any(part.is_symlink() for part in (path, *path.parents)) or not path.resolve().is_relative_to(RECEIPTS.RECEIPTS.resolve()): raise ValueError()
+            raw = path.read_bytes()
+            if len(raw) > 1048576: raise ValueError()
+            original = RECEIPTS.validate(json.loads(raw))
+            if original["context"].get("scheduling_binding") != binding or original["task"]["image_digest"] != image_digest: raise ValueError()
+            state = MIGRATION.observe_scheduling_administration(original, outputs, operation, now=now, deadline_seconds=seconds)
+            task = original["task"]
+            observations[name] = {"receipt_sha256": "sha256:" + hashlib.sha256(raw).hexdigest(), "task_arn": task["arn"],
+                "started_at": task["started_at"], "stopped_at": task["stopped_at"], "database_state": state}
+        policy = RECEIPTS.owner("core_readiness_freshness", "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py")
+        return RECEIPTS.SCHEDULING_STATE.initial_readiness(binding, observations, target="kanbien-core-platform", scope="core-server-persistence",
+            required_after=required_after, checked_at=now.isoformat().replace("+00:00", "Z"), timestamp=MIGRATION.timestamp,
+            observation_expired=policy.observation_expired)
+    except Exception as error:
+        if isinstance(error, ValueError) and str(error) == "scheduling-database-readiness-unrelated-work":
+            raise RECEIPTS.ReceiptError("persistence-scheduling-readiness-unrelated-work") from None
+        raise RECEIPTS.ReceiptError("persistence-scheduling-readiness-not-confirmed") from None
+
+
 def main() -> int:
     parser = AdministrationArgumentParser(add_help=False)
     # Keep this literal tuple beside the controller contract.  The declaration
@@ -270,6 +510,9 @@ def main() -> int:
     parser.add_argument("--fresh", action="store_true")
     parser.add_argument("--new-operation", action="store_true")
     parser.add_argument("--expected-operation")
+    parser.add_argument("--qualified-receipt", type=Path)
+    parser.add_argument("--scheduling-proof-id")
+    parser.add_argument("--scheduling-proof-due-at")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
@@ -281,6 +524,17 @@ def main() -> int:
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": PROOF_CONTRACT[args.operation]}, sort_keys=True))
         return 0
+    synthetic = args.operation in RECEIPTS.SCHEDULING_PROOF.PROOF_OPERATIONS
+    try:
+        if synthetic:
+            RECEIPTS.SCHEDULING_PROOF.proof_identifier(args.scheduling_proof_id)
+            if args.operation == "seed-scheduling-proof": RECEIPTS.SCHEDULING_PROOF.proof_time(args.scheduling_proof_due_at)
+            elif args.scheduling_proof_due_at is not None: raise ValueError()
+        elif args.scheduling_proof_id is not None or args.scheduling_proof_due_at is not None: raise ValueError()
+    except ValueError: return report("blocked", "persistence-administration-scheduling-proof-selection-invalid")
+    scheduling = synthetic or args.operation in RECEIPTS.SCHEDULING_STATE.RESULTS or args.operation == RECEIPTS.SCHEDULING_STATE.PREFIX_OPERATION
+    if scheduling != (args.qualified_receipt is not None) or scheduling and args.reconcile_task is not None:
+        return report("blocked", "persistence-administration-scheduling-custody-required")
     seconds = deadline()
     if seconds is None:
         return report("blocked", "persistence-administration-deadline-invalid")
@@ -300,17 +554,31 @@ def main() -> int:
         reconciliation = current_task(task, args.reconcile_task, definition)
         return accept(task, seconds, args.operation) if reconciliation == "ok" else report("blocked", reconciliation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
-    overrides = json.dumps({"containerOverrides": [{"name": "persistence-administration", "environment": [{"name": "PERSISTENCE_ADMINISTRATION_OPERATION", "value": args.operation}]}]})
+    environment = [{"name": "PERSISTENCE_ADMINISTRATION_OPERATION", "value": args.operation}]
+    if synthetic:
+        environment.append({"name": "PERSISTENCE_SCHEDULING_PROOF_ID", "value": args.scheduling_proof_id})
+        if args.operation == "seed-scheduling-proof": environment.append({"name": "PERSISTENCE_SCHEDULING_PROOF_DUE_AT", "value": args.scheduling_proof_due_at})
+    overrides = json.dumps({"containerOverrides": [{"name": "persistence-administration", "environment": environment}]})
     def historical():
         retained_path, retained = retained_observation(args.operation, definition)
         if retained_path is not None and retained is not None: return reused_observation(retained_path, retained, args.operation)
         return None
     operations = MIGRATION.task_operations()
-    binding = operations.BoundOperation(root=ROOT, proof_type="administration", family="kanbien-core-platform-persistence-administration",
-        container="persistence-administration", selector="PERSISTENCE_ADMINISTRATION_OPERATION", results=SUCCESS,
-        aws=MIGRATION.aws, report=report, accept=accept, receipts=RECEIPTS)
+    captured = {}
+    def scheduling_identity():
+        if not captured:
+            qualified = RECEIPTS.qualified_maintenance(args.qualified_receipt)
+            captured.update(MIGRATION.scheduling_database_binding(qualified, outputs, ((definition, "core_runtime"),)))
+        return dict(captured)
+    def authorize_submission(_previous, _proof):
+        try: scheduling_identity()
+        except Exception: raise operations.OperationFailure("scheduling-binding-not-confirmed") from None
+    binding = operation_binding(lambda task, seconds, operation, on_receipt=None, scheduling_binding=None:
+        accept(task, seconds, operation, on_receipt, (lambda: scheduling_binding) if scheduling_binding is not None else None))
     return binding.run(mode=args.operation, definition=definition, network=network, overrides=overrides, seconds=seconds,
-        new_operation=new_operation, expected_operation=args.expected_operation, historical=historical)
+        new_operation=new_operation, expected_operation=args.expected_operation, historical=historical,
+        authorize_submission=authorize_submission if scheduling else None,
+        submission_binding=scheduling_identity if scheduling else None)
 
 
 if __name__ == "__main__":

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-controls
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -184,7 +184,7 @@ def collection_protocols():
     finally: K.collect, K.Provider, sys.argv = original_collect, original_provider, original_argv
 
 
-def archive_protocols(*, bootstrap=False, proof_label=None, historical_graph=False):
+def archive_protocols(*, bootstrap=False, migration=False, proof_label=None, historical_graph=False):
     """Actual local task collector and gate producer, controlled input only."""
     A, T = K.A, K.A.T
     C = T.C
@@ -193,12 +193,14 @@ def archive_protocols(*, bootstrap=False, proof_label=None, historical_graph=Fal
         "dependency_incarnation_sha256": "sha256:" + "f" * 64, "proof_label": "entity-smoke-" + "a" * 24, "record_digest": "1" * 64}
     if proof_label is not None: binding["proof_label"] = proof_label
     stage, workload, operation, name = ("baseline", "administration", "bootstrap", "bootstrap") if bootstrap else ("acceptance", "verifier", "read", "final-read")
+    if migration: stage, workload, operation, name = "baseline", "migration", "apply", "migration"
     label = A.preflight_label(binding, stage, workload, operation)
     request = {**{key: item for key, item in binding.items() if key not in {"proof_label", "record_digest"}},
         "workload": workload, "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-" + workload + ":1",
         "proof_label": label, "security_group": "sg-" + "a" * 17, "subnets": ["subnet-" + "b" * 17], "deadline_seconds": 90,
         "environment": {"ENTITY_SMOKE_VERIFICATION_OPERATION": "ready", "ENTITY_SMOKE_PROOF_LABEL": label, "ENTITY_SMOKE_EXPECTED_SOURCE": binding["source_revision"]}}
     if bootstrap: request["environment"] = {"ENTITY_SMOKE_ADMINISTRATION_OPERATION": "preflight"}
+    if migration: request["environment"] = {"ENTITY_SMOKE_MIGRATION_OPERATION": "preflight"}
     reservation = {"schema": "deploy/entity-smoke-task-reservation/v1", "operation_id": "es-" + "2" * 32,
         "request": request, "request_sha256": hashlib.sha256(T.RUNNER.CONTROL.canonical(request)).hexdigest(), "reserved_at": "2026-11-09T02:30:00Z"}
     stamp = "2026-11-09T02:30:01Z"
@@ -210,6 +212,7 @@ def archive_protocols(*, bootstrap=False, proof_label=None, historical_graph=Fal
         "source_revision": binding["source_revision"], "proof_label_sha256": hashlib.sha256(label.encode()).hexdigest(),
         "steps": ["release", "liveness", "readiness"], "checked_at": stamp}
     if bootstrap: result = {"verdict": "passed", "code": "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED", "operation": "preflight"}
+    if migration: result = {"verdict": "passed", "code": "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED"}
     receipt = T.RUNNER.EVIDENCE.collect(task, reservation, {"events": [{"message": json.dumps(result)}]}, stamp)
     graph = T.GRAPH.contract(workload, C.GATE)
     if historical_graph:
@@ -233,7 +236,8 @@ def archive_protocols(*, bootstrap=False, proof_label=None, historical_graph=Fal
         value = {"schema": A.SCHEMA, "name": name, "stage": stage, "phase": "preflight", "requested_operation": operation,
             "controller_sha256": artifact, "collection_binding": binding, "graph": graph, "packet": packet, "completion": completion, "gate": gate, "admission": None}
         assert A.validate_task(value, binding) is value
-        if not bootstrap: successor_archive_protocols(A, value, task, result, root)
+        if migration: migration_profile_protocols(A, value, task, root)
+        elif not bootstrap: successor_archive_protocols(A, value, task, result, root)
         if bootstrap:
             step = cache / "task-steps/administration-bootstrap-preflight.json"
             C.RESOURCE.write_exclusive(step, packet)
@@ -308,6 +312,58 @@ def archive_protocols(*, bootstrap=False, proof_label=None, historical_graph=Fal
         fails(lambda: A.validate_task(malformed, binding), T.RUNNER.EVIDENCE.EvidenceFailure, "task-retained-receipt-mismatch")
 
 
+def migration_profile_protocols(A, preflight, task, root):
+    """A valid scheduled apply receipt must not satisfy the baseline proof."""
+    T, C = A.T, A.C
+    binding = preflight["collection_binding"]
+    value = copy.deepcopy(preflight)
+    value["phase"] = "operation"
+    packet = value["packet"]
+    reservation = packet["reservation"]
+    reservation.update(operation_id="es-" + "6" * 32, reserved_at="2026-11-09T02:30:02Z")
+    request = reservation["request"]
+    request.update(proof_label=binding["proof_label"], deadline_seconds=300,
+                   environment={"ENTITY_SMOKE_MIGRATION_OPERATION": "apply"})
+    observed = copy.deepcopy(task)
+    observed.update(taskArn="arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "7" * 32,
+                    startedBy=reservation["operation_id"], createdAt="2026-11-09T02:30:03Z",
+                    startedAt="2026-11-09T02:30:03Z", stoppedAt="2026-11-09T02:30:03Z")
+    result = {"verdict": "passed", "code": "ENTITY_SMOKE_MIGRATION_APPLIED"}
+    probe = {"reservation": preflight["packet"]["reservation"], "receipt": preflight["packet"]["receipt"],
+             "label": preflight["packet"]["reservation"]["request"]["proof_label"]}
+
+    def rebound(selected, suffix):
+        current = selected["packet"]
+        reserved = current["reservation"]
+        reserved["request_sha256"] = hashlib.sha256(T.RUNNER.CONTROL.canonical(reserved["request"])).hexdigest()
+        actual = {**observed, "overrides": T.RUNNER.CONTROL.overrides(reserved["request"])}
+        current["receipt"] = T.RUNNER.EVIDENCE.collect(actual, reserved,
+            {"events": [{"message": json.dumps(result)}]}, actual["stoppedAt"])
+        selected["completion"]["step_sha256"] = A.document_digest(current)
+        destination = root / suffix
+        T.RUNNER.PREFLIGHT.retain_admission(destination, reserved, probe,
+            preflight["packet"]["reservation"]["reserved_at"], reserved["reserved_at"])
+        selected["admission"] = C.read_json(T.RUNNER.PREFLIGHT.admission_path(destination, reserved))
+        assert T.RUNNER.EVIDENCE.validate_retained(current["receipt"], reserved) == current["receipt"]
+        T.RUNNER.PREFLIGHT.validate_admission(selected["admission"], reserved)
+
+    rebound(value, "baseline-migration")
+    original = copy.deepcopy(value)
+    with patch.object(T, "Provider", side_effect=AssertionError("historical evidence must not query AWS")), \
+         patch.object(C, "source_digest", side_effect=AssertionError("historical evidence must not read current source")):
+        assert A.validate_task(value, binding) is value
+        scheduled = copy.deepcopy(value)
+        scheduled["packet"]["reservation"]["request"]["environment"]["PERSISTENCE_MIGRATION_PROFILE"] = "scheduling"
+        rebound(scheduled, "scheduling-migration")
+        assert scheduled["packet"]["reservation"]["request_sha256"] != value["packet"]["reservation"]["request_sha256"]
+        try: A.validate_task(scheduled, binding)
+        except A.EvidenceFailure as failure:
+            assert failure.code == "acceptance-migration-profile-mismatch" and failure.item == "migration"
+            assert "scheduling" not in str(failure)
+        else: raise AssertionError("Scheduling apply must not satisfy baseline migration acceptance")
+        assert A.validate_task(value, binding) is value and value == original
+
+
 def successor_archive_protocols(A, original, task, result, root):
     """Actual v2 task/gate reader using local controlled task and plan inputs."""
     T, C = A.T, A.C
@@ -369,6 +425,130 @@ def successor_archive_protocols(A, original, task, result, root):
     fails(lambda: A.validate_task(invalid, binding, delivery=delivery), A.EvidenceFailure, "acceptance-task-gate-reference-invalid")
     invalid = copy.deepcopy(value); invalid["delivery"] = None
     fails(lambda: A.validate_task(invalid, binding, delivery=delivery), A.EvidenceFailure, "acceptance-task-delivery-mismatch")
+    scheduling_archive_protocols(A, value, task, root)
+
+
+def scheduling_archive_protocols(A, original, task, root):
+    """Real task, gate and admission readers; only provider responses are synthetic."""
+    T, C = A.T, A.C
+    binding, delivery = original["collection_binding"], original["delivery"]
+    parent = original["packet"]["binding"]
+    manifest = "a" * 64
+    deployment = {"result": {"facts": {"completed_at": "2026-11-09T02:00:00Z"}}}
+    state = {"schema": "kanbien/scheduling-database-state/v1", "manifest_sha256": manifest, "migration_count": 7,
+             "work_inventory": {"waiting_schedules": 2, "pending_outbox": 1, "active_processing": 0}}
+    sequence = 0
+
+    def pair(name, prerequisites, result, *, profile=None):
+        nonlocal sequence
+        stage, workload, operations = A.tasks(profile, metadata=True)[name]
+        operation, selected = operations[0], {}
+        for phase in ("preflight", "operation"):
+            sequence += 1
+            args = SimpleNamespace(proof_stage=stage, workload=workload, operation=operation, phase=phase,
+                qualification_profile=profile, migration_profile="scheduling" if name == "scheduling-migration" else "baseline",
+                expected_digest=binding["record_digest"] if profile else None, proof_label=binding["proof_label"])
+            label = A.preflight_label(binding, stage, workload, operation, delivery=delivery, qualification_profile=profile)
+            context = {"binding": parent, "delivery": delivery, "checked": {
+                "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-entity-smoke-" + workload + ":1",
+                "security_group": "sg-" + "a" * 17, "subnets": ["subnet-" + "b" * 17]},
+                "report": {"plan": {"preflight_label": label}}, "completion_deadlines": {workload: 300}}
+            request = T.STEPS.request(T.dependencies(), context, args)
+            stamp = "2026-11-09T02:" + str(sequence + 1).zfill(2) + ":00Z"
+            reservation = {"schema": "deploy/entity-smoke-task-reservation/v1", "operation_id": "es-" + format(sequence, "032x"),
+                "request": request, "request_sha256": hashlib.sha256(T.RUNNER.CONTROL.canonical(request)).hexdigest(), "reserved_at": stamp}
+            actual = copy.deepcopy(task)
+            actual.update(taskArn="arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + format(sequence, "032x"),
+                taskDefinitionArn=request["definition"], startedBy=reservation["operation_id"], overrides=T.RUNNER.CONTROL.overrides(request),
+                createdAt=stamp, startedAt=stamp, stoppedAt=stamp,
+                containers=[{"name": "entity-smoke-" + workload, "imageDigest": binding["image_digest"], "exitCode": 0}])
+            output = result if phase == "operation" else {"verdict": "passed", "code": "ENTITY_SMOKE_DATABASE_PREFLIGHT_CONFIRMED"}
+            if workload == "administration" and phase == "preflight": output = {**output, "operation": "preflight"}
+            receipt = T.RUNNER.EVIDENCE.collect(actual, reservation, {"events": [{"message": json.dumps(output)}]}, stamp)
+            compact = T.STEPS.prerequisite_custody(C, prerequisites)
+            plan = {**original["packet"]["plan"], "workload": workload, "phase": phase,
+                "operation": "preflight" if phase == "preflight" else operation, "prepared_operation": operation,
+                "proof_stage": stage, "preflight_label": label, "expected_record_digest": args.expected_digest,
+                "request_sha256": A.digest(request), "prerequisites_sha256": A.digest(compact)}
+            if profile: plan.update(qualification_profile=profile, scheduling_manifest_sha256=manifest)
+            packet = {"schema": "deploy/entity-smoke-task-step/v3", "binding": parent, "delivery": delivery,
+                "plan": plan, "plan_sha256": A.digest(plan), "prerequisites": compact, "reservation": reservation, "receipt": receipt}
+            graph = T.GRAPH.contract(workload, C.GATE)
+            artifacts = {row["id"]: original["controller_sha256"] if row["id"] == T.GRAPH.CONTROLLER_SOURCE else binding["image_digest"] for row in graph["artifacts"]}
+            local = root / ("scheduling-archive-" + str(sequence))
+            cache = local / ".cache/entity-smoke-live" / binding["proof_label"] / "releases" / delivery["delivery_id"]
+            book = C.GateBook(original["controller_sha256"], cache / "task-realization", contract=graph, artifact_bindings=artifacts)
+            for component in book.known: book.component(component)
+            book.bind_plan(packet["plan_sha256"])
+            for gate in C.GATE.GATE_ORDER[:7]: book.gate(gate)
+            produced = book.validate("controlled-execution", 1)
+            gate = C.read_json(produced)
+            value = {**original, "name": name, "stage": stage, "phase": phase, "requested_operation": operation,
+                "packet": packet, "graph": graph, "gate": gate,
+                "completion": {"schema": "deploy/entity-smoke-task-completion/v1", "step_sha256": A.document_digest(packet),
+                    "plan_sha256": packet["plan_sha256"], "realization_evidence": str(produced.relative_to(local)),
+                    "realization_evidence_sha256": A.document_digest(gate)}, "admission": None}
+            if profile: value["qualification_profile"] = profile
+            if phase == "operation":
+                before = selected["preflight"]["packet"]
+                probe = {"reservation": before["reservation"], "receipt": before["receipt"], "label": label}
+                T.RUNNER.PREFLIGHT.retain_admission(cache / "task-receipts", reservation, probe, before["reservation"]["reserved_at"], stamp)
+                value["admission"] = C.read_json(T.RUNNER.PREFLIGHT.admission_path(cache / "task-receipts", reservation))
+            assert A.validate_task(value, binding, delivery=delivery, qualification_profile=profile, metadata=True) is value
+            if profile and phase == "operation":
+                # Historical collectors reconstruct a label, not today's
+                # migration manifest. The validated original plan supplies it.
+                context.update(cache=cache, artifact=original["controller_sha256"])
+                step = T.STEPS.path(context, args)
+                C.RESOURCE.write_exclusive(step, packet)
+                C.RESOURCE.write_exclusive(T.COMPLETION.path(step), value["completion"])
+                store = T.RUNNER.CONTROL.AttemptStore(cache / "task-attempts")
+                C.RESOURCE.write_exclusive(store.path_for(T.STEPS.key(args, delivery), request), reservation)
+                T.RUNNER.retain(T.RUNNER.receipt_path(cache / "task-receipts", request, reservation), receipt, reservation)
+                def no_provider(*arguments, **options): raise AssertionError("historical metadata must not query AWS")
+                with patch.object(C, "ROOT", local):
+                    assert T.STEPS.observe_packet(T.dependencies(), context, args, no_provider, historical=True, select=False) == packet
+                    wrong = {**context, "report": {"plan": {"preflight_label": label, "scheduling_manifest_sha256": "f" * 64}}}
+                    fails(lambda: T.STEPS.observe_packet(T.dependencies(), wrong, args, no_provider, historical=True, select=False),
+                          T.STEPS.StepFailure, "task-scheduling-manifest-mismatch")
+            selected[phase] = value
+        return selected
+
+    for complete in (False, True):
+        base = {"required_after": deployment["result"]["facts"]["completed_at"],
+                "packets": {"maintenance-deployment": deployment, "bootstrap-lineage": delivery["predecessor"]}}
+        prefix = {"schema": "kanbien/scheduling-migration-prefix/v1", "manifest_sha256": manifest,
+            "manifest_migration_count": 7, "minimum_applied_migrations": 1,
+            "applied_migrations": 7 if complete else 1, "applied_prefix_sha256": manifest if complete else "b" * 64,
+            "state": "complete" if complete else "partial"}
+        archives = {"scheduling-prefix": pair("scheduling-prefix", base,
+            {"verdict": "passed", "operation": "observe-scheduling-prefix", "code": "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", "migration_prefix": prefix})}
+        previous = archives["scheduling-prefix"]["operation"]["packet"]
+        if not complete:
+            before_apply = {"required_after": previous["receipt"]["task"]["stopped_at"],
+                            "packets": {**base["packets"], "observe-scheduling-prefix": previous}}
+            archives["scheduling-migration"] = pair("scheduling-migration", before_apply,
+                {"verdict": "passed", "code": "ENTITY_SMOKE_MIGRATION_APPLIED"})
+        record = {"qualification_profile": A.SCHEDULING.PROFILE, "delivery": delivery, "binding": binding,
+                  "deployment": deployment, "scheduling_migrations": archives}
+        lineage = K.validate_scheduling_migrations(record)
+        assert lineage["manifest_sha256"] == manifest and len(lineage["available"]) == (1 if complete else 2)
+        qualified = pair("migration-state", {"required_after": lineage["required_after"],
+            "packets": {"scheduling-metadata": lineage["packets"]}},
+            {"verdict": "passed", "operation": "observe-scheduling-state", "code": "PERSISTENCE_SCHEDULING_STATE_CONFIRMED", "database_state": state},
+            profile=A.SCHEDULING.PROFILE)
+        assert qualified["operation"]["packet"]["receipt"]["result"]["database_state"]["work_inventory"]["waiting_schedules"] == 2
+        stripped = copy.deepcopy(qualified["operation"]); stripped.pop("qualification_profile")
+        fails(lambda: A.validate_task(stripped, binding, delivery=delivery, qualification_profile=A.SCHEDULING.PROFILE),
+              A.EvidenceFailure, "acceptance-task-envelope-invalid")
+        if not complete:
+            missing = copy.deepcopy(record); missing["scheduling_migrations"].pop("scheduling-migration")
+            fails(lambda: K.validate_scheduling_migrations(missing), K.CollectionFailure, "acceptance-scheduling-apply-proof-mismatch")
+        else:
+            assert "scheduling-migration" not in archives, "complete prefix does not fabricate an apply task"
+        altered = copy.deepcopy(record)
+        altered["scheduling_migrations"]["scheduling-prefix"]["operation"]["packet"]["prerequisites"]["required_after"] = "2026-11-09T01:00:00Z"
+        fails(lambda: K.validate_scheduling_migrations(altered), T.STEPS.StepFailure, "task-step-delivery-plan-mismatch")
 
 
 def control_custody_protocols():
@@ -516,6 +696,7 @@ def control_custody_protocols():
 def run():
     collection_protocols()
     archive_protocols()
+    archive_protocols(migration=True)
     archive_protocols(bootstrap=True)
     archive_protocols(bootstrap=True, historical_graph=True)
     archive_protocols(bootstrap=True, proof_label=K.T.IMAGE_REPAIR.LABEL)

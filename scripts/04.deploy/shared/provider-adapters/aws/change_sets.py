@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -106,12 +106,16 @@ def retained_execution(store, *, preparation_phase, preparation_request,
 
 
 def _run(provider, store, *, phase, request, operation, token_field, arguments,
-         precondition, observe, passthrough):
+         precondition, observe, passthrough, reserve=None):
     # The durable operation owns the provider idempotency token. Workload policy
     # cannot silently replace it with a different or non-durable identity.
     if token_field in arguments or operation == "create-change-set" and "Description" in arguments:
         raise ChangeSetFailure("operation-token-conflict")
-    reservation, fresh = store.reserve(phase, request)
+    previous = store.read(phase, request) if reserve is not None else None
+    reservation, fresh = (store.reserve(phase, request) if reserve is None else reserve())
+    if reserve is not None and (type(fresh) is not bool or previous is not None and fresh
+            or store.read(phase, request) != reservation):
+        raise ChangeSetFailure("reservation-not-retained")
     if fresh:
         precondition(reservation)
         try:
@@ -130,7 +134,7 @@ def prepare(provider, store, *, phase, request, arguments, precondition, observe
                 observe=observe, passthrough=passthrough)
 
 
-def execute(provider, store, *, phase, request, arguments, precondition, observe, passthrough=()):
+def execute(provider, store, *, phase, request, arguments, precondition, observe, passthrough=(), reserve=None):
     return _run(provider, store, phase=phase, request=request, operation="execute-change-set",
                 token_field="ClientRequestToken", arguments=arguments, precondition=precondition,
-                observe=observe, passthrough=passthrough)
+                observe=observe, passthrough=passthrough, reserve=reserve)

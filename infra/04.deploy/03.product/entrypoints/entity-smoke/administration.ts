@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.entity-smoke.administration
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-22"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -15,15 +15,21 @@
 //   - id: deploy.plan.entity-smoke-core-platform
 //     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
 
-import { createNodePostgreSqlConnectionPool, postgreSqlPersistenceOperationError, type PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { createNodePostgreSqlConnectionPool, createNodePostgreSqlTokenConnectionPool, rdsIamAuthenticationToken, postgreSqlPersistenceOperationError, type PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { persistenceConfigurationResult, persistenceCertificateAuthorityResult, persistenceCredentialsResult } from "../shared/persistence/configuration";
 import { ensureBoundedLoginRole, ensureRdsIamAuthentication, requireBoundedExistingRole } from "../shared/persistence/role-credential";
-import { entitySmokeSchema, entitySmokeRuntimeUsername, entitySmokeMigrationUsername, entitySmokeMigrationManifest } from "./postgresql";
+import { entitySmokeSchema, entitySmokeRuntimeUsername, entitySmokeMigrationUsername, entitySmokeMigrationManifest, entitySmokeSchedulingContinuationManifest, createEntitySmokePostgreSqlRuntime } from "./postgresql";
+import { entitySmokeExpiredPurgeJobName, entitySmokeExpiredPurgeMessageType } from "@kanbien/app-entity-smoke";
+import { entityId } from "@kanbien/core/shared";
 import { entitySmokeConfigurationError, entitySmokeDependencyStateError, entitySmokeDiagnosticCatalogs, reportEntitySmokeFailure } from "./diagnostics";
 import { entitySmokePasswordAuthenticationPredicate, performEntitySmokeDatabasePreflight } from "./preflight";
+import { persistenceIamAuthenticationResult } from "../kanbien-core-server-persistence-iam-authentication";
+import { grantSchedulingDatabaseAccess, observeSchedulingDatabaseState, observeSchedulingMigrationPrefix, proveSchedulingDatabaseAccess, observeSchedulingProof, type SchedulingDatabasePolicy, type SchedulingProofApplication } from "../shared/persistence/scheduling-administration";
+import { PersistenceTaskObservations } from "../shared/persistence/operation-diagnostics";
 
 export type EntitySmokeAdministrationOperation = "bootstrap" | "grant-runtime" | "observe-permissions" | "observe-migration-state" | "revoke-runtime" | "restore-runtime";
-const operations = new Set(["preflight", "bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime"]);
+const legacyOperations = new Set(["bootstrap", "grant-runtime", "observe-permissions", "observe-migration-state", "revoke-runtime", "restore-runtime"]);
+const operations = new Set(["preflight", ...legacyOperations, "grant-scheduling-access", "observe-scheduling-state", "prove-scheduling-access", "observe-scheduling-prefix", "observe-scheduling-proof"]);
 type AdministrationResult = "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED" | "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" | "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
 
 export async function runEntitySmokeAdministration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
@@ -41,27 +47,70 @@ export async function runEntitySmokeAdministration(env: NodeJS.ProcessEnv = proc
   if (!credentials.ok) { reject({ diagnosticRecord: credentials.error.diagnostic }); return; }
   const authority = persistenceCertificateAuthorityResult(env);
   if (!authority.ok) { reject({ diagnosticRecord: authority.error.diagnostic }); return; }
-  if ([entitySmokeRuntimeUsername, entitySmokeMigrationUsername].includes(credentials.value.username)) {
+  const schedulingOperation = operation === "grant-scheduling-access" || operation === "observe-scheduling-state" || operation === "prove-scheduling-access" || operation === "observe-scheduling-prefix" || operation === "observe-scheduling-proof";
+  if ([entitySmokeRuntimeUsername, entitySmokeMigrationUsername, ...(schedulingOperation ? ["entity_smoke_scheduling_dispatch", "entity_smoke_scheduling_worker"] : [])].includes(credentials.value.username)) {
     reject(entitySmokeConfigurationError("identity", "mismatch")); return;
   }
+  const authentication = operation === "prove-scheduling-access" ? persistenceIamAuthenticationResult(env, settings.value, "PERSISTENCE_RUNTIME_DATABASE_USERNAME") : undefined;
+  if (authentication?.ok === false) { reject({ diagnosticRecord: authentication.error.diagnostic }); return; }
   const pool = createNodePostgreSqlConnectionPool(settings.value, { ...credentials.value, certificateAuthority: authority.value });
-  let completion: { verdict: "passed"; code: string; operation: string } | undefined;
+  const schedulingObservations = schedulingOperation ? new PersistenceTaskObservations("administration") : undefined;
+  let completion: { verdict: "passed"; code: string; operation: string; database_state?: unknown; migration_prefix?: unknown; scheduling_observation?: unknown } | undefined;
   try {
+    if (schedulingOperation) {
+      const policy = entitySmokeSchedulingDatabasePolicy(settings.value.database);
+      if (operation === "observe-scheduling-proof") {
+        const snapshot = await observeSchedulingProof({ pool, configuration: settings.value, policy,
+          jobName: entitySmokeExpiredPurgeJobName, messageType: String(entitySmokeExpiredPurgeMessageType),
+          selection: { kind: "subject", id: env["PERSISTENCE_SCHEDULING_PROOF_ENTITY_ID"], dueAt: env["PERSISTENCE_SCHEDULING_PROOF_DUE_AT"], subjectKind: "entity-smoke.test-entity" },
+          readApplication: async (client, id): Promise<SchedulingProofApplication> => {
+            const participant: PostgreSqlConnectionPool = { query: statement => client.query(statement), connect: async () => client, end: async () => undefined };
+            const entity = await createEntitySmokePostgreSqlRuntime(participant).repository.get(entityId<"TestEntity">(id));
+            return entity === null ? { kind: "entity", present: false } : { kind: "entity", present: true, visibility: entity.visibility,
+              lifecycle_state: entity.lifecycle.state, ...(entity.lifecycle.state !== "deleted" ? {} : { deleted_at: entity.lifecycle.deletedAt, restore_eligible_until: entity.lifecycle.restoreEligibleUntil }) };
+          } }, schedulingObservations?.options);
+        completion = { verdict: "passed", operation, code: "PERSISTENCE_SCHEDULING_PROOF_OBSERVED", scheduling_observation: snapshot };
+      } else if (operation === "observe-scheduling-prefix") {
+        const prefix = await observeSchedulingMigrationPrefix(pool, policy, schedulingObservations?.options);
+        completion = { verdict: "passed", operation, code: "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", migration_prefix: prefix };
+      } else {
+      const state = operation === "grant-scheduling-access" ? await grantSchedulingDatabaseAccess(pool, policy, schedulingObservations?.options) : await observeSchedulingDatabaseState(pool, policy, schedulingObservations?.options);
+      if (operation === "prove-scheduling-access") {
+        if (authentication?.ok !== true) throw entitySmokeConfigurationError("identity", "invalid");
+        const region = authentication.value.region;
+        await proveSchedulingDatabaseAccess(policy, (_role, username) => createNodePostgreSqlTokenConnectionPool(settings.value, {
+          username, certificateAuthority: authority.value, authenticationToken: rdsIamAuthenticationToken({ region, hostname: settings.value.host, port: settings.value.port, username }),
+        }), schedulingObservations?.options);
+      }
+      completion = { verdict: "passed", operation, code: operation === "grant-scheduling-access" ? "PERSISTENCE_SCHEDULING_ACCESS_GRANTED" : operation === "observe-scheduling-state" ? "PERSISTENCE_SCHEDULING_STATE_CONFIRMED" : "PERSISTENCE_SCHEDULING_PRIVILEGE_PROVEN", database_state: state };
+      }
+    } else {
     const code = operation === "preflight"
       ? await performEntitySmokeDatabasePreflight(pool, { identity: "administration", database: settings.value.database, username: credentials.value.username })
       : await performEntitySmokeAdministration(pool, operation as EntitySmokeAdministrationOperation, settings.value.database);
     completion = { verdict: "passed", code, operation };
-  } catch (cause) { reportEntitySmokeFailure("administration", operation === "preflight" ? "not-started" : "unknown",
-    postgreSqlPersistenceOperationError(operation === "preflight" ? "readiness" : "administration", cause, { diagnosticDefinitions: entitySmokeDiagnosticCatalogs.flatMap(catalog => [...catalog.definitions]) })); process.exitCode = 1; }
+    }
+  } catch (cause) {
+    const observed = postgreSqlPersistenceOperationError(operation === "preflight" ? "readiness" : "administration", cause, { diagnosticDefinitions: entitySmokeDiagnosticCatalogs.flatMap(catalog => [...catalog.definitions]) });
+    if (schedulingObservations !== undefined) console.error(JSON.stringify(schedulingObservations.failure("PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", observed)));
+    else reportEntitySmokeFailure("administration", operation === "preflight" ? "not-started" : "unknown", observed);
+    process.exitCode = 1;
+  }
   finally { try { await pool.end(); } catch (cause) { completion = undefined; reportEntitySmokeFailure("close", "not-assessed", cause); process.exitCode = 1; } }
   if (completion !== undefined) console.log(JSON.stringify(completion));
 }
 function reject(cause: unknown): void { reportEntitySmokeFailure("administration", "not-started", cause); process.exitCode = 1; }
 
+export function entitySmokeSchedulingDatabasePolicy(database: string): SchedulingDatabasePolicy {
+  return { database, manifest: entitySmokeSchedulingContinuationManifest(), otherSchema: "platform", migrationUsername: entitySmokeMigrationUsername, httpUsername: entitySmokeRuntimeUsername,
+    dispatchUsername: "entity_smoke_scheduling_dispatch", workerUsername: "entity_smoke_scheduling_worker", applicationTable: "test_entity",
+    httpApplicationPrivileges: ["SELECT", "INSERT", "UPDATE"], workerApplicationPrivileges: ["SELECT", "DELETE"] };
+}
+
 /** The database name was checked by the existing PostgreSQL configuration owner.
  * Role/schema/table names below are fixed by this scope, never caller input. */
 export async function performEntitySmokeAdministration(pool: PostgreSqlConnectionPool, operation: EntitySmokeAdministrationOperation, database: string): Promise<AdministrationResult> {
-  if (!operations.has(operation) || (operation as string) === "preflight") throw entitySmokeConfigurationError("operation", "invalid");
+  if (!legacyOperations.has(operation)) throw entitySmokeConfigurationError("operation", "invalid");
   if (!/^[a-z][a-z0-9_]{0,62}$/.test(database)) throw entitySmokeConfigurationError("database", "invalid");
   if (operation === "observe-permissions") { await observePermissions(pool, database); return "ENTITY_SMOKE_ADMINISTRATION_CONFIRMED"; }
   if (operation === "observe-migration-state") return observeMigrationState(pool);

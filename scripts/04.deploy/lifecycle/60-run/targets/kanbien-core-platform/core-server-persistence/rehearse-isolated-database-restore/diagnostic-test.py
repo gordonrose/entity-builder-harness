@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-27"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: persistence.diagnostics
 #   disciplines: [security, sre]
@@ -18,6 +18,7 @@
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
 from __future__ import annotations
 import contextlib
+import copy
 import importlib.util
 import io
 import json
@@ -36,6 +37,7 @@ RID='kanbien-core-platform-persistence-restore-20261024-d1'
 CANARY='password=synthetic-canary postgres://user:canary@private.invalid secret-token'
 FAILURE='KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED'
 IMAGE='sha256:'+'a'*64
+DEFINITION='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-restoration-verifier:1'
 
 def load(path, name='test_controller'):
  spec=importlib.util.spec_from_file_location(name,path); value=importlib.util.module_from_spec(spec); spec.loader.exec_module(value); return value
@@ -77,7 +79,7 @@ class Provider:
   if operation=='lookup-events':return True,{'Events':[{'EventTime':'2020-01-01T00:00:00Z','CloudTrailEvent':json.dumps({'requestParameters':{'roleName':'fixture-role','policyName':'kanbien-core-platform-restoration-verifier-current-instance'}})}]},'ok'
   if operation=='run-task':
    identity=args[args.index('--started-by')+1];overrides=json.loads(args[args.index('--overrides')+1])
-   self.tasks=[{'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'startedBy':identity,'taskDefinitionArn':'fixture-definition:1','lastStatus':'RUNNING','createdAt':datetime.now(timezone.utc).isoformat(),'startedAt':'2026-10-26T02:00:00Z','stoppedAt':'2026-10-26T02:00:01Z','overrides':overrides,'containers':[{'exitCode':0,'imageDigest':IMAGE}]}]
+   self.tasks=[{'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'startedBy':identity,'taskDefinitionArn':args[args.index('--task-definition')+1],'lastStatus':'RUNNING','createdAt':datetime.now(timezone.utc).isoformat(),'startedAt':'2026-10-26T02:00:00Z','stoppedAt':'2026-10-26T02:00:01Z','overrides':overrides,'containers':[{'exitCode':0,'imageDigest':IMAGE}]}]
    return (False,None,'aws-command-timeout') if self.lost_response else (True,{},'ok')
   if operation=='stop-task':return True,{},'ok'
   if operation=='get-log-events':return logs([event(self.result)])
@@ -88,6 +90,11 @@ class Provider:
 class DiagnosticTests(unittest.TestCase):
  def setUp(self):
   self.m=load(HERE/'script.py');self.directory=tempfile.TemporaryDirectory();self.m.OPERATION_DIAGNOSTICS=Path(self.directory.name)/'diagnostics';self.m.ROOT=Path(self.directory.name)
+  subprocess.run(['git','init','--quiet',str(self.m.ROOT)],check=True)
+  self.native=self.m.native_task_owner();self.native.reserve_task_cost=lambda request,reserve,**_options:reserve()
+  self.m.native_task_owner=lambda:self.native
+  self.m.diagnostic_cost_admission_supported=lambda:True
+  self.m.RESOURCE_OPERATIONS.reserve_resource_cost=lambda phase,request,reserve:reserve()
  def tearDown(self):self.directory.cleanup()
  def capture(self,function,*args,**kwargs):
   out=io.StringIO()
@@ -137,16 +144,62 @@ class DiagnosticTests(unittest.TestCase):
   self.m.OPERATION_DIAGNOSTICS=Path(self.directory.name)/'file';self.m.OPERATION_DIAGNOSTICS.write_text('owned fixture')
   self.assertEqual(self.m.retain_verifier_rejection(provider,'kanbien-restore-fixture',FAILURE,RID,task),('persistence-diagnostic-report-write-failed',))
  def target(self):
-  src={'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','InstanceCreateTime':'2020-01-01T00:00:00Z','DBSubnetGroup':{'DBSubnetGroupName':'fixture-subnets'}}
+  src={'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','InstanceCreateTime':'2020-01-01T00:00:00Z','DBInstanceClass':'db.t4g.micro','DBSubnetGroup':{'DBSubnetGroupName':'fixture-subnets'}}
   point={'DBSnapshotIdentifier':SID,'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','SnapshotCreateTime':'2026-10-24T00:00:00Z','Status':'available','Encrypted':True}
   proof={'task':{'started_at':'2026-10-23T00:00:00Z','stopped_at':'2026-10-23T00:00:01Z'},'integrity':{'payload_sha256':'b'*64}}
   tags,_=self.m.recovery_point_binding(src,point,SID,RID,proof)[0]
   restored={**src,'DBInstanceIdentifier':RID,'DbiResourceId':'db-RESTORED','DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Endpoint':{'Address':'fixture.invalid'},'TagList':[{'Key':k,'Value':v} for k,v in tags.items()]}
-  controls={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'fixture-definition:1','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PersistenceRestorationVerifierTaskRoleName':'fixture-role','PrivateSubnetIds':'subnet-fixture','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
+  controls={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':DEFINITION,'PersistenceRestoredDatabaseSecurityGroupId':'sg-'+'a'*17,'PersistenceRestorationVerifierTaskRoleName':'fixture-role','PrivateSubnetIds':'subnet-fixture','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
+  restored['VpcSecurityGroups']=[{'VpcSecurityGroupId':controls['PersistenceRestoredDatabaseSecurityGroupId']}]
   provider=Provider(self.m);provider.restored=restored
   stack=contextlib.ExitStack();stack.enter_context(patch.object(self.m,'source',return_value=(src,'ok')));stack.enter_context(patch.object(self.m,'controls',return_value=(controls,'ok')));stack.enter_context(patch.object(self.m,'db',return_value=(restored,'ok')));stack.enter_context(patch.object(self.m,'snapshot',return_value=(point,'ok')));stack.enter_context(patch.object(self.m,'read_record_proof',return_value=(proof,'ok')))
   return provider,stack
  def run_diagnostic(self,provider,**kwargs):return self.capture(self.m.diagnose_connection,provider,SID,RID,record_proof_path=Path('fixture-proof.json'),**kwargs)
+ def test_restore_budget_reserves_original_and_never_replays_lost_task(self):
+  provider,stack=self.target()
+  with stack:
+   calls=[]
+   def refuse(request,reserve,**options):
+    calls.append(request);raise self.native.OperationFailure('task-cost-admission-not-confirmed')
+   self.native.reserve_task_cost=refuse
+   _,blocked=self.capture(self.m.verify,provider,SID,RID)
+   self.assertEqual(blocked['findings'][0]['code'],'persistence-restoration-verifier-cost-or-reservation-not-confirmed')
+   operation=self.m.restore_run_identity(provider.restored);path=self.m.restore_reservation_path(operation)
+   self.assertFalse(path.exists());self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
+   self.native.reserve_task_cost=lambda request,reserve,**options:reserve()
+   provider.lost_response=True
+   _,lost=self.capture(self.m.verify,provider,SID,RID)
+   self.assertEqual(lost['verdict'],'uncertain');original=self.m.read_restore_reservation(path)
+   self.assertEqual(original['operation_id'],operation)
+   self.assertEqual(self.m.scheduling_reservation_census([DEFINITION])[0]['operation_id'],operation)
+   self.native.reserve_task_cost=refuse
+   _,pending=self.capture(self.m.verify,provider,SID,RID,True)
+   self.assertEqual(pending['verdict'],'pending');self.assertEqual(len(calls),1)
+   self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
+   provider.tasks=[]
+   _,missing=self.capture(self.m.verify,provider,SID,RID)
+   self.assertEqual(missing['findings'][0]['code'],'persistence-restoration-verifier-reserved-reconcile-only')
+   _,cleanup=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(cleanup['verdict'],'uncertain')
+   self.assertFalse(any(call[1]=='delete-db-instance' for call in provider.calls))
+   self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
+   self.assertFalse(self.m.absent_database_reservations_resolved(provider,RID,DEFINITION),"missing native task is not resolved by database absence or elapsed time")
+   changed=dict(original['request'],network='different')
+   with self.assertRaises(self.native.JOURNAL.JournalFailure):self.m.reserve_restore_verifier(operation,changed)
+ def test_optional_diagnostic_cannot_bypass_active_budget(self):
+  provider,stack=self.target()
+  with stack:
+   self.m.diagnostic_cost_admission_supported=lambda:False
+   _,blocked=self.run_diagnostic(provider)
+   self.assertEqual(blocked['findings'][0]['code'],'persistence-connection-diagnostic-cost-owner-not-supported')
+   self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
+   self.assertFalse(self.m.OPERATION_DIAGNOSTICS.exists())
+   self.m.diagnostic_cost_admission_supported=lambda:True
+   self.run_diagnostic(provider)
+   self.m.diagnostic_cost_admission_supported=lambda:False
+   _,observed=self.run_diagnostic(provider)
+   self.assertEqual(observed['verdict'],'pending')
+   self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
  def test_repeated_interrupted_and_retention_lost(self):
   provider,stack=self.target()
   with stack:
@@ -157,6 +210,61 @@ class DiagnosticTests(unittest.TestCase):
    provider.tasks=[]
    _,result=self.run_diagnostic(provider);self.assertEqual(result['findings'][0]['code'],'persistence-connection-diagnostic-reserved-reconcile-only')
    self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
+ def test_clone_creation_retains_original_when_submission_response_is_lost(self):
+  provider,stack=self.target()
+  with stack,patch.object(self.m,'db',return_value=(None,'aws-resource-missing')):
+   invoke=provider.aws
+   def lost(*args):
+    if args[1]=='restore-db-instance-from-db-snapshot':
+     provider.calls.append(args);return False,None,'aws-command-timeout'
+    return invoke(*args)
+   provider.aws=lost
+   status,first=self.capture(self.m.restore,provider,SID,RID,record_proof_path=Path('fixture-proof.json'))
+   self.assertEqual(first['verdict'],'uncertain',first)
+   originals=self.m.scheduling_resource_census()
+   self.assertEqual(len(originals),1)
+   original=originals[0]
+   self.assertEqual(original['request']['database'],RID)
+   self.assertEqual(original['request']['instance_class'],'db.t4g.micro')
+   self.assertIn('Key=ResourceOperation,Value='+original['operation_id'],provider.calls[-1])
+   status,second=self.capture(self.m.restore,provider,SID,RID,record_proof_path=Path('fixture-proof.json'))
+   self.assertEqual(second['findings'][0]['code'],'persistence-restore-reserved-reconcile-only')
+   self.assertEqual(len([call for call in provider.calls if call[1]=='restore-db-instance-from-db-snapshot']),1)
+   self.assertEqual(self.m.scheduling_resource_census(),originals)
+
+ def test_new_clone_cleanup_requires_terminal_original_and_never_replays_delete(self):
+  provider,stack=self.target()
+  with stack,patch.object(self.m,'verifier_tasks',return_value=([],'ok')),patch.object(self.m,'remove_temporary_restore_identity_policy',return_value='ok'),patch.object(self.m.RESOURCE_OPERATIONS,'proof_cleanup_admission',return_value=None):
+   src=self.m.source(provider)[0];proof=self.m.read_record_proof(Path('fixture'))[0];ctl=self.m.controls(provider)[0]
+   request=self.m.restore_resource_request(src,SID,RID,proof,ctl)
+   original,_=self.m.restore_resource_store().reserve('restore-database',request)
+   provider.restored['TagList'].append({'Key':'ResourceOperation','Value':original['operation_id']})
+   # An available copy with no resolved verifier is not terminal proof.
+   _,blocked=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(blocked['verdict'],'blocked')
+   self.assertFalse(any(call[1]=='delete-db-instance' for call in provider.calls))
+   provider.restored['DBInstanceStatus']='failed'
+   _,first=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(first['verdict'],'pending',first)
+   retained=self.m.restore_cleanup_store().records()
+   self.assertEqual(retained[0]['request']['terminal'],{'outcome':'restore-failed','tasks':[]})
+   _,again=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(again['findings'][0]['code'],'persistence-restore-deletion-reserved-reconcile-only')
+   self.assertEqual(len([call for call in provider.calls if call[1]=='delete-db-instance']),1)
+   with patch.object(self.m,'db',return_value=(None,'aws-resource-missing')),patch.object(self.m,'absent_database_reservations_resolved',return_value=True):
+    _,done=self.capture(self.m.cleanup,provider,SID,RID,observe_only=True)
+   self.assertEqual(done['verdict'],'cleaned-up',done)
+   completed=json.loads((self.m.restore_cleanup_store().root/'completed'/(RID+'.json')).read_text())
+   self.assertEqual(completed['creation'],original)
+   self.assertEqual(completed['deletion'],retained[0])
+   self.assertEqual(completed['database'],'absent')
+   self.assertNotIn(CANARY,json.dumps(completed))
+   self.assertEqual(self.m.scheduling_resource_cleanup(original),completed)
+   malformed=copy.deepcopy(completed);malformed['observed_at']='2020-01-01T00:00:00Z'
+   target=self.m.restore_cleanup_store().root/'completed'/(RID+'.json')
+   target.write_text(json.dumps(malformed))
+   with self.assertRaises(ValueError):self.m.scheduling_resource_cleanup(original)
+
  def test_uncertain_launch_blocks_cleanup_and_policy_ownership(self):
   provider,stack=self.target()
   with stack:

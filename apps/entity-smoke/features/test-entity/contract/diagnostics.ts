@@ -28,7 +28,26 @@ export const testEntityIdentifierConflictDiagnostic = defineDiagnostic({
   } },
 } as const);
 
-export const testEntityDiagnosticCatalog = { owner: "entity-smoke.test-entity", definitions: [testEntityValidationDiagnostic, testEntityStoredRecordDiagnostic, testEntityIdentifierConflictDiagnostic] } as const;
+export const testEntityRetentionDiagnostic = defineDiagnostic({
+  code: "entity-smoke.test-entity.retention-rejected", version: 1,
+  classification: { failureKind: "validation", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    field: { type: "enum", values: ["transaction", "delivery", "subject", "entity-id"] },
+    reason: { type: "enum", values: ["missing", "mismatch", "invalid-format"] },
+    effect: { type: "enum", values: ["mutation-not-invoked"] },
+  } },
+} as const);
+
+export const testEntityWriteConflictDiagnostic = defineDiagnostic({
+  code: "entity-smoke.test-entity.write-conflict", version: 1,
+  classification: { failureKind: "conflict", failureSource: "unknown", severity: "warning", recovery: "user_correctable" },
+  detail: { type: "object", properties: {
+    condition: { type: "enum", values: ["changed-or-missing"] },
+    effect: { type: "enum", values: ["not-saved"] },
+  } },
+} as const);
+
+export const testEntityDiagnosticCatalog = { owner: "entity-smoke.test-entity", definitions: [testEntityValidationDiagnostic, testEntityStoredRecordDiagnostic, testEntityIdentifierConflictDiagnostic, testEntityRetentionDiagnostic, testEntityWriteConflictDiagnostic] } as const;
 
 export function testEntityValidationRecord(field: "input" | "integerValue" | "uuidValue" | "occurredAt" | "label" | "status" | "enabled" | "categories" | "notes" | "description" | "reviewedAt" | "secondaryCategories", reason: "missing" | "wrong-type" | "invalid-format" | "invalid-value" | "invalid-item"): DiagnosticRecord {
   const result = createDiagnosticRecord(testEntityValidationDiagnostic, { field, reason });

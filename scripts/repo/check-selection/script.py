@@ -5,7 +5,7 @@
 #   version: 23
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -464,7 +464,11 @@ def validate_check(root: Path, check_id: str, check: Any) -> list[dict[str, str]
     if not isinstance(check.get('scope_inputs', True), bool): return fail('check-input-contract-invalid')
     if not isinstance(check.get('changed_path_context', False), bool): return fail('check-input-contract-invalid')
     if not isinstance(stage, str) or stage not in STAGES or not isinstance(check.get('evidence_class'), str) or check['evidence_class'] not in CLASSES[stage]: return fail('check-stage-invalid')
-    if not isinstance(argv, list) or len(argv) < 2 or argv[0] != 'bash' or not all(isinstance(arg, str) and arg and not any(c in arg for c in '\n\r\0;|&`$') for arg in argv): return fail('check-argv-invalid')
+    interpreters = {'bash': ('.sh',), 'node': ('.mjs', '.js'), 'python3': ('.py',)}
+    if (not isinstance(argv, list) or len(argv) < 2
+            or not all(isinstance(arg, str) and arg and not any(c in arg for c in '\n\r\0;|&`$') for arg in argv)
+            or argv[0] not in interpreters or not argv[1].endswith(interpreters[argv[0]])):
+        return fail('check-argv-invalid')
     parameters = check.get('parameters', {})
     if not isinstance(parameters, dict): return fail('check-parameters-invalid')
     for name, parameter in parameters.items():
@@ -474,7 +478,7 @@ def validate_check(root: Path, check_id: str, check: Any) -> list[dict[str, str]
     if any(('{' in arg or '}' in arg) and arg not in allowed for arg in argv): return fail('check-argument-placeholder-invalid')
     if stage == 'local':
         runtime = check.get('runtime')
-        if not isinstance(runtime, dict) or not coverage.strings(runtime.get('tools')) or not set(runtime['tools']) <= TOOLS or not coverage.strings(runtime.get('environment'), empty=True) or not coverage.strings(runtime.get('config_inputs', []), empty=True) or any(coverage.within(root, value) is None for value in runtime.get('config_inputs', [])): return fail('check-runtime-contract-invalid')
+        if not isinstance(runtime, dict) or not coverage.strings(runtime.get('tools')) or not set(runtime['tools']) <= TOOLS or argv[0] not in runtime['tools'] or not coverage.strings(runtime.get('environment'), empty=True) or not coverage.strings(runtime.get('config_inputs', []), empty=True) or any(coverage.within(root, value) is None for value in runtime.get('config_inputs', [])): return fail('check-runtime-contract-invalid')
         node_packages = runtime.get('node_packages', [])
         if not coverage.strings(node_packages, empty=True) or any(not valid_node_package(name) for name in node_packages) or ('node' in runtime['tools'] and 'node_packages' not in runtime) or ('typescript' in runtime['tools'] and 'typescript' not in node_packages): return fail('check-runtime-node-installation-invalid')
     command = coverage.within(root, argv[1])

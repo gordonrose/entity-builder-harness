@@ -5,7 +5,7 @@
 #   version: 6
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -445,6 +445,29 @@ def run(case, snapshot_args, S, T, canary):
     assert Y.run(probe_args, provider(Y))["verdict"] == "completed"
     planned_read = reader_args("operation"); planned(Y, planned_read); planned_read.mode = "execute"; original_transport.jobs.lost_next = True
     fails(lambda: Y.run(planned_read, provider(Y)), "task-submission-uncertain-reconcile-required")
+    # Exercise the actual original task/admission/log reader and truthful gated
+    # failed-cleanup plan. Restore only this controlled provider branch afterward
+    # so the existing successful-acceptance fixture remains independent.
+    failed_context, _ = Y.prepare(planned_read, provider(Y))
+    failed_request = T.STEPS.request(T.dependencies(), failed_context, planned_read)
+    failed_original = failed_context["store"].read(T.STEPS.key(planned_read), failed_request)
+    failed_task = next(task for task in original_transport.task_rows.values() if task.get("startedBy") == failed_original["operation_id"])
+    failed_id = failed_task["taskArn"].rsplit("/", 1)[1]
+    retained_result = original_transport.jobs.results[failed_id]
+    failed_task["containers"][0]["exitCode"] = 1
+    original_transport.jobs.results[failed_id] = original_transport.jobs.results[original_task["taskArn"].rsplit("/", 1)[1]]
+    failed_args = SimpleNamespace(**{**vars(cleanup_args), "phase": "cleanup-failed", "mode": "plan", "approved_plan": None})
+    try:
+        failed_plan = D.run(failed_args, provider(D))
+        assert failed_plan["verdict"] == "planned" and failed_plan["plan"]["phase"] == "cleanup-failed"
+        assert failed_plan["plan"]["scope_acceptance"] is False
+        assert "original_readback_required" not in D.graph("cleanup-failed")["change_shape"]["disposable_restore_cleanup"]
+        failed_args.mode, failed_args.approved_plan = "execute", "sha256:" + "0" * 64
+        fails(lambda: D.run(failed_args, provider(D)), "restore-approved-plan-mismatch")
+        assert not any(operation == "delete-stack" for _, operation, _ in clone.calls)
+    finally:
+        failed_task["containers"][0]["exitCode"] = 0
+        original_transport.jobs.results[failed_id] = retained_result
     with patch.object(C.TRANSITION, "RETIRED_PROOF_LABEL", planned_read.proof_label):
         read_result = Y.run(planned_read, provider(Y))
     assert read_result["verdict"] == "completed"
@@ -610,6 +633,14 @@ def run(case, snapshot_args, S, T, canary):
     before_delete = len(clone.calls)
     captured_cleanup = D.completed_cleanup(D.source(cleanup_args, provider(D)), cleanup_args, provider(D))
     assert captured_cleanup["receipt"]["result"]["facts"]["absence_observed"] is True
+    execution = [item for item in store.records() if item["phase"] == "execute-restore"]
+    assert len(execution) == 1
+    cost_cleanup = D.scheduling_resource_cleanup(execution[0], receipt_path=str(cleanup_args.receipt.relative_to(C.ROOT)),
+        proof_label=cleanup_args.proof_label, expected_predecessor=getattr(cleanup_args, "expected_predecessor", None), provider=provider(D))
+    assert cost_cleanup == captured_cleanup["receipt"], "cost lifetime consumes the original gated absence, not a supplied summary"
+    wrong_original = copy.deepcopy(execution[0]); wrong_original["operation_id"] = "es-" + "0" * 32
+    fails(lambda: D.scheduling_resource_cleanup(wrong_original, receipt_path=str(cleanup_args.receipt.relative_to(C.ROOT)),
+        proof_label=cleanup_args.proof_label, expected_predecessor=getattr(cleanup_args, "expected_predecessor", None), provider=provider(D)), "restore-cost-original-not-retained")
     assert not any(operation == "delete-stack" for _, operation, _ in clone.calls[before_delete:])
     # Use the real acceptance prerequisite and task caller, with the same actual
     # restore owner in this controlled source/custody/transport fixture. Never

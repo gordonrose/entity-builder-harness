@@ -7,6 +7,7 @@ import type {
   PlatformPersistenceLeaseOwner,
   PlatformPersistenceObserver,
   PlatformProcessingStore,
+  PlatformOutboxStore,
 } from "@kanbien/platform-persistence";
 import type { PlatformRuntimeLifecycleController, PlatformRuntimeMountResult } from "@kanbien/platform-runtime";
 import type { PlatformWorkerError } from "./errors";
@@ -55,7 +56,14 @@ export interface PlatformWorkerDurableOutboxProcessingOptions {
   readonly owner: PlatformPersistenceLeaseOwner;
   readonly leaseDurationMs: number;
   readonly observer?: PlatformPersistenceObserver;
+  /** Required for external delivery: the selected scope's authoritative envelope. */
+  readonly outbox?: Pick<PlatformOutboxStore, "get">;
 }
+
+/** Terminal is retained for transport redrive, not a claimed failed-queue send. */
+export type PlatformWorkerDeliveryResult =
+  | Exclude<PlatformWorkerRunNextResult, { readonly status: "idle" | "dead-lettered" }>
+  | (Omit<Extract<PlatformWorkerRunNextResult, { readonly status: "dead-lettered" }>, "status"> & { readonly status: "terminal" });
 
 export type PlatformWorkerRunNextResult =
   | { readonly status: "idle" }
@@ -106,6 +114,7 @@ export interface PlatformWorkerShell {
   start(): Promise<Result<void, PlatformWorkerError>>;
   enqueue(message: QueueMessage): Result<void, PlatformWorkerError>;
   runNext(): Promise<Result<PlatformWorkerRunNextResult, PlatformWorkerError>>;
+  runDelivery(message: QueueMessage): Promise<Result<PlatformWorkerDeliveryResult, PlatformWorkerError>>;
   runUntilIdle(options?: PlatformWorkerRunUntilIdleOptions): Promise<Result<readonly PlatformWorkerRunNextResult[], PlatformWorkerError>>;
   health(): Promise<PlatformReadinessSummary>;
   shutdown(): Promise<Result<void, PlatformWorkerError>>;

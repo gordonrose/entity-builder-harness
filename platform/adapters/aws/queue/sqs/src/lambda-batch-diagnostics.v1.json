@@ -1,0 +1,70 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "aws-sqs",
+    "definitions": [
+      {
+        "code": "aws-sqs.batch-boundary-observed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "warning",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "maximum-batch-size",
+                "expected-source",
+                "processor",
+                "event",
+                "records",
+                "record",
+                "message-id",
+                "source",
+                "body",
+                "receipt-handle",
+                "continuation",
+                "processor-result",
+                "retry-delay",
+                "visibility"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "empty",
+                "not-finite",
+                "not-integer",
+                "out-of-range",
+                "duplicate",
+                "mismatch",
+                "rejected",
+                "threw"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "not-started",
+                "record-not-acknowledged",
+                "remaining-not-started"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

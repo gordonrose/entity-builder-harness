@@ -56,7 +56,7 @@ import {
 } from "@kanbien/platform-runtime";
 import { workerError, workerFailure, type PlatformWorkerError } from "./errors";
 import { captureWorkerDiagnostic, platformWorkerDiagnosticCatalog, platformWorkerBoundaryDiagnostic, reportWorkerBoundary, workerDiagnosticEvidence,
-  workerDeliveryRejectedRecord, workerCoordinationRecord, workerDeliveryBoundaryRecord, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
+  workerDeliveryRejectedRecord, workerCoordinationRecord, workerDeliveryBoundaryRecord, workerExternalDeliveryRecord, type WorkerDeliveryBoundaryDetail } from "./diagnostics";
 import { workerDiagnosticErrorCodes } from "./diagnostics";
 import { workerConfigurationDiagnosticRecord } from "./configuration-diagnostics";
 import { validateWorkerRetryConfiguration, validateWorkerRetryDelay, workerRetryDelayError } from "./configuration/index";
@@ -67,6 +67,7 @@ import type {
   PlatformWorkerRunNextResult,
   PlatformWorkerShell,
   PlatformWorkerShellOptions,
+  PlatformWorkerDeliveryResult,
 } from "./types";
 
 export const workerBuiltinDiagnosticCatalogs = Object.freeze([coreDiagnosticCatalog, platformContractDiagnosticCatalog,
@@ -146,12 +147,13 @@ export async function createPlatformWorkerShell(
     get processingStore() { return processing.processingStore; },
     get owner() { return processing.owner; },
     get observer() { return processing.observer; },
+    get outbox() { return processing.outbox; },
     leaseDurationMs: lease.value,
   }) as PlatformWorkerDurableOutboxProcessingOptions;
   const queue = options.queue ?? createInMemoryPlatformWorkerQueue({
     now: workerQueueNow(options.deps.clock),
   });
-  const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps,
+  const lifecycle = createPlatformRuntimeLifecycle({ apps: mounted.value.apps, clock: options.deps.clock,
     get diagnosticDefinitions() { return diagnosticDefinitions(); },
     onDiagnostic: (record, context) => reportPlatformDiagnostic(startupDiagnostics, record, context),
   });
@@ -184,7 +186,7 @@ export async function createPlatformWorkerShell(
   const tracer = options.tracer ?? noopTracer;
   const { maxAttempts, retryBackoffMs } = retryConfiguration.value;
 
-  async function runNext(): Promise<Result<PlatformWorkerRunNextResult, PlatformWorkerError>> {
+  async function execute(external?: { readonly message: QueueMessage }): Promise<Result<PlatformWorkerRunNextResult, PlatformWorkerError>> {
     let profile: PlatformCapabilityObservabilityProfile | undefined;
     let phase: WorkerDeliveryBoundaryDetail["phase"] = "dequeue";
     let effect: WorkerDeliveryBoundaryDetail["effect"] = "handler-not-invoked";
@@ -226,7 +228,8 @@ export async function createPlatformWorkerShell(
       return workerFailure("PLATFORM_WORKER_NOT_READY", "Platform worker shell is not ready.", undefined, undefined, [], captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "lifecycle", condition: "not-ready", effect: "handler-not-invoked" })));
     }
 
-    const entry = queue.next();
+    let entry: PlatformWorkerQueueEntry | undefined = external === undefined ? queue.next()
+      : { message: external.message, attempt: 0, enqueuedAt: external.message.enqueuedAt };
     if (entry === undefined) {
       return { ok: true, value: { status: "idle" } };
     }
@@ -238,7 +241,7 @@ export async function createPlatformWorkerShell(
         messageType: String(entry.message.type),
       }, undefined, [], captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "job", condition: "unmatched", effect: "handler-not-invoked" })));
       phase = "dead-letter";
-      queue.deadLetter(entry, error);
+      if (external === undefined) queue.deadLetter(entry, error);
       return { ok: true, value: deadLettered(entry, error) };
     }
 
@@ -260,7 +263,7 @@ export async function createPlatformWorkerShell(
     if (invalidPayload !== undefined) {
       reportedErrors.add(invalidPayload);
       phase = "dead-letter";
-      queue.deadLetter(entry, invalidPayload);
+      if (external === undefined) queue.deadLetter(entry, invalidPayload);
       phase = "observation";
       recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "rejected",
@@ -276,7 +279,7 @@ export async function createPlatformWorkerShell(
     }
 
     phase = "identity";
-    const durableClaim = await claimDurableOutboxProcessing(options, entry.message, diagnosticDefinitions, boundary, observe);
+    const durableClaim = await claimDurableOutboxProcessing(options, entry.message, diagnosticDefinitions, boundary, observe, external !== undefined);
     if (!durableClaim.ok) {
       reportedErrors.add(durableClaim.error);
       phase = "observation";
@@ -291,7 +294,7 @@ export async function createPlatformWorkerShell(
       if (durableClaim.error.code === "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID") {
         observe(durableClaim.error.diagnosticRecord!);
         phase = "dead-letter";
-        queue.deadLetter(entry, durableClaim.error);
+        if (external === undefined) queue.deadLetter(entry, durableClaim.error);
         phase = "observation";
         recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
           outcome: "rejected",
@@ -312,6 +315,7 @@ export async function createPlatformWorkerShell(
     }
 
     if (durableClaim.value.kind === "already-completed") {
+      entry = { ...entry, attempt: durableClaim.value.attempt };
       const condition = durableClaim.value.outcome === "terminal-failure" ? "already-terminal" : "already-completed";
       observe(captureWorkerDiagnostic(() => workerCoordinationRecord(condition)));
       phase = "observation";
@@ -331,7 +335,7 @@ export async function createPlatformWorkerShell(
         );
         reportedErrors.add(terminalFailure);
         phase = "dead-letter";
-        queue.deadLetter(entry, terminalFailure);
+        if (external === undefined) queue.deadLetter(entry, terminalFailure);
         phase = "observation";
         recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
           outcome: "failed",
@@ -375,6 +379,7 @@ export async function createPlatformWorkerShell(
     }
 
     if (durableClaim.value.kind === "claimed") {
+      entry = { ...entry, attempt: durableClaim.value.attempt };
       recordDurablePersistenceObservation(
         options,
         entry.message,
@@ -382,6 +387,16 @@ export async function createPlatformWorkerShell(
         "processing.claimed",
         "succeeded",
       );
+      if (entry.attempt > maxAttempts) {
+        const exhausted = workerError("PLATFORM_WORKER_DURABLE_PROCESSING_TERMINAL_FAILURE", "Durable attempt budget is exhausted.", undefined, undefined, [],
+          captureWorkerDiagnostic(() => workerExternalDeliveryRecord({ field: "attempt-budget", reason: "exhausted", effect: "handler-not-invoked" })));
+        observe(exhausted.diagnosticRecord!);
+        const settled = await settleFailedDurableOutboxProcessing({ processing: options.durableOutboxProcessing!, outboxEntryId: durableClaim.value.outboxEntryId,
+          fence: durableClaim.value.fence, terminal: true, now: options.deps.clock.now() }, diagnosticDefinitions, boundary);
+        if (!settled.ok) return settled;
+        if (external === undefined) queue.deadLetter(entry, exhausted);
+        return { ok: true, value: deadLettered(entry, exhausted, job.name) };
+      }
     }
 
     phase = "identity";
@@ -478,6 +493,11 @@ export async function createPlatformWorkerShell(
           endWorkerTrace(profile, traceSpan, { outcome: "failed", error: completionError, handlerStarted: true });
           return { ok: false, error: completionError };
         }
+        if (completed.value.record.completion?.outcome !== "succeeded") {
+          const own = captureWorkerDiagnostic(() => workerExternalDeliveryRecord({ field: "completion-outcome", reason: "mismatch", effect: "completion-not-established" }));
+          observe(own);
+          return workerFailure("PLATFORM_WORKER_DURABLE_PROCESSING_FAILED", "Stored completion does not establish successful execution.", undefined, undefined, [], own);
+        }
 
         phase = "observation";
         recordDurablePersistenceObservation(
@@ -520,6 +540,12 @@ export async function createPlatformWorkerShell(
     } catch (error) {
       const failedPhase = phase;
       const own = phase === "context" ? undefined : boundary(phase, "thrown", error);
+      // A successful effect followed by an uncertain completion is not a failed
+      // handler. Never overwrite that uncertainty with a retry or terminal write.
+      if (external !== undefined && effect === "handler-succeeded") {
+        return workerFailure("PLATFORM_WORKER_DURABLE_PROCESSING_FAILED", "External delivery completion could not be established.",
+          { phase: "complete" }, error, diagnosticDefinitions(), own);
+      }
       if (!contextInputComplete) {
         try {
           const checked = createDiagnosticRecord(platformWorkerBoundaryDiagnostic, { operation: "job-delivery", phase: "context-input", boundary: "selection", effect: "handler-not-invoked" });
@@ -546,6 +572,19 @@ export async function createPlatformWorkerShell(
       if (contextDiagnosticReported) reportedErrors.add(workerHandlerError);
       if (failedPhase === "handler") effect = "handler-failed";
 
+      // External delivery persists timing; legacy local queue ordering is retained.
+      let externalDelay: number | undefined;
+      let externalRetryAt: ReturnType<typeof isoDateTimeFromDate> | undefined;
+      let externalReleasedAt: Date | undefined;
+      if (external !== undefined && entry.attempt < maxAttempts) {
+        phase = "backoff";
+        const checked = validateWorkerRetryDelay(retryBackoffMs(entry.attempt));
+        if (!checked.ok) throw workerRetryDelayError(checked.error.reason);
+        externalDelay = checked.value;
+        externalReleasedAt = options.deps.clock.now();
+        externalRetryAt = isoDateTimeFromDate(new Date(externalReleasedAt.getTime() + externalDelay));
+      }
+
       if (durableClaim.value.kind === "claimed") {
         phase = "settlement";
         const settled = await settleFailedDurableOutboxProcessing({
@@ -553,7 +592,8 @@ export async function createPlatformWorkerShell(
           outboxEntryId: durableClaim.value.outboxEntryId,
           fence: durableClaim.value.fence,
           terminal: entry.attempt >= maxAttempts,
-          now: (phase = "settlement-clock", options.deps.clock.now()),
+          now: (phase = "settlement-clock", externalReleasedAt ?? options.deps.clock.now()),
+          ...(externalRetryAt === undefined ? {} : { retryAt: externalRetryAt }),
         }, diagnosticDefinitions, boundary);
         if (!settled.ok) {
           reportedErrors.add(settled.error);
@@ -584,7 +624,7 @@ export async function createPlatformWorkerShell(
 
       if (entry.attempt < maxAttempts) {
         phase = "backoff";
-        const checkedDelay = validateWorkerRetryDelay(retryBackoffMs(entry.attempt));
+        const checkedDelay = externalDelay === undefined ? validateWorkerRetryDelay(retryBackoffMs(entry.attempt)) : { ok: true as const, value: externalDelay };
         if (!checkedDelay.ok) {
           const invalidDelay = workerRetryDelayError(checkedDelay.error.reason);
           observe(invalidDelay.diagnosticRecord);
@@ -593,7 +633,7 @@ export async function createPlatformWorkerShell(
         }
         const delayMs = checkedDelay.value;
         phase = "retry";
-        const retry = queue.retry(entry, delayMs);
+        const retry = external === undefined ? queue.retry(entry, delayMs) : workerSuccess();
         if (!retry.ok) {
           boundary("retry", "returned-failure", retry.error);
           reportedErrors.add(retry.error);
@@ -632,7 +672,7 @@ export async function createPlatformWorkerShell(
       }
 
       phase = "dead-letter";
-      queue.deadLetter(entry, workerHandlerError);
+      if (external === undefined) queue.deadLetter(entry, workerHandlerError);
       phase = "observation";
       recordWorkerObservation(metricDiagnostics, options, entry, profile, startedAt, {
         outcome: "failed",
@@ -655,6 +695,15 @@ export async function createPlatformWorkerShell(
     }
   }
 
+  const runNext = () => execute();
+  async function runDelivery(message: QueueMessage): Promise<Result<PlatformWorkerDeliveryResult, PlatformWorkerError>> {
+    const result = await execute({ message });
+    if (!result.ok) return result;
+    if (result.value.status === "dead-lettered") return { ok: true, value: { ...result.value, status: "terminal" } };
+    if (result.value.status === "idle") return workerFailure("PLATFORM_WORKER_DURABLE_PROCESSING_FAILED", "External delivery did not establish an outcome.");
+    return { ok: true, value: result.value };
+  }
+
   return {
     ok: true,
     value: {
@@ -671,6 +720,7 @@ export async function createPlatformWorkerShell(
       },
       enqueue: (message) => queue.enqueue(message),
       runNext,
+      runDelivery,
       runUntilIdle: async (runOptions = {}) => {
         const maxIterations = runOptions.maxIterations ?? 100;
         const results: PlatformWorkerRunNextResult[] = [];
@@ -735,8 +785,9 @@ type DurableOutboxClaim =
       readonly kind: "already-completed";
       readonly outboxEntryId: OutboxEntryId;
       readonly outcome: import("@kanbien/platform-persistence").PlatformProcessingOutcome;
+      readonly attempt: number;
     }
-  | { readonly kind: "claimed"; readonly outboxEntryId: OutboxEntryId; readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence };
+  | { readonly kind: "claimed"; readonly outboxEntryId: OutboxEntryId; readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence; readonly attempt: number };
 
 async function claimDurableOutboxProcessing(
   options: PlatformWorkerShellOptions,
@@ -744,9 +795,11 @@ async function claimDurableOutboxProcessing(
   diagnosticDefinitions: () => readonly DiagnosticDefinition[],
   boundary: WorkerBoundaryObserver,
   observe: (record: DiagnosticRecord, cause?: unknown) => void,
+  external: boolean,
 ): Promise<Result<DurableOutboxClaim, PlatformWorkerError>> {
   const processing = options.durableOutboxProcessing;
   if (processing === undefined) {
+    if (external) return externalDeliveryFailure("durable-processing", "absent", observe);
     return { ok: true, value: { kind: "not-configured" } };
   }
 
@@ -757,6 +810,19 @@ async function claimDurableOutboxProcessing(
 
   let phase: WorkerDeliveryBoundaryDetail["phase"] = "claim";
   try {
+    if (external) {
+      phase = "lookup";
+      const outbox = processing.outbox;
+      if (outbox === undefined) return externalDeliveryFailure("outbox-store", "absent", observe);
+      const stored = await outbox.get(identity.value);
+      if (stored === null) return externalDeliveryFailure("outbox-record", "absent", observe);
+      if (String(stored.entry.id) !== String(identity.value)) return externalDeliveryFailure("outbox-record", "mismatch", observe);
+      if (String(stored.entry.messageType) !== String(message.type)) return externalDeliveryFailure("message-type", "mismatch", observe);
+      if (Number(stored.entry.messageVersion) !== Number(message.version)) return externalDeliveryFailure("message-version", "mismatch", observe);
+      if (stored.entry.tenantId !== message.tenantId) return externalDeliveryFailure("tenant", "mismatch", observe);
+      if (Object.keys(message.payload).length !== 1) return externalDeliveryFailure("payload", "unexpected", observe);
+      phase = "claim";
+    }
     const claim = await processing.processingStore.claim({
       outboxEntryId: identity.value,
       owner: processing.owner,
@@ -784,7 +850,7 @@ async function claimDurableOutboxProcessing(
           ),
         };
       }
-      return { ok: true, value: { kind: "already-completed", outboxEntryId: identity.value, outcome } };
+      return { ok: true, value: { kind: "already-completed", outboxEntryId: identity.value, outcome, attempt: claim.value.record.attempt } };
     }
 
     if (claim.value.disposition === "lease-active") {
@@ -800,6 +866,7 @@ async function claimDurableOutboxProcessing(
       };
     }
 
+    if (claim.value.disposition === "retry-not-due") return externalDeliveryFailure("retry-time", "not-due", observe);
     const lease = claim.value.record.lease;
     if (lease === undefined) {
       const own = captureWorkerDiagnostic(() => workerDeliveryRejectedRecord({ field: "claimed-lease", condition: "absent", effect: "handler-not-invoked" })); observe(own);
@@ -814,7 +881,7 @@ async function claimDurableOutboxProcessing(
       };
     }
 
-    return { ok: true, value: { kind: "claimed", outboxEntryId: identity.value, fence: lease.fence } };
+    return { ok: true, value: { kind: "claimed", outboxEntryId: identity.value, fence: lease.fence, attempt: claim.value.record.attempt } };
   } catch (error) {
     const own = boundary(phase, "thrown", error, "handler-not-invoked");
     return {
@@ -829,6 +896,12 @@ async function claimDurableOutboxProcessing(
       ),
     };
   }
+}
+
+function externalDeliveryFailure(field: Parameters<typeof workerExternalDeliveryRecord>[0]["field"], reason: Parameters<typeof workerExternalDeliveryRecord>[0]["reason"], observe: (record: DiagnosticRecord) => void): Result<never, PlatformWorkerError> {
+  const own = captureWorkerDiagnostic(() => workerExternalDeliveryRecord({ field, reason, effect: "handler-not-invoked" }));
+  observe(own);
+  return workerFailure(field === "retry-time" ? "PLATFORM_WORKER_DURABLE_PROCESSING_BUSY" : "PLATFORM_WORKER_DURABLE_OUTBOX_ENVELOPE_INVALID", "External delivery was not admitted for durable execution.", undefined, undefined, [], own);
 }
 
 function durableOutboxEntryId(message: QueueMessage): Result<OutboxEntryId, PlatformWorkerError> {
@@ -910,6 +983,7 @@ async function settleFailedDurableOutboxProcessing(input: {
   readonly fence: import("@kanbien/platform-persistence").PlatformPersistenceFence;
   readonly terminal: boolean;
   readonly now: Date;
+  readonly retryAt?: ReturnType<typeof isoDateTimeFromDate>;
 }, diagnosticDefinitions: () => readonly DiagnosticDefinition[], boundary: WorkerBoundaryObserver): Promise<Result<void, PlatformWorkerError>> {
   try {
     const settled = input.terminal
@@ -923,10 +997,17 @@ async function settleFailedDurableOutboxProcessing(input: {
         outboxEntryId: input.outboxEntryId,
         fence: input.fence,
         releasedAt: isoDateTimeFromDate(input.now),
+        ...(input.retryAt === undefined ? {} : { retryAt: input.retryAt }),
       });
     if (!settled.ok) {
       const own = boundary(input.terminal ? "terminal-complete" : "release", "returned-failure", settled.error, "settlement-unknown");
       return { ok: false, error: durableProcessingFailure(input.terminal ? "complete" : "release", settled.error, diagnosticDefinitions(), own) };
+    }
+    if (input.terminal && (!("record" in settled.value) || settled.value.record.completion?.outcome !== "terminal-failure")) {
+      const mismatch = workerError("PLATFORM_WORKER_DURABLE_PROCESSING_FAILED", "Durable terminal completion was not established.", undefined, undefined, [],
+        captureWorkerDiagnostic(() => workerExternalDeliveryRecord({ field: "completion-outcome", reason: "mismatch", effect: "completion-not-established" })));
+      boundary("terminal-complete", "returned-failure", mismatch, "settlement-unknown");
+      return { ok: false, error: mismatch };
     }
     return { ok: true, value: undefined };
   } catch (error) {

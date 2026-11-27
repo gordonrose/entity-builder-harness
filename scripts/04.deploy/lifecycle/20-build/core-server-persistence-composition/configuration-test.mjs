@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-configuration
-//   version: 8
+//   version: 9
 //   status: draft
 //   created_on: "2026-10-24"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -18,6 +18,7 @@
 //     path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
 
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
@@ -446,6 +447,15 @@ try {
     }
   }
   await rejectedBeforePool(migration.runKanbienCoreServerPersistenceMigration, { ...valid, PERSISTENCE_MIGRATION_OPERATION: "unknown" });
+  assert.deepEqual(config.persistenceMigrationProfileResult({}), { ok: true, value: "baseline" });
+  for (const profile of ["baseline", "scheduling"]) assert.deepEqual(config.persistenceMigrationProfileResult({ PERSISTENCE_MIGRATION_PROFILE: profile }), { ok: true, value: profile });
+  for (const profile of ["", " scheduling", "scheduling ", "other-private-profile", 1]) {
+    const result = config.persistenceMigrationProfileResult({ PERSISTENCE_MIGRATION_PROFILE: profile });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.diagnostic.code, "kanbien-core-server.migration-profile-invalid");
+    assert(!JSON.stringify(result.error.diagnostic).includes("other-private-profile"));
+    await rejectedBeforePool(migration.runKanbienCoreServerPersistenceMigration, { ...valid, PERSISTENCE_MIGRATION_PROFILE: profile }, result.error.diagnostic);
+  }
   await rejectedBeforePool(administration.runKanbienCoreServerPersistenceAdministration, { ...valid, PERSISTENCE_RUNTIME_DATABASE_USERNAME: valid.PERSISTENCE_MIGRATION_DATABASE_USERNAME });
   certificateText = "not-a-certificate";
   for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, administration.runKanbienCoreServerPersistenceAdministration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) await rejectedBeforePool(run, valid);
@@ -458,6 +468,7 @@ try {
   await iamAuthenticationRegression();
   await administratorCredentialRegression();
   await administrationConfigurationRegression();
+  await schedulingPrefixEntrypointRegression();
   administrationDiagnosticRegression();
   restoreDiagnosticRegression();
   await restoreTransportProbeRegression();
@@ -730,6 +741,43 @@ async function administrationConfigurationRegression() {
   } finally { certificateText = certificate; }
 }
 
+async function schedulingPrefixEntrypointRegression() {
+  const connection = require(join(compiled, "platform/adapters/aws/persistence/postgresql/src/connection.js"));
+  const originalPool = connection.createNodePostgreSqlConnectionPool, originalLog = console.log, originalError = console.error, originalExit = process.exitCode;
+  const policy = administration.kanbienCoreSchedulingDatabasePolicy(valid.PERSISTENCE_POSTGRES_DATABASE, valid.PERSISTENCE_MIGRATION_DATABASE_USERNAME, valid.PERSISTENCE_RUNTIME_DATABASE_USERNAME);
+  const pairs = policy.manifest.migrations.map(({ id, checksum }) => ({ id, checksum }));
+  const digest = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  try {
+    for (const applied of [1, 2, 4, 7]) for (const cleanupFails of [false, true]) {
+      const output = [], events = [], cleanup = new Error("PRIVATE-prefix-cleanup-canary");
+      let releases = 0;
+      const query = async ({ text }) => {
+        events.push(text);
+        if (text.startsWith("SELECT pg_try_advisory")) return { rows: [{ acquired: true }] };
+        if (text.startsWith("SELECT current_database()")) return { rows: [{ database: policy.database, owner: policy.migrationUsername }] };
+        if (text.startsWith("SELECT pg_get_userbyid")) return { rows: [{ owner: policy.migrationUsername }] };
+        if (text.startsWith("SELECT to_regclass")) return { rows: [{ relation: "platform.platform_migration_history" }] };
+        if (text.startsWith("SELECT migration_id")) return { rows: pairs.slice(0, applied).map(({ id, checksum }) => ({ migration_id: id, checksum })) };
+        if (/^(BEGIN|SET LOCAL|COMMIT|ROLLBACK)/.test(text)) return { rows: [] };
+        assert.fail("prefix entrypoint queried a non-journal table");
+      };
+      connection.createNodePostgreSqlConnectionPool = () => ({ query() { assert.fail("use the checked-out transaction client"); }, connect: async () => ({ query, release() { releases++; } }),
+        async end() { events.push("end"); if (cleanupFails) throw cleanup; } });
+      console.log = console.error = line => { events.push("output"); output.push(JSON.parse(line)); }; process.exitCode = undefined;
+      const run = () => administration.runKanbienCoreServerPersistenceAdministration({ ...valid, PERSISTENCE_ADMINISTRATION_OPERATION: "observe-scheduling-prefix" });
+      if (cleanupFails) await assert.rejects(run, error => error === cleanup); else await run();
+      assert.equal(releases, 1); assert(!events.some(text => /^(CREATE|ALTER|GRANT|INSERT|UPDATE|DELETE|LOCK TABLE)/.test(text)));
+      if (applied >= 2 && !cleanupFails) {
+        assert.deepEqual(output, [{ verdict: "accepted", code: "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", migration_prefix: {
+          schema: "kanbien/scheduling-migration-prefix/v1", manifest_sha256: digest(pairs), manifest_migration_count: 7,
+          minimum_applied_migrations: 2, applied_migrations: applied, applied_prefix_sha256: digest(pairs.slice(0, applied)), state: applied === 7 ? "complete" : "partial" } }]);
+        assert(events.indexOf("output") > events.indexOf("end"));
+      } else assert(!output.some(item => item.verdict === "accepted"), "invalid history or cleanup failure cannot publish a successful prefix receipt");
+      assert(!JSON.stringify(output).includes("PRIVATE-"));
+    }
+  } finally { connection.createNodePostgreSqlConnectionPool = originalPool; console.log = originalLog; console.error = originalError; process.exitCode = originalExit; }
+}
+
 async function iamConfigurationRegression() {
   const configuration = config.persistenceConfiguration(valid, "server");
   const callers = [
@@ -925,16 +973,17 @@ async function migrationCleanupRegression() {
   console.log = console.error = (line) => { events.push("output"); output.push(JSON.parse(line)); };
   const boundary = (operation, phase, at, condition, effect) => ({ schema: "core/diagnostic-record/v1", code: "persistence.boundary-observed", definitionVersion: 1, detail: { operation, phase, boundary: at, condition, effect } });
   try {
-    for (const bodyFails of [false, true]) for (const ending of ["none", "sync", "rejected"]) {
+    for (const profile of [undefined, "scheduling"]) for (const bodyFails of [false, true]) for (const ending of ["none", "sync", "rejected"]) {
       output.length = events.length = 0; process.exitCode = 73;
       let ends = 0, applies = 0, queries = 0;
       const pool = { query() { queries++; throw new Error("Unexpected SQL"); }, end() { assert.equal(this, pool); events.push("end"); ends++; if (ending === "sync") throw cleanup; return ending === "rejected" ? Promise.reject(cleanup) : Promise.resolve(); } };
       connection.createNodePostgreSqlTokenConnectionPool = () => pool;
       migrations.createPostgreSqlMigrationRunner = (_configuration, options) => { assert.equal(options.pool, pool); return { async apply(manifest) {
-        applies++; assert.equal(manifest.schemaPreprovisioned, true); assert.equal(manifest.migrations.length, 2);
+        applies++; assert.equal(manifest.schemaPreprovisioned, true); assert.equal(manifest.migrations.length, profile === "scheduling" ? 7 : 2);
+        assert.deepEqual(manifest.continuation, profile === "scheduling" ? { minimumAppliedMigrations: 2 } : undefined);
         if (bodyFails) throw body; return { ok: true, value: [] };
       } }; };
-      const run = () => migration.runKanbienCoreServerPersistenceMigration(valid);
+      const run = () => migration.runKanbienCoreServerPersistenceMigration({ ...valid, PERSISTENCE_MIGRATION_PROFILE: profile });
       if (ending === "none") await run(); else await assert.rejects(run, (error) => error === cleanup);
       assert.equal(applies, 1); assert.equal(queries, 0); assert.equal(ends, 1); assert.equal(events.indexOf("end") > events.indexOf("output"), true);
       assert.deepEqual(output[0], bodyFails ? { verdict: "rejected", code: "PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage: "migration" } : { verdict: "accepted", code: "PERSISTENCE_MIGRATION_APPLIED" });

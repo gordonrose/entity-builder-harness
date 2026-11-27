@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.task-journal
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -29,6 +29,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import tempfile
 import uuid
@@ -105,9 +106,13 @@ def locked(path, lock_path, marker, read_value):
 
 
 def reserve(path, descriptor, value, *, schema, marker, mode, request, new_operation,
-            expected, completed):
-    """Compare-and-reserve with the caller's validated terminal proof reader."""
+            expected, completed, operation_id=None):
+    """Compare-and-reserve; fixed source-owned identities cannot be reset."""
+    if operation_id is not None and (new_operation or not isinstance(operation_id, str) or re.fullmatch(r"[A-Za-z0-9_-]{1,36}", operation_id) is None):
+        raise JournalFailure("operation-identity-invalid")
     if value is not None:
+        if operation_id is not None and value["operation_id"] != operation_id:
+            raise JournalFailure("operation-identity-mismatch")
         if new_operation and value["operation_id"] == expected:
             if completed(value) is None: raise JournalFailure("prior-operation-not-complete")
             # Preserve the original operation before advancing the existing
@@ -133,7 +138,7 @@ def reserve(path, descriptor, value, *, schema, marker, mode, request, new_opera
     else:
         if new_operation and expected is not None: raise JournalFailure("operation-predecessor-missing")
         predecessor = None
-    value = {"schema": schema, "mode": mode, "operation_id": "kp-" + uuid.uuid4().hex,
+    value = {"schema": schema, "mode": mode, "operation_id": operation_id if operation_id is not None else "kp-" + uuid.uuid4().hex,
              "predecessor": predecessor, "request": request, "task_arn": None,
              "proof_receipt": None, "proof_sha256": None}
     save(path, value)

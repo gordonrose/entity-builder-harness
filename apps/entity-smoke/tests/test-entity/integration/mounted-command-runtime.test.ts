@@ -4,7 +4,7 @@ import { createDiagnosticRecord, type DiagnosticRecord } from "@kanbien/core/dia
 import { noopLogger } from "@kanbien/core/logging";
 import { noopMetrics } from "@kanbien/core/monitoring";
 import { recordLifecyclePolicy, recordRetentionPolicyReference } from "@kanbien/core/persistence";
-import { coreUuidDiagnostic, coreUuidGenerationDiagnostic, correlationId, fixedClock,
+import { coreUuidDiagnostic, coreUuidGenerationDiagnostic, correlationId, entityId, fixedClock,
   isoDateTimeFromDate, ok, uuid } from "@kanbien/core/shared";
 import { fixedFeatureFlagReader, validatePlatformCapabilityObservabilityProfile,
   validatePlatformDiagnosticCatalog, validatePlatformRouteRegistration,
@@ -34,6 +34,7 @@ async function main(): Promise<void> {
   let createFailure: TestEntityError | undefined;
   let readFailure: TestEntityError | undefined;
   let generationFails = false;
+  let conflictOnSave = false;
   const repository = inMemoryTestEntityRepository();
   const services: TestEntityServiceDependencies = {
     clock, lifecyclePolicy: policy.value,
@@ -41,9 +42,12 @@ async function main(): Promise<void> {
     repository: {
       async create(entity) { repositoryCalls++; return createFailure === undefined ? repository.create(entity) : { ok: false, error: createFailure }; },
       get(entityId) { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.get(entityId); },
-      save(entity) { repositoryCalls++; return repository.save(entity); },
+      async save(entity, expected) {
+        repositoryCalls++;
+        if (conflictOnSave) await repository.save({ ...expected, label: canary }, expected);
+        return repository.save(entity, expected);
+      },
       listByStatus(status) { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.listByStatus(status); },
-      listArchivedDeleted() { repositoryCalls++; if (readFailure !== undefined) throw readFailure; return repository.listArchivedDeleted(); },
       purgeArchivedDeleted(entityId) { repositoryCalls++; return repository.purgeArchivedDeleted(entityId); },
     },
   };
@@ -135,6 +139,14 @@ async function main(): Promise<void> {
   deepEqual((await command({ action: "get", id: id.value })).body, created.body);
   const eligible = await command({ action: "assess-purge", id: id.value, retentionSatisfied: true, legalHold: false });
   equal(eligible.status, 200); deepEqual(eligible.body, { eligibility: "not-deleted" });
+  conflictOnSave = true;
+  const staleWrite = await command({ action: "update", id: id.value, input: { label: "stale update" } });
+  equal(staleWrite.status, 409);
+  deepEqual(staleWrite.body, { error: { code: "TEST_ENTITY_WRITE_CONFLICT", message: "The test entity changed before it could be saved." } });
+  deepEqual(staleWrite.observability?.diagnosticRecord?.detail, { condition: "changed-or-missing", effect: "not-saved" });
+  equal(JSON.stringify(staleWrite).includes(canary), false);
+  equal((await repository.get(entityId<"TestEntity">(id.value)))?.label, canary);
+  conflictOnSave = false;
 
   createFailure = { code: "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED", defaultMessage: "The store operation failed." };
   const beforeProvider = repositoryCalls;

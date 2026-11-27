@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.runnable-program-contract.v1
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -55,12 +55,15 @@ field_guide:
   - path: runnable_programs[]
     what: One program that may be selected as a package root.
     validation: Requires a stable ID, a relative entrypoint, runtime_executable, and approved and observed dependency lists.
+  - path: runnable_programs[].execution_kind
+    what: Process execution by default, or explicit managed-handler invocation by an external managed runtime.
+    validation: process retains the executable-plus-file command; managed-handler requires node, a relative .js/.cjs/.mjs entrypoint without traversal and an ASCII handler_export identifier.
   - path: runnable_programs[].approved_dependencies
     what: Dependencies deliberately allowed in the program boundary.
     validation: Every observed dependency must be listed here before package construction may continue.
   - path: image_contracts[]
     what: An executable image boundary for one declared program.
-    validation: Requires exec-form tokens beginning with the declared runtime_executable followed immediately by the selected program entrypoint, without shell syntax.
+    validation: Process programs require exec-form tokens beginning with runtime_executable followed immediately by entrypoint, without shell syntax. Managed handlers require command_mode handler and exactly one module.export token derived from the declared entrypoint and handler_export; provider packaging proves the actual runtime bootstrap separately.
   - path: package_candidates[]
     what: A candidate package formed from one image contract.
     validation: Requires runtime-bound-sha256 as its immutable identity rule until a package digest exists.

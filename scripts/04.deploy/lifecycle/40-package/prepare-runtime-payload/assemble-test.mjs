@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.prepare-runtime-payload
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-14"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines: [architecture, security, sre]
@@ -113,7 +113,10 @@ function fixture(kind, body, omittedContextException) {
       if (target.endsWith(".json")) put(join(repository, target), readFileSync(join(root, target)));
       else put(join(compiled, target), "module.exports = { marker: " + JSON.stringify(target) + " };\n");
     }
-    for (const [entry, [exported]] of Object.entries(entries[kind])) put(join(compiled, entriesHome, entry + ".js"), `exports.${exported} = async () => { console.log('CALLED'); };\n`);
+    for (const [entry, [exported]] of Object.entries(entries[kind])) {
+      put(join(repository, entriesHome, entry + ".ts"), readFileSync(join(root, entriesHome, entry + ".ts")));
+      put(join(compiled, entriesHome, entry + ".js"), `exports.${exported} = async () => { console.log('CALLED'); };\n`);
+    }
     put(join(compiled, entriesHome, "entity-smoke/diagnostics.js"), "exports.reportEntitySmokeFailure = (operation, reason) => console.error(JSON.stringify({operation, reason}));\n");
     const cli = join(repository, home, `build-${kind}-image/prepare-runtime.mjs`);
     body({ compiled, repository, cli, packages: orderedPackages, prepare: (args = []) => run(cli, ["--compiled-root", compiled, ...args]) });

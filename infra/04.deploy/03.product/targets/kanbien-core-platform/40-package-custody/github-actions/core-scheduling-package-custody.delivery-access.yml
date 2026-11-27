@@ -1,0 +1,33 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.core-scheduling-package-custody.delivery-access
+#   version: 1
+#   status: active
+#   created_on: "2026-10-23"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [security, sre]
+#   kind: delivery-access-contract
+#   purpose: Bind the persistence candidate's package route to the existing target delivery role and ECR repository.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+schema: deploy/delivery-access-contract/v1
+pipeline: core-scheduling-package-custody
+actor: github-kanbien-core-platform-delivery
+provider_policy_source: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml#DeliveryRole
+workflow: .github/workflows/publish-kanbien-core-platform-scheduling.yml
+operations:
+  - { id: repository-observation, workflow_step: Prove fixed delivery read access, provider_action: ecr:DescribeRepositories, resource_class: core-server-image-repository, purpose: verify-own-immutable-scanning-publication-destination, proof: static-policy-coverage-and-live-read-probe }
+  - { id: obtain-registry-token, workflow_step: Log in to Amazon ECR, provider_action: ecr:GetAuthorizationToken, resource_class: aws-ecr-registry-token, purpose: authenticate-to-declared-package-destination, proof: static-policy-coverage }
+  - { id: upload-layer-start, workflow_step: Publish immutable image, provider_action: ecr:InitiateLayerUpload, resource_class: core-server-image-repository, purpose: publish-immutable-candidate-layer, proof: static-policy-coverage }
+  - { id: upload-layer-part, workflow_step: Publish immutable image, provider_action: ecr:UploadLayerPart, resource_class: core-server-image-repository, purpose: publish-immutable-candidate-layer, proof: static-policy-coverage }
+  - { id: upload-layer-complete, workflow_step: Publish immutable image, provider_action: ecr:CompleteLayerUpload, resource_class: core-server-image-repository, purpose: publish-immutable-candidate-layer, proof: static-policy-coverage }
+  - { id: check-layer-availability, workflow_step: Publish immutable image, provider_action: ecr:BatchCheckLayerAvailability, resource_class: core-server-image-repository, purpose: avoid-reuploading-existing-layer, proof: static-policy-coverage }
+  - { id: publish-image-manifest, workflow_step: Publish immutable image, provider_action: ecr:PutImage, resource_class: core-server-image-repository, purpose: publish-immutable-candidate-manifest, proof: static-policy-coverage }
+  - { id: read-image-manifest, workflow_step: Publish immutable image, provider_action: ecr:BatchGetImage, resource_class: core-server-image-repository, purpose: verify-published-image-manifest, proof: static-policy-coverage }
+  - { id: resolve-published-digest, workflow_step: Publish immutable image, provider_action: ecr:DescribeImages, resource_class: core-server-image-repository, purpose: resolve-immutable-published-digest, proof: static-policy-coverage-and-live-read-probe }
+  - { id: retrieve-published-layer, workflow_step: Publish immutable image, provider_action: ecr:GetDownloadUrlForLayer, resource_class: core-server-image-repository, purpose: retrieve-published-image-for-identity-check, proof: static-policy-coverage }
+  - { id: read-vulnerability-findings, workflow_step: Require clean ECR scan, provider_action: ecr:DescribeImageScanFindings, resource_class: core-server-image-repository, purpose: enforce-declared-vulnerability-policy, proof: static-policy-coverage-and-live-read-probe }

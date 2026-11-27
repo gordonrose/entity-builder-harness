@@ -4,7 +4,7 @@ id: deploy.guide.operational-realization-contract.v2
 version: 3
 status: active
 created_on: "2026-11-08"
-updated_on: "2026-11-15"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.realization
 disciplines: [architecture, security, sre]
@@ -79,6 +79,11 @@ This is not general teardown permission. The provider controller still needs the
 original successful readback, positively owned disposable resources and explicit
 concrete execution approval, protecting source and shared resources. All gates,
 current normalized change counts and input-bound evidence remain required.
+
+A separately authorized failed-proof cleanup may instead use the schema's exact
+terminal-failure variant: original terminal failure and no unresolved dependent
+tasks replace successful readback. This cannot qualify recovery or acceptance;
+unknown outcomes and unidentifiable partial resources remain blocked.
 
 For the verifier, permissions and network reachability must be proven against
 its own provider identity and private server route. The compiler cannot derive

@@ -1,5 +1,5 @@
 import { deepEqual, equal, rejects } from "node:assert/strict";
-import { entityId, fixedClock, ok, type UUID } from "@kanbien/core/shared";
+import { entityId, fixedClock, isoDateTimeFromDate, ok, type UUID } from "@kanbien/core/shared";
 import { recordLifecyclePolicy, recordRetentionPolicyReference } from "@kanbien/core/persistence";
 import { createTestEntityService, deleteTestEntityService, getTestEntityService,
   relationalTestEntityRepository, restoreLogicallyDeletedTestEntityService,
@@ -45,13 +45,17 @@ async function main(): Promise<void> {
   const nonNull = await repository.get(id);
   equal(nonNull?.description, ""); equal(nonNull?.reviewedAt, moment); deepEqual(nonNull?.secondaryCategories, []);
   if (nonNull === null) throw new Error("Expected row.");
-  await repository.save(nonNull);
+  await repository.save(nonNull, nonNull);
   equal(statements.at(-1)!.text.startsWith("UPDATE __SCHEMA__.test_entity SET "), true, "saving must not recreate a missing row");
   equal(statements.at(-1)!.text.includes("created_at ="), false);
   equal(statements.at(-1)!.values[11], "[]", "empty categories are JSON, not SQL NULL");
-  deepEqual(statements.at(-1)!.values, [id, Number.MAX_SAFE_INTEGER, row.uuid_value, moment, canary, "draft", false,
+  deepEqual(statements.at(-1)!.values.slice(0, 15), [id, Number.MAX_SAFE_INTEGER, row.uuid_value, moment, canary, "draft", false,
     '["alpha","gamma"]', JSON.stringify([canary, ""]), "", moment, "[]", "active", '{"state":"active"}', moment]);
+  deepEqual(statements.at(-1)!.values.slice(15), [id, Number.MAX_SAFE_INTEGER, row.uuid_value, moment, canary, "draft", false,
+    '["alpha","gamma"]', JSON.stringify([canary, ""]), "", moment, "[]", "active", '{"state":"active"}', moment, moment]);
   equal(statements.at(-1)!.text.includes("updated_at = $15 WHERE id = $1"), true, "parameters stay contiguous after omitting created_at");
+  equal(statements.at(-1)!.text.includes("lifecycle IS NOT DISTINCT FROM $29 AND created_at IS NOT DISTINCT FROM $30 AND updated_at IS NOT DISTINCT FROM $31"), true);
+  equal((statements.at(-1)!.text.match(/IS NOT DISTINCT FROM/g) ?? []).length, 16, "every stored field participates in stale-write protection");
 
   rows = [row]; await repository.listByStatus("draft");
   const listing = statements.at(-1)!;
@@ -59,19 +63,26 @@ async function main(): Promise<void> {
   equal(listing.text.includes("status = $1 AND lifecycle->>'state' = 'active' ORDER BY created_at, id"), true);
   const deletedLifecycle = { state: "deleted", deletedAt: moment, restoreEligibleUntil: "2026-11-07T12:01:00.000Z", retentionPolicy: "test-entity.retention" };
   rows = [{ ...row, visibility: "archived", lifecycle: deletedLifecycle }];
-  const archivedDeleted = await repository.listArchivedDeleted();
-  equal(archivedDeleted.length, 1);
-  const cleanupList = statements.at(-1)!;
-  deepEqual(cleanupList.values, []);
-  equal(cleanupList.text.includes("visibility = 'archived' AND lifecycle->>'state' = 'deleted'"), true);
+  await relationalTestEntityRepository(executor, { lockForMutation: true }).get(id);
+  equal(statements.at(-1)!.text.endsWith("WHERE id = $1 FOR UPDATE"), true, "deletion transaction reads lock the selected row");
   rowCount = 1; rows = [{ id }];
-  const purged = await repository.purgeArchivedDeleted(id);
+  const deletedAt = isoDateTimeFromDate(new Date(moment)), asOf = isoDateTimeFromDate(new Date("2026-11-07T12:05:00.001Z"));
+  const purged = await repository.purgeArchivedDeleted({ id, deletedAt, asOf, retentionWindowMs: 300000 });
   equal(purged.ok, true); if (!purged.ok) throw new Error("Expected purge query success.");
   equal(purged.value, true);
   const purge = statements.at(-1)!;
-  deepEqual(purge.values, [id]);
-  equal(purge.text.includes("DELETE FROM __SCHEMA__.test_entity WHERE id = $1 AND visibility = 'archived' AND lifecycle->>'state' = 'deleted'"), true);
-  rows = [];
+  deepEqual(purge.values, [id, deletedAt, asOf, 300000]);
+  equal(purge.text, "DELETE FROM __SCHEMA__.test_entity WHERE id = $1 AND visibility = 'archived' AND lifecycle->>'state' = 'deleted' AND lifecycle->>'deletedAt' = $2 AND (lifecycle->>'deletedAt')::timestamptz + ($4::double precision * interval '1 millisecond') < $3::timestamptz AND (lifecycle->>'restoreEligibleUntil')::timestamptz < $3::timestamptz RETURNING id");
+  rowCount = 0; rows = [];
+  deepEqual(await repository.purgeArchivedDeleted({ id, deletedAt, asOf, retentionWindowMs: 300000 }), ok(false));
+  for (const [count, returned] of [[null, []], [1, []], [0, [{ id }]], [2, [{ id }, { id }]], [1, [{ id: canary }]]] as const) {
+    rowCount = count; rows = returned;
+    const result = await repository.purgeArchivedDeleted({ id, deletedAt, asOf, retentionWindowMs: 300000 });
+    equal(result.ok, false); if (result.ok) throw new Error("Expected uncertain purge response rejection.");
+    deepEqual(result.error.diagnosticRecord?.detail, { field: "row-count", reason: "invalid-shape", effect: "not-returned" });
+    equal(JSON.stringify(result).includes(canary), false);
+  }
+  rows = []; rowCount = 1;
   equal(await repository.get(id), null); deepEqual(await repository.listByStatus("draft"), []);
 
   // The raw repository keeps deleted facts for restore; ordinary get does not.
@@ -112,18 +123,20 @@ async function main(): Promise<void> {
   rows = [row, row];
   await rejects(() => repository.get(id), (error: TestEntityError) => error.code === "TEST_ENTITY_STORED_RECORD_INVALID");
   rows = []; rowCount = 0;
-  const emptyWrite = await repository.save(created.value);
-  equal(emptyWrite.ok, false); if (!emptyWrite.ok) equal(emptyWrite.error.diagnosticRecord?.detail && (emptyWrite.error.diagnosticRecord.detail as {field: string}).field, "row-count");
+  const emptyWrite = await repository.save(created.value, created.value);
+  equal(emptyWrite.ok, false); if (!emptyWrite.ok) deepEqual(emptyWrite.error.diagnosticRecord?.detail, { condition: "changed-or-missing", effect: "not-saved" });
   if (emptyWrite.ok) throw new Error("Expected empty write rejection.");
   for (const [count, returnedRows] of [[0, []], [null, [row]], [2, [row]], [1, [row, row]]] as const) {
     rowCount = count; rows = returnedRows;
     for (const operation of ["create", "save"] as const) {
       const beforeInvalidCount = statements.length;
-      const result: Awaited<ReturnType<typeof repository.create>> = await repository[operation](created.value);
+      const result: Awaited<ReturnType<typeof repository.create>> = await repository[operation](created.value, created.value);
       equal(result.ok, false, "write count and returned rows must both prove one selected record");
       if (result.ok) throw new Error("Expected invalid write evidence rejection.");
-      deepEqual(result.error.diagnosticRecord, { schema: "core/diagnostic-record/v1", code: "entity-smoke.test-entity.stored-record-invalid", definitionVersion: 1,
-        detail: { field: "row-count", reason: "invalid-shape", effect: "not-returned" } });
+      deepEqual(result.error.diagnosticRecord, operation === "save" && count === 0
+        ? { schema: "core/diagnostic-record/v1", code: "entity-smoke.test-entity.write-conflict", definitionVersion: 1, detail: { condition: "changed-or-missing", effect: "not-saved" } }
+        : { schema: "core/diagnostic-record/v1", code: "entity-smoke.test-entity.stored-record-invalid", definitionVersion: 1,
+          detail: { field: "row-count", reason: "invalid-shape", effect: "not-returned" } });
       equal(statements.length, beforeInvalidCount + 1, "uncertain write evidence cannot authorize replay");
     }
   }
@@ -131,7 +144,7 @@ async function main(): Promise<void> {
   failure = { code: "SYNTHETIC_PROVIDER_FAILURE", defaultMessage: "The operation did not complete.", diagnosticRecord: emptyWrite.error.diagnosticRecord,
     relatedDiagnosticRecords: related };
   const beforeFailure = statements.length;
-  const failed = await repository.save(created.value); equal(failed.ok, false);
+  const failed = await repository.save(created.value, created.value); equal(failed.ok, false);
   if (!failed.ok) {
     equal(failed.error, failure, "preserve the exact selected error envelope");
     equal(failed.error.relatedDiagnosticRecords, related, "preserve source companion-array identity");

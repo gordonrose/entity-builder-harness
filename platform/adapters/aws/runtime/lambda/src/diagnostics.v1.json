@@ -1,0 +1,84 @@
+{
+  "schema": "core/diagnostic-catalog-export/v1",
+  "delivery": {
+    "maxRelatedRecords": 8
+  },
+  "catalog": {
+    "owner": "aws-lambda",
+    "definitions": [
+      {
+        "code": "aws-lambda.invocation-budget-invalid",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "enum",
+              "values": [
+                "minimum-remaining-ms",
+                "minimum-delivery-remaining-ms",
+                "remaining-time"
+              ]
+            },
+            "reason": {
+              "type": "enum",
+              "values": [
+                "missing",
+                "wrong-type",
+                "not-finite",
+                "not-integer",
+                "not-positive",
+                "negative",
+                "not-after-total-margin"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "next-operation-not-started"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "code": "aws-lambda.dispatch-outcome-failed",
+        "version": 1,
+        "classification": {
+          "failureKind": "unknown",
+          "failureSource": "unknown",
+          "severity": "error",
+          "recovery": "manual_investigation",
+          "retryable": false,
+          "userCorrectable": false
+        },
+        "detail": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "enum",
+              "values": [
+                "queue-send-failed",
+                "publish-marker-failed"
+              ]
+            },
+            "effect": {
+              "type": "enum",
+              "values": [
+                "earlier-effects-possible"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

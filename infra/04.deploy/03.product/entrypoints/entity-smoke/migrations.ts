@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.entity-smoke.migrations
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-07"
-//   updated_on: "2026-11-22"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -18,18 +18,23 @@
 import { createNodePostgreSqlTokenConnectionPool, createPostgreSqlMigrationRunner, postgreSqlPersistenceOperationError } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { entitySmokeDatabaseSettings } from "./configuration";
 import { entitySmokeConfigurationError, entitySmokeDiagnosticCatalogs, reportEntitySmokeFailure } from "./diagnostics";
-import { entitySmokeMigrationManifest, entitySmokeMigrationUsername } from "./postgresql";
+import { entitySmokeMigrationManifest, entitySmokeMigrationUsername, entitySmokeSchedulingContinuationManifest } from "./postgresql";
 import { performEntitySmokeDatabasePreflight } from "./preflight";
+import { persistenceMigrationProfileResult } from "../shared/persistence/configuration";
 
 export async function runEntitySmokeMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const operation = env["ENTITY_SMOKE_MIGRATION_OPERATION"];
   if (operation !== "apply" && operation !== "preflight") {
     reportEntitySmokeFailure("migration", "not-started", entitySmokeConfigurationError("operation", "invalid")); process.exitCode = 1; return;
   }
+  const profile = persistenceMigrationProfileResult(env);
+  if (!profile.ok) {
+    reportEntitySmokeFailure("migration", "not-started", { diagnosticRecord: profile.error.diagnostic }); process.exitCode = 1; return;
+  }
   const settings = entitySmokeDatabaseSettings(env, "migration");
   if (!settings.ok) { reportEntitySmokeFailure("migration", "not-started", settings.error); process.exitCode = 1; return; }
   const pool = createNodePostgreSqlTokenConnectionPool(settings.value.configuration, settings.value.credentials);
-  const manifest = entitySmokeMigrationManifest();
+  const manifest = profile.value === "scheduling" ? entitySmokeSchedulingContinuationManifest() : entitySmokeMigrationManifest("baseline");
   let completion: { verdict: "passed"; code: string } | undefined;
   try {
     if (operation === "preflight") {

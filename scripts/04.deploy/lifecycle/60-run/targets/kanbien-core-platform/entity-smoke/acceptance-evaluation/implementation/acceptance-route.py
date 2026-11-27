@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.collect-acceptance.implementation
-#   version: 5
+#   version: 6
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -38,6 +38,7 @@ CONTROL = module("entity_smoke_acceptance_control_custody", DIRECTORY / "accepta
 RESTART = module("entity_smoke_acceptance_restart_graph", DIRECTORY / "recovery-and-replacement/restart/restart-route.py")
 T, C = D.TASK, D.C
 S = module("entity_smoke_acceptance_succession", C.ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py")
+SCHEDULING = module("entity_smoke_scheduling_qualification", C.ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py")
 TARGET, SCOPE = "kanbien-core-platform", "entity-smoke"
 EVIDENCE_ROOT = C.CONTRACT.parent.parent / "30-release-evidence"
 SCHEMA = "deploy/entity-smoke-collected-acceptance/v1"
@@ -63,6 +64,35 @@ class CollectionFailure(Exception):
 
 def require(value, code, item=None):
     if not value: raise CollectionFailure(code, item)
+
+
+def validate_scheduling(packet, *, required=False, evidence_class="live"):
+    try: SCHEDULING.record_profile(packet)
+    except SCHEDULING.ProofFailure as failure: raise CollectionFailure(failure.code) from None
+    bundle = packet.get("scheduling_qualification")
+    require(bundle is not None or not required, "scheduling-proof-required")
+    if bundle is None: return
+    try:
+        SCHEDULING.validate(bundle, root=C.ROOT, target=TARGET, scope=SCOPE,
+            source=packet["binding"]["source_revision"], primary_image=packet["binding"]["image_digest"],
+            historical=True, evidence_class=evidence_class)
+    except SCHEDULING.ProofFailure as failure: raise CollectionFailure(failure.code) from None
+
+
+def attach_scheduling(packet, args):
+    if getattr(args, "qualification_profile", None) is None: return packet
+    try:
+        packet["qualification_profile"] = SCHEDULING.profile(args.qualification_profile)
+        packet["scheduling_qualification"] = SCHEDULING.collect(root=C.ROOT, target=TARGET, scope=SCOPE,
+            source=packet["binding"]["source_revision"], primary_image=packet["binding"]["image_digest"],
+            proof=args.scheduling_receipt, packages=args.scheduling_packages, observed_at=C.now())
+    except SCHEDULING.ProofFailure as failure: raise CollectionFailure(failure.code) from None
+    return packet
+
+
+def observation_path(cache, args):
+    suffix = ".scheduling-a2-v1" if getattr(args, "qualification_profile", None) == SCHEDULING.PROFILE else ""
+    return cache / ("acceptance-observation" + suffix + ".json")
 
 
 def successor_parent(value, args):
@@ -119,6 +149,8 @@ def current_predecessor():
 
 
 def collection_cache(args, custody=None):
+    require(getattr(args, "qualification_profile", None) is None or getattr(args, "expected_predecessor", None) is not None,
+            "acceptance-scheduling-successor-required")
     if getattr(args, "expected_predecessor", None) is None:
         return C.delivery_cache(args.proof_label)
     previous = current_predecessor()
@@ -168,16 +200,17 @@ def task_context(value, args, provider, checked):
     if args.workload not in checked:
         checked[args.workload] = T.BINDING.inspect(provider, args.workload, value["parameters"], value["resources"], value["binding_snapshot"])
     context = {**value, "checked": checked[args.workload]}
-    context["report"] = {"plan": {"preflight_label": A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation, delivery=value.get("delivery"))}}
+    context["report"] = {"plan": {"preflight_label": A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation, delivery=value.get("delivery"), qualification_profile=getattr(args, "qualification_profile", None))}}
     return context
 
 
 def task_proofs(value, cleanup, args, provider):
     root_binding = {**value["binding"], "record_digest": args.expected_digest}
     checked, result = {}, {}
-    for name, (stage, workload, operations) in A.TASKS.items():
+    for name, (stage, workload, operations) in A.tasks(getattr(args, "qualification_profile", None)).items():
         operation = operations[0]
         selected = selected_args(args, stage, workload, operation)
+        selected.qualification_profile = A.task_profile(name, getattr(args, "qualification_profile", None))
         if name == "original-record" and not T.STEPS.path(value, selected).is_file():
             selected = selected_args(args, stage, workload, "observe-create")
         context = cleanup["reader"]["context"] if name == "restore-read" else task_context(value, selected, provider, checked)
@@ -191,6 +224,73 @@ def task_proofs(value, cleanup, args, provider):
             pair[phase] = A.capture_task(T, context, current, provider, name, root_binding, historical=stage != "acceptance")
         result[name] = pair
     return result
+
+
+def scheduling_migrations(value, args, provider):
+    """Archive original metadata tasks through the same task/gate reader."""
+    lineage = T.STEPS.scheduling_migration_lineage(T.dependencies(), value, args, provider)
+    binding = {**value["binding"], "record_digest": args.expected_digest}
+    checked, result = {}, {}
+    names = ["scheduling-prefix"] + (["scheduling-migration"] if "scheduling-migration" in lineage["packets"] else [])
+    for name in names:
+        stage, workload, operations = A.METADATA_TASKS[name]
+        result[name] = {}
+        for phase in ("preflight", "operation"):
+            selected = selected_args(args, stage, workload, operations[0], phase)
+            selected.qualification_profile, selected.expected_digest = None, None
+            selected.migration_profile = "scheduling" if name == "scheduling-migration" else "baseline"
+            result[name][phase] = A.capture_task(T, task_context(value, selected, provider, checked), selected,
+                provider, name, binding)
+    return result
+
+
+def validate_scheduling_migrations(value):
+    """Reconstruct exact migration custody; an already-complete prefix needs no apply."""
+    selected = value.get("qualification_profile")
+    if selected is None:
+        require("scheduling_migrations" not in value, "acceptance-scheduling-migration-profile-mismatch")
+        return None
+    require(value.get("delivery") is not None, "acceptance-scheduling-successor-required")
+    archives = value.get("scheduling_migrations")
+    require(isinstance(archives, dict) and set(archives) in ({"scheduling-prefix"}, {"scheduling-prefix", "scheduling-migration"}),
+            "acceptance-scheduling-migration-proof-incomplete")
+    binding, delivery = value["binding"], value["delivery"]
+    after = value["deployment"]["result"]["facts"]["completed_at"]
+    packets = {"maintenance-deployment": value["deployment"], "bootstrap-lineage": delivery["predecessor"]}
+    timestamp, available, attempts = T.RUNNER.EVIDENCE.timestamp, set(), set()
+    prefix = None
+    for name in ("scheduling-prefix", "scheduling-migration"):
+        if name not in archives: continue
+        pair = archives[name]
+        require(isinstance(pair, dict) and set(pair) == {"preflight", "operation"}, "acceptance-task-phases-incomplete", name)
+        for phase, proof in pair.items():
+            require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase,
+                    "acceptance-task-attribution-mismatch", name)
+            A.validate_task(proof, binding, delivery=delivery, metadata=True)
+            packet = proof["packet"]
+            expected = {"required_after": after, "packets": packets}
+            if packet["schema"] == "deploy/entity-smoke-task-step/v3": expected = T.STEPS.prerequisite_custody(C, expected)
+            require(packet["prerequisites"] == expected, "acceptance-task-prerequisite-mismatch", name)
+            A.POLICY.validate_prerequisite_references(packet["prerequisites"], available)
+            attempt = packet["reservation"]["operation_id"]
+            require(attempt not in attempts and timestamp(packet["receipt"]["task"]["created_at"]) >= timestamp(after),
+                    "acceptance-successor-task-order-invalid", name)
+            attempts.add(attempt)
+        before, operation = pair["preflight"]["packet"], pair["operation"]
+        admission = operation["admission"]["preflight"]
+        require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"],
+                "acceptance-original-preflight-mismatch", name)
+        packet = operation["packet"]
+        if name == "scheduling-prefix":
+            require(packet["receipt"]["result"].get("code") == "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", "acceptance-scheduling-prefix-not-confirmed")
+            try: prefix = T.RUNNER.EVIDENCE.SCHEDULING_STATE.validate_prefix(packet["receipt"]["result"].get("migration_prefix"),
+                    minimum_applied_migrations=1, manifest_migration_count=7)
+            except ValueError: raise CollectionFailure("acceptance-scheduling-prefix-not-confirmed") from None
+            require((prefix["state"] == "partial") == ("scheduling-migration" in archives), "acceptance-scheduling-apply-proof-mismatch")
+        packets["observe-scheduling-prefix" if name == "scheduling-prefix" else name] = packet
+        after = packet["receipt"]["task"]["stopped_at"]
+        available.add(A.digest(packet))
+    return {"required_after": after, "packets": packets, "manifest_sha256": prefix["manifest_sha256"], "available": available}
 
 
 def control_graph(name):
@@ -304,6 +404,8 @@ def validate_control(name, value, binding):
 
 
 def gather(args, provider):
+    require(getattr(args, "qualification_profile", None) is None or getattr(args, "expected_predecessor", None) is not None,
+            "acceptance-scheduling-successor-required")
     if getattr(args, "expected_predecessor", None) is not None:
         return gather_successor(args, provider)
     evidence = retained_source_evidence(args)
@@ -338,6 +440,7 @@ def gather(args, provider):
                           "source_resource_id": value["parameters"]["DatabaseResourceId"], "database_name": value["parameters"]["DatabaseName"], "observed_at": C.now()}}
     transition = C.TRANSITION.read(C, value["cache"], value["binding"])
     if transition is not None: packet["source_transition"] = transition
+    attach_scheduling(packet, args)
     validate_packet(packet)
     # Final local/current binding rechecks cannot launch or stop anything.
     require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
@@ -361,10 +464,11 @@ def gather_successor(args, provider):
     binding = {**value["binding"], "record_digest": args.expected_digest}
     checked, tasks = {}, {}
     for name in (REQUALIFICATION_TASKS if requalify else SUCCESSOR_TASKS):
-        stage, workload, operations = A.TASKS[name]
+        stage, workload, operations = A.tasks(getattr(args, "qualification_profile", None))[name]
         pair = {}
         for phase in (("operation",) if name == "credential-unready" else ("preflight", "operation")):
             current = selected_args(args, stage, workload, operations[0], phase)
+            current.qualification_profile = A.task_profile(name, getattr(args, "qualification_profile", None))
             current.delivery_id = value["delivery"]["delivery_id"]
             context = cleanup["reader"]["context"] if name == "restore-read" else task_context(value, current, provider, checked)
             pair[phase] = A.capture_task(T, context, current, provider, name, binding, historical=requalify and name != "final-read")
@@ -392,6 +496,9 @@ def gather_successor(args, provider):
             restored_binding=cleanup["reader"]["context"]["binding"],
             controls={name: control_proof(name, receipt, binding if name == "credential-replacement" else resource_binding,
                 value["cache"], value["artifact"]) for name, receipt in sources.items()})
+    if getattr(args, "qualification_profile", None) is not None:
+        packet["scheduling_migrations"] = scheduling_migrations(value, args, provider)
+    attach_scheduling(packet, args)
     validate_packet(packet)
     require(C.source_digest() == value["artifact"], "acceptance-source-changed-before-retention")
     C.ALIGN.source_preflight(value["custody"], **options)
@@ -401,7 +508,7 @@ def gather_successor(args, provider):
 def validate_successor_identity(value, *, evidence_class):
     requalify = value["schema"] == REQUALIFIED_SCHEMA
     extras = {"controls", "restored_binding", "controller_basis"} if requalify else set()
-    require(set(value) == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256",
+    require(set(value) - {"scheduling_qualification", "qualification_profile", "scheduling_migrations"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256",
             "delivery", "predecessor", "deployment", "tasks", "package", "runtime"} | extras
             and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
             "acceptance-collection-envelope-invalid")
@@ -442,6 +549,7 @@ def validate_successor(value, *, evidence_class):
     binding, delivery, predecessor = validate_successor_identity(value, evidence_class=evidence_class)
     if value["schema"] == REQUALIFIED_SCHEMA:
         return validate_requalified_successor(value, binding, delivery)
+    lineage = validate_scheduling_migrations(value)
     tasks = value["tasks"]
     selected_tasks = SUCCESSOR_TASKS if value["schema"] == SUCCESSOR_SCHEMA else LEGACY_SUCCESSOR_TASKS
     require(isinstance(tasks, dict) and set(tasks) == set(selected_tasks), "acceptance-proof-set-incomplete")
@@ -455,7 +563,7 @@ def validate_successor(value, *, evidence_class):
             proof = pair[phase]
             require(isinstance(proof, dict) and proof.get("name") == name and proof.get("phase") == phase
                     and proof.get("controller_sha256") == proof.get("packet", {}).get("plan", {}).get("controller_sha256"), "acceptance-task-attribution-mismatch", name)
-            A.validate_task(proof, binding, delivery=delivery)
+            A.validate_task(proof, binding, delivery=delivery, qualification_profile=value.get("qualification_profile"))
             packet = proof["packet"]
             plan = packet["plan"]
             require(plan["controller_sha256"] == proof["controller_sha256"]
@@ -463,6 +571,10 @@ def validate_successor(value, *, evidence_class):
                     and all(plan[key] == value["deployment"]["plan"][key] for key in ("parameters_sha256", "template_sha256")),
                     "acceptance-task-delivery-plan-mismatch", name)
             expected = {"required_after": after, "packets": {"deployment": value["deployment"], "predecessor": predecessor, **earlier}}
+            if name == "migration-state" and lineage is not None:
+                expected["required_after"] = max(after, lineage["required_after"], key=timestamp)
+                expected["packets"]["scheduling-metadata"] = lineage["packets"]
+                require(plan.get("scheduling_manifest_sha256") == lineage["manifest_sha256"], "acceptance-scheduling-manifest-mismatch")
             if packet.get("schema") == "deploy/entity-smoke-task-step/v3": expected = T.STEPS.prerequisite_custody(C, expected)
             require(packet["prerequisites"] == expected,
                 "acceptance-task-prerequisite-mismatch", name)
@@ -474,7 +586,7 @@ def validate_successor(value, *, evidence_class):
         admission = pair["operation"]["admission"]["preflight"]
         require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"],
                 "acceptance-original-preflight-mismatch", name)
-        stage, workload, allowed = A.TASKS[name]
+        stage, workload, allowed = A.tasks(value.get("qualification_profile"))[name]
         earlier[workload + "-" + allowed[0]] = pair["operation"]["packet"]
         after = pair["operation"]["packet"]["receipt"]["task"]["stopped_at"]
     validate_runtime(value["runtime"], binding)
@@ -498,7 +610,8 @@ def validate_requalified_successor(value, binding, delivery):
         and isinstance(controls, dict) and set(controls) == REQUALIFICATION_CONTROLS, "acceptance-proof-set-incomplete")
     timestamp = T.RUNNER.EVIDENCE.timestamp
     after = value["deployment"]["result"]["facts"]["completed_at"]
-    earlier, available = {}, set()
+    lineage = validate_scheduling_migrations(value)
+    earlier, available = {}, set() if lineage is None else set(lineage["available"])
     for name in REQUALIFICATION_TASKS:
         pair = tasks[name]
         phases = {"operation"} if name == "credential-unready" else {"preflight", "operation"}
@@ -508,7 +621,8 @@ def validate_requalified_successor(value, binding, delivery):
                 and proof.get("controller_sha256") == (value["controller_sha256"] if name == "restore-read" else proof.get("packet", {}).get("plan", {}).get("controller_sha256")), "acceptance-task-attribution-mismatch", name)
             A.validate_task(proof, binding, delivery=None if name == "restore-read" else delivery,
                 expected_binding=value["restored_binding"] if name == "restore-read" else None,
-                namespace_delivery=delivery if name == "restore-read" else None)
+                namespace_delivery=delivery if name == "restore-read" else None,
+                qualification_profile=A.task_profile(name, value.get("qualification_profile")))
             if name != "restore-read":
                 plan = proof["packet"]["plan"]
                 A.POLICY.validate_prerequisite_references(proof["packet"]["prerequisites"], available)
@@ -518,6 +632,10 @@ def validate_requalified_successor(value, binding, delivery):
                     "acceptance-task-delivery-plan-mismatch", name)
             if name in REQUALIFICATION_TASKS[:5]:
                 expected = {"required_after": after, "packets": {"deployment": value["deployment"], "predecessor": value["predecessor"], **earlier}}
+                if name == "migration-state" and lineage is not None:
+                    expected["required_after"] = max(after, lineage["required_after"], key=timestamp)
+                    expected["packets"]["scheduling-metadata"] = lineage["packets"]
+                    require(proof["packet"]["plan"].get("scheduling_manifest_sha256") == lineage["manifest_sha256"], "acceptance-scheduling-manifest-mismatch")
                 if proof["packet"].get("schema") == "deploy/entity-smoke-task-step/v3": expected = T.STEPS.prerequisite_custody(C, expected)
                 require(proof["packet"]["prerequisites"] == expected,
                     "acceptance-task-prerequisite-mismatch", name)
@@ -525,7 +643,7 @@ def validate_requalified_successor(value, binding, delivery):
             before, admission = pair["preflight"]["packet"], pair["operation"]["admission"]["preflight"]
             require(admission["reservation"] == before["reservation"] and admission["receipt"] == before["receipt"],
                 "acceptance-original-preflight-mismatch", name)
-        stage, workload, operations = A.TASKS[name]
+        stage, workload, operations = A.tasks(value.get("qualification_profile"))[name]
         earlier[workload + "-" + operations[0]] = pair["operation"]["packet"]
         available.add(A.digest(pair["operation"]["packet"]))
         after = pair["operation"]["packet"]["receipt"]["task"]["stopped_at"]
@@ -576,9 +694,12 @@ def validate_runtime(runtime, binding):
 
 
 def validate_packet(value, *, evidence_class="live"):
+    require(isinstance(value, dict), "acceptance-collection-envelope-invalid")
+    validate_scheduling(value, evidence_class=evidence_class)
     if isinstance(value, dict) and value.get("schema") in SUCCESSOR_SCHEMAS:
         return validate_successor(value, evidence_class=evidence_class)
-    require(isinstance(value, dict) and set(value) - {"source_transition"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
+    validate_scheduling_migrations(value)
+    require(isinstance(value, dict) and set(value) - {"source_transition", "scheduling_qualification", "qualification_profile", "scheduling_migrations"} == {"schema", "target", "scope", "evidence_class", "binding", "controller_sha256", "controller_basis", "package", "tasks", "controls", "restored_binding", "runtime"}
             and value["schema"] == SCHEMA and value["target"] == TARGET and value["scope"] == SCOPE and value["evidence_class"] == evidence_class,
             "acceptance-collection-envelope-invalid")
     binding = C.RESOURCE.validate_binding(value["binding"])
@@ -595,7 +716,8 @@ def validate_packet(value, *, evidence_class="live"):
             require(isinstance(task, dict) and task.get("name") == name and task.get("phase") == phase, "acceptance-task-attribution-mismatch", name)
             controller = T.IMAGE_REPAIR.completed_bootstrap_controller(task.get("packet"), task.get("completion"), value["controller_sha256"])
             require(task.get("controller_sha256") == controller, "acceptance-task-attribution-mismatch", name)
-            A.validate_task(task, binding, expected_binding=value["restored_binding"] if name == "restore-read" else None)
+            A.validate_task(task, binding, expected_binding=value["restored_binding"] if name == "restore-read" else None,
+                qualification_profile=A.task_profile(name, value.get("qualification_profile")))
             if name != "restore-read" and task["packet"]["binding"]["source_revision"] != binding["source_revision"]:
                 require(transition is not None and task["packet"]["binding"] == transition["plan"]["previous_binding"] and C.TRANSITION.historical(task["packet"], task["completion"]), "acceptance-source-transition-required", name)
             operation_id = task["packet"]["reservation"]["operation_id"]
@@ -632,6 +754,10 @@ def candidate_material(packet):
     require(len(proof_bytes) <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
     proof_path = EVIDENCE_ROOT / "proof-receipts" / ("entity-smoke-" + A.digest(packet)[7:] + ".json")
     proofs = {"entity-smoke-complete-proof": {"path": str(proof_path.relative_to(EVIDENCE_ROOT)), "sha256": S.sha256_bytes(proof_bytes)}}
+    components = {}
+    if "scheduling_qualification" in packet:
+        components = SCHEDULING.material(packet["scheduling_qualification"])
+        proofs.update({name: {"path": relative, "sha256": S.sha256_bytes(payload)} for name, (relative, payload) in components.items()})
     contracts = {"configuration_contract": {"path": str((C.CONTRACT.parent / "declaration-contract.yml").relative_to(C.ROOT)), "sha256": packet["binding"]["configuration_contract_sha256"]},
                  "permission_contract": {"path": str(C.DEPLOY.SOURCE.relative_to(C.ROOT)), "sha256": packet["binding"]["permission_contract_sha256"]}}
     document = S.candidate_document(target=TARGET, scope=SCOPE,
@@ -641,13 +767,14 @@ def candidate_material(packet):
     # Retain the original YAML order: a resumed copy must reproduce exact bytes.
     candidate = {key: document[key] for key in ("schema", "target", "scope", "status", "evidence_class", "release", "proof", "proof_set")}
     target = EVIDENCE_ROOT / S.CANDIDATE_DIRECTORY / (candidate["release"]["id"] + ".yml")
-    return {"proof": (proof_path, proof_bytes), "candidate": (target, S.rendered(candidate)), "document": candidate}
+    return {"proof": (proof_path, proof_bytes), "candidate": (target, S.rendered(candidate)), "document": candidate,
+            "components": [(EVIDENCE_ROOT / relative, payload) for relative, payload in components.values()]}
 
 
 def retained_source_evidence(args, custody=None):
     cache = collection_cache(args, custody)
     custody = C.ALIGN.read_receipt(args.receipt.absolute()) if custody is None else custody
-    observation = cache / "acceptance-observation.json"
+    observation = observation_path(cache, args)
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if not observation.exists(): return None
     packet = read_packet(observation)
@@ -659,7 +786,7 @@ def retained_source_evidence(args, custody=None):
     except C.InfrastructureFailure: raise CollectionFailure("acceptance-source-evidence-binding-mismatch") from None
     material = candidate_material(packet)
     files = {str(path.relative_to(C.ROOT)): {"sha256": S.sha256_bytes(payload), "size_bytes": len(payload)}
-             for path, payload in (material["proof"], material["candidate"])}
+             for path, payload in (material["proof"], material["candidate"], *material["components"])}
     return {"source_revision": custody["source_revision"], "image_digest": custody["image_digest"],
             "files": files}
 
@@ -671,6 +798,9 @@ def retain(packet, cache, *, root=None):
     C.RESOURCE.CONTROL.no_symlinks(root)
     material = candidate_material(packet)
     artifact = A.immutable_json(material["proof"][0], packet)
+    for path, payload in material["components"]:
+        C.RESOURCE.CONTROL.no_symlinks(path)
+        S.immutable_write(path, payload)
     candidate = material["document"]
     S.candidate_identity(candidate, root)
     target, payload = material["candidate"]
@@ -678,16 +808,18 @@ def retain(packet, cache, *, root=None):
     S.immutable_write(target, payload)
     marker = {"schema": "deploy/entity-smoke-acceptance-collection/v1", "binding": packet["binding"], "controller_sha256": packet["controller_sha256"],
               "candidate_record": str(target.relative_to(C.ROOT)), "candidate_sha256": C.digest_file(target), "proof_sha256": artifact["sha256"], "scope_acceptance": False, "current_readiness": False}
-    A.immutable_json(cache / "acceptance-collection.json", marker)
+    marker_name = "acceptance-collection.scheduling-a2-v1.json" if "scheduling_qualification" in packet else "acceptance-collection.json"
+    A.immutable_json(cache / marker_name, marker)
     return marker
 
 
 def collect(args, provider):
     cache = collection_cache(args)
-    observation = cache / "acceptance-observation.json"
+    observation = observation_path(cache, args)
     C.RESOURCE.CONTROL.no_symlinks(observation)
     if observation.exists():
         packet = read_packet(observation)
+        validate_scheduling(packet, required=getattr(args, "qualification_profile", None) is not None)
         custody = C.ALIGN.read_receipt(args.receipt.absolute())
         C.ALIGN.source_preflight(custody, retained_source_evidence=retained_source_evidence(args, custody))
         require(packet["controller_sha256"] == C.source_digest()
@@ -697,6 +829,7 @@ def collect(args, provider):
         # Original captured observation only: no fresh provider claims or jobs.
         return retain(packet, cache), "retained"
     packet, selected_cache = gather(args, provider)
+    validate_packet(packet)
     require(selected_cache == cache, "acceptance-proof-cache-mismatch")
     A.fresh_final(packet["tasks"]["final-read"]["operation"], final_required_after(packet), C.now())
     require(len(T.RUNNER.CONTROL.canonical(packet)) + 1 <= MAX_PACKET_BYTES, "acceptance-collected-proof-too-large")
@@ -710,6 +843,7 @@ def parse(arguments=None):
     parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     parser.error = lambda _message: (_ for _ in ()).throw(CollectionFailure("acceptance-arguments-invalid"))
     parser.add_argument("--inputs", type=Path)
+    parser.add_argument("--require-qualification-profile", choices=(SCHEDULING.PROFILE,))
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--proof-label")
     parser.add_argument("--expected-digest")
@@ -718,6 +852,10 @@ def parse(arguments=None):
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args = parser.parse_args(arguments)
+    require(args.require_qualification_profile is None or args.inputs is not None, "acceptance-input-qualification-profile-required")
+    args.qualification_profile = None
+    args.scheduling_receipt = None
+    args.scheduling_packages = None
     if args.inputs is None:
         require(args.receipt is not None and isinstance(args.proof_label, str) and isinstance(args.expected_digest, str)
                 and re.fullmatch(r"entity-smoke-[a-f0-9]{24}", args.proof_label) and re.fullmatch(r"[a-f0-9]{64}", args.expected_digest), "acceptance-arguments-invalid")
@@ -733,13 +871,23 @@ def resolve_inputs(args):
     if args.inputs is None: return args
     owner = module("entity_smoke_acceptance_manifest", C.ROOT / "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py")
     route = owner.document(C.CONTRACT.parent / "acceptance-route-contract.yml")
+    input_document = owner.document(args.inputs)
+    require(args.require_qualification_profile is None or input_document.get("qualification_profile") == args.require_qualification_profile,
+            "acceptance-input-qualification-profile-required")
     try: values = owner.input_values(args.inputs, route, root=C.ROOT)
     except ValueError as failure:
         code = str(failure)
         raise CollectionFailure(code if re.fullmatch(r"acceptance-inputs-[a-z0-9-]+", code) else "acceptance-inputs-not-confirmed") from None
-    require(set(values) == {"candidate_receipt", "proof_label", "expected_digest", "expected_predecessor"}, "acceptance-inputs-set-invalid")
-    return parse(["--receipt", values["candidate_receipt"], "--proof-label", values["proof_label"], "--expected-digest", values["expected_digest"],
+    profile = input_document.get("qualification_profile")
+    additional = {"scheduling_receipt", "scheduling_packages"} if profile is not None else set()
+    require(profile in {None, SCHEDULING.PROFILE} and set(values) == {"candidate_receipt", "proof_label", "expected_digest", "expected_predecessor"} | additional, "acceptance-inputs-set-invalid")
+    resolved = parse(["--receipt", values["candidate_receipt"], "--proof-label", values["proof_label"], "--expected-digest", values["expected_digest"],
                   "--expected-predecessor", values["expected_predecessor"], "--write-candidate"])
+    resolved.qualification_profile = profile
+    if profile is not None:
+        require(resolved.expected_predecessor is not None, "acceptance-scheduling-successor-required")
+        resolved.scheduling_receipt, resolved.scheduling_packages = Path(values["scheduling_receipt"]), values["scheduling_packages"]
+    return resolved
 
 
 def failure_details(failure, context=None):

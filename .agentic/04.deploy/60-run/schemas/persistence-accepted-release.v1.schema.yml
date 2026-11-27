@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.persistence-accepted-release.v1
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -30,6 +30,10 @@ required_fields:
 - release
 - acceptance
 - provider_observation
+optional_qualification:
+  qualification_profile: When scheduling-a2-v1 is explicitly selected, the retained database-state proof uses observe-scheduling-state and complete seven-migration state. It must agree with scheduling_qualification; absence retains the baseline interpretation.
+  scheduling_qualification: Explicit scheduling-a2-v1 proof with exact dispatcher and worker custody; mandatory only for requested scheduling qualification, never inferred from historical HTTP acceptance. Validated by the shared scheduling proof owner and bound into candidate proof_set.
+  scheduling_migrations: Original controller prefix receipt and, only for a partial prefix, the explicit scheduling apply receipt. Source, maintenance image, database incarnation, prefix document hash, chronology and the subsequent complete-state manifest must agree. The original documents are additionally retained in proof_set; a complete prefix has no fabricated apply.
 evidence_classes:
 - live
 - simulated

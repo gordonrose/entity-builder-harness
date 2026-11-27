@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.runtime-dependency-program-fixture
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-15"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: testing
 //   disciplines: [architecture, security]
@@ -24,7 +24,7 @@ import { readProgramBuildInputs } from "../../20-build/runnable-program-contract
 const source = fileURLToPath(new URL("../../../../../", import.meta.url));
 export function copyProgramFixture(repository, programId) {
   const selected = readProgramBuildInputs(source, { programId });
-  const files = new Set([...selected.manifestPaths.filter(path => path !== "package-lock.json"),
+  const files = new Set([selected.runtimeEntry.source, ...selected.manifestPaths.filter(path => path !== "package-lock.json"),
     ...selected.inputs.sourceFiles, ...Object.values(selected.inputs.packages).flatMap(exports =>
       Object.values(exports).filter(path => path.endsWith(".json")))]);
   for (const relative of files) {

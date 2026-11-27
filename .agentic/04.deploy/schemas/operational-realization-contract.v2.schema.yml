@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -37,6 +37,10 @@ bounded_cleanup:
   selection: change_shape.disposable_restore_cleanup
   default: delete-remains-forbidden
   required_true_fields: [original_readback_required, positive_ownership_required, explicit_execution_approval_required, preserve_source_and_shared_resources]
+  terminal_failure_variant:
+    required_true_fields: [original_terminal_failure_required, no_unresolved_dependents_required, positive_ownership_required, explicit_execution_approval_required, preserve_source_and_shared_resources]
+    selection: exact-closed-alternative-to-successful-readback
+    proof: authenticated-original-terminal-failure-and-complete-owned-resources-never-successful-readback-or-acceptance
   additional_fields: forbidden
   allowed_operation_classes: [delete]
   forbidden_operation_classes: [create, update, replace, broaden-permission]
@@ -65,7 +69,7 @@ field_guide:
   - path: change_shape.disposable_restore_cleanup
     what: Explicit opt-in for cleanup of a proven disposable restore, never ordinary deletion.
     does: Admits a delete-only change shape without granting permission or manufacturing ownership/readback proof.
-    validation: v2 only; exact four required_true_fields above must be true, with exact bounded allowed/forbidden classes. Null, false, missing or extra fields reject. All evidence bindings, gate ordering and current normalized change counts remain mandatory. The provider-owned applicability rule and actual controller must require original successful readback, positive ownership, protected source/shared resources and separate concrete execution approval.
+    validation: v2 only; either exact successful-readback fields or exact terminal_failure_variant fields must be true, with exact bounded allowed/forbidden classes. Mixed, null, false, missing or extra fields reject. All evidence bindings, gate ordering and current normalized change counts remain mandatory. The provider-owned applicability rule and controller must establish the selected original outcome, positive ownership, protected source/shared resources and separate concrete execution approval. Failed cleanup never establishes recovery acceptance.
   - path: schema
     what: Explicit version selection for the extended graph.
     does: Prevents existing v1 declarations from silently gaining new admission rules.

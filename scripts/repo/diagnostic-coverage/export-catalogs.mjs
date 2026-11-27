@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: repo.diagnostics.export-catalogs
-//   version: 6
+//   version: 7
 //   status: active
 //   created_on: "2026-10-27"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 06.shared
 //   domain: diagnostics
 //   disciplines: [architecture, security, sre]
@@ -56,9 +56,13 @@ const selections = [
   ["platform/persistence", "platform/persistence/src/diagnostics.js", "platformPersistenceDiagnosticCatalog"],
   ["platform/persistence/src/maintenance", "platform/persistence/src/maintenance/index.js", "persistenceMaintenanceDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
   ["platform/adapters/aws/queue/sqs/src/configuration", "platform/adapters/aws/queue/sqs/src/configuration/index.js", "sqsConfigurationDiagnosticCatalog", "diagnostics.v1.json", undefined, "contract/reporting"],
+  ["platform/adapters/aws/queue/sqs", "platform/adapters/aws/queue/sqs/src/index.js", "sqsLambdaBatchDiagnosticCatalog", "lambda-batch-diagnostics.v1.json", undefined, "src"],
+  ["platform/adapters/aws/queue/sqs", "platform/adapters/aws/queue/sqs/src/index.js", "sqsDiagnosticCatalog", "diagnostics.v1.json", undefined, "src"],
+  ["platform/adapters/aws/runtime/lambda", "platform/adapters/aws/runtime/lambda/src/index.js", "lambdaRuntimeDiagnosticCatalog", "diagnostics.v1.json", undefined, "src"],
   ["apps/platform-smoke", "apps/platform-smoke/src/diagnostics.js", "platformSmokeDiagnosticCatalog"],
   ["apps/entity-smoke", "apps/entity-smoke/features/test-entity/contract/diagnostics.js", "testEntityDiagnosticCatalog"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.js", "entitySmokeTargetDiagnosticCatalog", "entity-smoke-target-diagnostics.v1.json"],
+  ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/scheduling/diagnostics.js", "schedulingTargetDiagnosticCatalog", "scheduling-target-diagnostics.v1.json"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.js", "persistenceTaskConfigurationDiagnosticCatalog"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.js", "persistenceTaskOperationDiagnosticCatalog", "kanbien-core-server-persistence-operation-diagnostics.v1.json", "persistenceTaskFailureContract"],
   ["infra/04.deploy/03.product/entrypoints", "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.js", "kanbienPlatformPostgreSqlOperationDiagnosticCatalog", "kanbien-platform-postgresql-operation-diagnostics.v1.json"],

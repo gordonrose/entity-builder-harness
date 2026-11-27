@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines: [architecture, security, sre]
@@ -163,6 +163,19 @@ def main():
                 "explicit_execution_approval_required", "preserve_source_and_shared_resources")}}
         assert set(cleanup["change_shape"]["disposable_restore_cleanup"]) == set(schema["bounded_cleanup"]["required_true_fields"])
         run(root, cleanup)
+        failed_cleanup = copy.deepcopy(cleanup)
+        fields = failed_cleanup["change_shape"]["disposable_restore_cleanup"]
+        fields.pop("original_readback_required")
+        fields.update(original_terminal_failure_required=True, no_unresolved_dependents_required=True)
+        assert set(fields) == set(schema["bounded_cleanup"]["terminal_failure_variant"]["required_true_fields"])
+        run(root, failed_cleanup)
+        for field in fields:
+            changed = copy.deepcopy(failed_cleanup); changed["change_shape"]["disposable_restore_cleanup"].pop(field)
+            run(root, changed, "change-shape-invalid")
+            changed = copy.deepcopy(failed_cleanup); changed["change_shape"]["disposable_restore_cleanup"][field] = False
+            run(root, changed, "change-shape-invalid")
+        changed = copy.deepcopy(failed_cleanup); changed["change_shape"]["disposable_restore_cleanup"]["original_readback_required"] = True
+        run(root, changed, "change-shape-invalid")
         absent = copy.deepcopy(cleanup); absent["change_shape"].pop("disposable_restore_cleanup")
         run(root, absent, "change-shape-invalid")
         legacy_cleanup = copy.deepcopy(upgraded)

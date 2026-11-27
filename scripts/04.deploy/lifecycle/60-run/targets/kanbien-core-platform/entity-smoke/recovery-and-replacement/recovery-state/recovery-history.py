@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.recovery-history
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-21"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -123,7 +123,16 @@ def validate(route, context, args, value):
     C = route.C
     require(isinstance(value, dict) and set(value) == {"schema", "binding", "controller_sha256", "plan", "plan_sha256", "prerequisites", "final_step", "completed_at", "references", "current_readiness", "scope_acceptance"}
             and value["schema"] == SCHEMA and value["current_readiness"] is False and value["scope_acceptance"] is False, "history-packet-invalid")
-    selected = SimpleNamespace(**{**vars(args), "proof_stage": "credential-recovery", "workload": "database-proof", "operation": "permissions", "phase": "operation"})
+    plan = value.get("plan")
+    require(isinstance(plan, dict), "history-final-plan-mismatch")
+    owner = route.ACCEPTANCE.SCHEDULING
+    try: qualification_profile = owner.profile(plan.get("qualification_profile"))
+    except owner.ProofFailure as failure: raise HistoryFailure(failure.code) from None
+    require(getattr(args, "qualification_profile", None) in {None, qualification_profile}, "history-qualification-profile-mismatch")
+    # Snapshot/restore readers obtain the selection from the original hash-bound
+    # final task plan; they never infer it from today's database or a CLI default.
+    selected = SimpleNamespace(**{**vars(args), "qualification_profile": qualification_profile,
+        "proof_stage": "credential-recovery", "workload": "database-proof", "operation": "permissions", "phase": "operation"})
     step = route.STEPS.path(context, selected)
     controller = route.COMPLETION.controller_for(route, C.read_json(step), C.read_json(route.COMPLETION.path(step)), context["artifact"])
     require(value["binding"] == {**context["binding"], "record_digest": args.expected_digest} and value["controller_sha256"] == controller, "history-source-or-binding-mismatch")
@@ -142,15 +151,17 @@ def validate(route, context, args, value):
     baseline = {"deployment", "predecessor", "recovery-baseline-read", "recovery-applied-history", "recovery-runtime"} if delivery else {"initial-stop", "initial-restart", "initial-recovery-original-read", "initial-recovery-applied-history"}
     require(isinstance(packets, dict) and baseline | {"credential-permission-state", "credential-revoke", "credential-unready", "credential-restore", "credential-replacement", "credential-read"} <= set(packets), "history-prerequisite-set-incomplete")
     required = {"credential-replacement-receipt.json", "credential-replacement-plan.json"}
+    database_proof = owner.database_proof(qualification_profile)
+    database_step = ("administration", database_proof["operation"], database_proof["stage"])
     if delivery:
         require(plan.get("delivery") == delivery, "history-source-or-binding-mismatch")
         C.validate_deployment_receipt(packets["deployment"], context["binding"], delivery)
         require(C.read_json(context["cache"] / "receipts/update.json") == packets["deployment"], "history-source-or-binding-mismatch")
         required.add("receipts/update.json")
-        prior_steps = (("verifier", "read", "baseline"), ("administration", "observe-migration-state", "initial-recovery"))
+        prior_steps = (("verifier", "read", "baseline"), database_step)
     else:
         required.update({"initial-restart-receipt.json", "initial-restart-plan.json", "failure-attempts/root.json", "failure-receipts/stopped.json", "receipts/create.json"})
-        prior_steps = (("verifier", "read", "server-replacement"), ("verifier", "read", "initial-recovery"), ("administration", "observe-migration-state", "initial-recovery"))
+        prior_steps = (("verifier", "read", "server-replacement"), ("verifier", "read", "initial-recovery"), database_step)
     for phase in (("credential-replacement",) if delivery else ("start-runtime", "credential-replacement")):
         required.add("attempts/" + args.proof_label + "-" + phase + ".json")
     for workload, operation, stage in (*prior_steps,

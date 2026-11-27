@@ -1,6 +1,7 @@
 import type { OutboxEntryId } from "@kanbien/core/persistence";
 import type { ISODateTime, Result } from "@kanbien/core/shared";
 import { platformPersistenceError, type PlatformPersistenceError } from "./errors";
+import { validatePlatformProcessingRetryAt } from "./processing-retry";
 import { capturePlatformPersistenceDiagnostic, observePlatformPersistenceDiagnostic, persistenceLocalRejectionDiagnosticRecord, type PersistenceLocalRejectionDetail, type PlatformPersistenceDiagnosticOptions } from "./diagnostics";
 import {
   nextPlatformPersistenceLease,
@@ -15,6 +16,7 @@ import {
 
 export type PlatformProcessingClaimResult =
   | { readonly disposition: "claimed"; readonly record: PlatformProcessingRecord }
+  | { readonly disposition: "retry-not-due"; readonly record: PlatformProcessingRecord }
   | { readonly disposition: "lease-active"; readonly record: PlatformProcessingRecord }
   | { readonly disposition: "already-completed"; readonly record: PlatformProcessingRecord };
 
@@ -40,6 +42,7 @@ export interface PlatformProcessingStore {
     readonly outboxEntryId: OutboxEntryId;
     readonly fence: PlatformPersistenceFence;
     readonly releasedAt: ISODateTime;
+    readonly retryAt?: ISODateTime;
   }): Promise<Result<PlatformProcessingRecord, PlatformPersistenceError>>;
 }
 
@@ -59,6 +62,10 @@ export function createInMemoryPlatformProcessingStore(options: PlatformPersisten
       const record = records.get(input.outboxEntryId);
       if (record?.state === "completed") {
         return success({ disposition: "already-completed", record: copyProcessingRecord(record) });
+      }
+
+      if (record?.state === "retry-eligible" && record.retryAt !== undefined && Date.parse(record.retryAt) > Date.parse(input.acquiredAt)) {
+        return success({ disposition: "retry-not-due", record: copyProcessingRecord(record) });
       }
 
       if (record?.state === "claimed" && record.lease !== undefined && !platformLeaseExpired(record.lease, input.acquiredAt)) {
@@ -141,6 +148,8 @@ export function createInMemoryPlatformProcessingStore(options: PlatformPersisten
     },
 
     async release(input) {
+      const retry = validatePlatformProcessingRetryAt(input, options);
+      if (!retry.ok) return retry;
       const record = records.get(input.outboxEntryId);
       if (record === undefined || record.state !== "claimed" || record.lease === undefined) {
         return reject(
@@ -176,6 +185,7 @@ export function createInMemoryPlatformProcessingStore(options: PlatformPersisten
         attempt: record.attempt,
         lease: record.lease,
         releasedAt: input.releasedAt,
+        ...(retry.value === undefined ? {} : { retryAt: retry.value }),
       });
       records.set(input.outboxEntryId, released);
       return success(copyProcessingRecord(released));

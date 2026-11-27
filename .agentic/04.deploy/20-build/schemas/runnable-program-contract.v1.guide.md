@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.runnable-program-contract.v1.guide
-version: 2
+version: 3
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-11-15"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -29,7 +29,7 @@ stable ID and a relative entrypoint. The approved dependencies are the reviewed
 boundary; the observed dependencies are supplied by a deterministic report.
 The checker rejects a difference rather than guessing whether it is harmless.
 
-An image contract then selects that program and gives the image one exec-form
+An image contract then selects that program and gives a process image one exec-form
 start command. An exec-form command is a list of literal tokens, such as a
 runtime executable and an entrypoint. It avoids a shell that could interpret
 variables, operators, or unreviewed input.
@@ -43,9 +43,17 @@ Candidate verification lists only safe receipt field names. The later receipt
 may prove which source revision, package digest, and release identity were
 checked, but this contract never stores their values or any sensitive material.
 
-The program `runtime_executable` must name a supported interpreter; its image
+For a process, `runtime_executable` must name a supported interpreter; its image
 command begins with that interpreter and the exact entrypoint. A shell, echo,
 or an interpreter evaluation flag mentioning the entrypoint is not execution.
+
+A managed function uses `execution_kind: managed-handler`, `runtime_executable:
+node`, a compiled `.js`, `.cjs` or `.mjs` entrypoint and one `handler_export`
+identifier. Its image contract uses `command_mode: handler`; for
+`artifacts/worker.js` and export `handler`, the exact command is
+`[artifacts/worker.handler]`. The provider owns and proves the managed runtime
+bootstrap separately. This alternative does not turn process commands into
+handlers or permit shell syntax, extra tokens or undeclared exports.
 
 ## Declaration-derived workspace builds
 

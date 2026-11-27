@@ -1,0 +1,88 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.aws.shared-scheduling-network-template
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-27"
+#   updated_on: "2026-11-27"
+#   layer: 04.deploy
+#   domain: deployment.scheduling
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Declare one shared private SQS endpoint for the two independently isolated scheduling scopes.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: product.plan.reusable-aws-scheduling
+#     path: .agentic/03.product/plans/implementation/reusable-aws-scheduling.md
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Add one target-shared private SQS endpoint; no VPC, NAT, database, Scheduler endpoint or workload replacement.
+Parameters:
+  VpcId: { Type: 'AWS::EC2::VPC::Id' }
+  PrivateSubnetIds:
+    Type: 'List<AWS::EC2::Subnet::Id>'
+    Description: Exactly two approved existing private subnets in distinct availability zones; controller must validate the bounded cost and actual route.
+  LegacyWorkerSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  LegacyRelaySecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  LegacyWorkerQueueArn: { Type: String, AllowedPattern: '^arn:aws:sqs:eu-west-1:[0-9]{12}:kanbien-staging-platform-shell-worker$' }
+  LegacyRelationalQueueArn: { Type: String, AllowedPattern: '^arn:aws:sqs:eu-west-1:[0-9]{12}:kanbien-staging-platform-relational-smoke$' }
+  LegacyWorkerRoleArn: { Type: String, AllowedPattern: '^arn:aws:iam::[0-9]{12}:role/kanbien-staging-platform-shell-worker-task$' }
+  LegacyRelayRoleArn: { Type: String, AllowedPattern: '^arn:aws:iam::[0-9]{12}:role/kanbien-staging-platform-shell-relay-task$' }
+  LegacyRelationalWorkerRoleArn: { Type: String, AllowedPattern: '^arn:aws:iam::[0-9]{12}:role/kanbien-staging-platform-relational-worker-task$' }
+  LegacyRelationalRelayRoleArn: { Type: String, AllowedPattern: '^arn:aws:iam::[0-9]{12}:role/kanbien-staging-platform-relational-relay-task$' }
+Resources:
+  SchedulingEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private SQS only; preserve the existing staging worker and relay routes.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref LegacyWorkerSecurityGroupId }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref LegacyRelaySecurityGroupId }
+      SecurityGroupEgress:
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: '127.0.0.1/32' }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Capability, Value: scheduling }]
+  SchedulingSqsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VpcId
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.sqs'
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref PrivateSubnetIds
+      SecurityGroupIds: [!Ref SchedulingEndpointSecurityGroup]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: ['sqs:SendMessage', 'sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes', 'sqs:ChangeMessageVisibility']
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:kanbien-core-platform-core-server-persistence-scheduling'
+              - !Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:kanbien-core-platform-core-server-persistence-scheduling-dlq'
+              - !Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:kanbien-core-platform-entity-smoke-scheduling'
+              - !Sub 'arn:${AWS::Partition}:sqs:${AWS::Region}:${AWS::AccountId}:kanbien-core-platform-entity-smoke-scheduling-dlq'
+            Condition: { StringEquals: { 'aws:PrincipalAccount': !Ref 'AWS::AccountId' }, Bool: { 'aws:SecureTransport': 'true' } }
+          - Effect: Allow
+            Principal: '*'
+            Action: 'sqs:SendMessage'
+            Resource: !Ref LegacyWorkerQueueArn
+            Condition: { ArnEquals: { 'aws:PrincipalArn': !Ref LegacyRelayRoleArn }, StringEquals: { 'aws:PrincipalAccount': !Ref 'AWS::AccountId' }, Bool: { 'aws:SecureTransport': 'true' } }
+          - Effect: Allow
+            Principal: '*'
+            Action: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes', 'sqs:ChangeMessageVisibility']
+            Resource: !Ref LegacyWorkerQueueArn
+            Condition: { ArnEquals: { 'aws:PrincipalArn': !Ref LegacyWorkerRoleArn }, StringEquals: { 'aws:PrincipalAccount': !Ref 'AWS::AccountId' }, Bool: { 'aws:SecureTransport': 'true' } }
+          - Effect: Allow
+            Principal: '*'
+            Action: 'sqs:SendMessage'
+            Resource: !Ref LegacyRelationalQueueArn
+            Condition: { ArnEquals: { 'aws:PrincipalArn': !Ref LegacyRelationalRelayRoleArn }, StringEquals: { 'aws:PrincipalAccount': !Ref 'AWS::AccountId' }, Bool: { 'aws:SecureTransport': 'true' } }
+          - Effect: Allow
+            Principal: '*'
+            Action: ['sqs:ReceiveMessage', 'sqs:DeleteMessage', 'sqs:GetQueueAttributes', 'sqs:ChangeMessageVisibility']
+            Resource: !Ref LegacyRelationalQueueArn
+            Condition: { ArnEquals: { 'aws:PrincipalArn': !Ref LegacyRelationalWorkerRoleArn }, StringEquals: { 'aws:PrincipalAccount': !Ref 'AWS::AccountId' }, Bool: { 'aws:SecureTransport': 'true' } }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Capability, Value: scheduling }]
+Outputs:
+  SchedulingSqsEndpointId: { Value: !Ref SchedulingSqsEndpoint }
+  EndpointSecurityGroupId: { Value: !Ref SchedulingEndpointSecurityGroup }

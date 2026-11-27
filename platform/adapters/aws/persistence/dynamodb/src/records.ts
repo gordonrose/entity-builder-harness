@@ -33,6 +33,7 @@ import {
   platformPersistenceLease,
   platformPersistenceLeaseOwner,
   platformProcessingRecord,
+  decodePlatformProcessingRetryAt,
   type PlatformOutboxRecord,
   type PlatformProcessingRecord,
 } from "@kanbien/platform-persistence";
@@ -105,6 +106,7 @@ export function processingRecordToItem(record: PlatformProcessingRecord): Dynamo
     attempt: numberValue(record.attempt),
     ...(record.lease === undefined ? {} : leaseToItem(record.lease)),
     ...(record.releasedAt === undefined ? {} : { releasedAt: stringValue(record.releasedAt) }),
+    ...(record.retryAt === undefined ? {} : { retryAt: stringValue(record.retryAt) }),
     ...(record.completion === undefined ? {} : {
       completionOutcome: stringValue(record.completion.outcome),
       completedAt: stringValue(record.completion.completedAt),
@@ -177,6 +179,7 @@ export function itemToProcessingRecord(item: DynamoDbPersistenceItem, observatio
     attempt: requiredResult(platformPersistenceAttempt(requiredNumber(item, "attempt"))),
     ...(lease === undefined ? {} : { lease }),
     ...(optionalString(item, "releasedAt") === undefined ? {} : { releasedAt: requiredIso(item, "releasedAt") }),
+    ...(item.retryAt === undefined ? {} : { retryAt: decodePlatformProcessingRetryAt(item.retryAt.S) }),
     ...(completionOutcome === undefined ? {} : {
       completion: {
         outcome: requiredProcessingOutcome(completionOutcome),

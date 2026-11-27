@@ -6,8 +6,9 @@ the mutable mechanics that make retries safe: attempts, leases, fences, and
 terminal processing completion.
 
 This package does not select a database, queue, scheduler, cloud region, or
-application entity. The first provider implementation will live separately at
-`platform/adapters/aws/persistence/dynamodb/`.
+application entity. Provider implementations live separately in the
+[PostgreSQL](../adapters/aws/persistence/postgresql/README.md) and
+[DynamoDB](../adapters/aws/persistence/dynamodb/README.md) adapters.
 
 ## Source map
 
@@ -32,8 +33,13 @@ the existing combined catalogue remains available too.
 | `observability/index.ts` | Deliberate transition-observability exports. | A second package or target boundary. |
 | `types.ts` | Mutable outbox/processing record shapes, attempts, leases, fences, and safe constructors. | A database representation or target configuration. |
 | `scheduling.ts` | One-off reminder creation, due-row selection, and the one-time handoff from a due reminder to an outbox entry; plus a deterministic in-memory proof store. | Recurrence, timezone rules, choosing a job's message type, a running scheduler, queue sends, or job execution. |
+| `schedule-delivery.ts` | A bounded due pass with a stop check between reminders; unavailable jobs are retained as blocked records. | Queue sending, timers or interrupting an in-flight store call. |
+| `schedule-jobs.ts` | Maps selected public job registrations to declared message types and stable reminder-based outbox identities. | A global list of every app's jobs or automatic app mounting. |
+| `schedule-reference.ts` | Checks a received envelope against the scoped outbox and due reminder. | Choosing an application entity from queue data or applying its business rules. |
+| `schedule-dispatch.ts` | One due pass followed by a bounded number of existing relay attempts, including older waiting work. | Interrupting in-flight calls, automatic invocation, worker execution, AWS selection or calendar rules. |
 | `outbox.ts` | Pending-entry storage port, claim/lease/publish transitions, and deterministic in-memory proof store. | Queue sends; a relay calls a queue adapter after it claims an entry. |
 | `processing.ts` | Worker claim, release-for-retry, and completion transitions; duplicate recognition; and stale-fence rejection. | A job handler's business effect or queue acknowledgement. |
+| `processing-retry.ts` | Checks a persisted retry deadline and rejects malformed stored timing. | Deciding retry policy or starting a timer. |
 | `lineage.ts` | Append-oriented record-change storage port and deterministic in-memory proof store. | Full record snapshots, free-form metadata, or audit-event storage. |
 | `relay.ts` | One-entry outbox claiming, minimal queue-envelope creation, sending, and post-acceptance publication marking. | Queue receive, worker retry/DLQ policy, acknowledgement, target lifecycle, or provider APIs. |
 | `transaction.ts` | The atomic-write port and the validated state-change/lineage/outbox mutation envelope. | A pretend in-memory transaction or a provider-specific database transaction. |
@@ -55,7 +61,7 @@ the existing combined catalogue remains available too.
    cannot write after a later claimant because its older fence is rejected.
 
 An in-memory store proves those state rules locally. It is not durable and is
-not a substitute for the later adapter or AWS evidence.
+not a substitute for real database or AWS evidence.
 
 ## The relay boundary
 
@@ -69,8 +75,8 @@ which the worker's stable idempotency identity must tolerate.
 The relay does not receive messages, retry a job, dead-letter a job,
 acknowledge a provider delivery, emit worker telemetry, or manage worker
 shutdown. Those responsibilities remain with the existing worker and provider
-queue boundaries. The concrete queue sender and durable outbox store remain
-future adapter work.
+queue boundaries. Concrete sending and storage remain in the existing
+[SQS](../adapters/aws/queue/sqs/README.md) and persistence adapters.
 
 Relay boundary records distinguish raw throws from returned failures and retain
 the last observed send/publication milestone. A failed send leaves acceptance
@@ -80,6 +86,113 @@ Core type/version results. Optional direct queue-message diagnostic options and
 relay selected definitions preserve source primary/eight without replacing raw
 throws. Raw relay evidence uses the existing observer's `relay` operation;
 ordinary idle/contention remains free of failure diagnostics.
+
+## One bounded scheduling pass
+
+[createPlatformScheduleDispatcher](src/schedule-dispatch.ts) joins two existing
+operations. First, due delivery moves ready reminders into the **outbox**: the
+stored waiting list of work promised for delivery. Then the relay sends waiting
+work to the queue. It runs the relay even when no new reminders became due,
+so a previous failed send can be retried after its claim expires.
+
+The public exports are:
+
+| Export | Purpose |
+| --- | --- |
+| `createPlatformScheduleDispatcher` | Construct the caller-driven operation from existing due delivery and relay instances. |
+| `PlatformScheduleDispatcher` | The object exposing asynchronous `runOnce`. |
+| `PlatformScheduleDispatchOptions` | Select those two dependencies, a `maximumRelayAttempts` integer from 1 through 100, and optional diagnostic reporting. The checked attempt limit is captured once. |
+| `PlatformScheduleDispatchInvocation` | Optional synchronous `shouldContinue` checked before due selection, each reminder and each relay call. `shouldContinueDelivery` can stop the due phase earlier to reserve time for relay work. |
+| `PlatformScheduleDispatchRunResult` | Due-pass counts (or null if never started), relay-attempt and published counts, and the reason this call stopped. |
+
+For example, with already configured `delivery` and `relay` instances:
+
+```ts
+const dispatcher = createPlatformScheduleDispatcher({
+  delivery,
+  relay,
+  maximumRelayAttempts: 10,
+});
+const result = await dispatcher.runOnce();
+```
+
+Suppose one reminder is due. Its handover succeeds but queue sending fails.
+The result has one newly created delivery, one relay attempt, zero published,
+and `stopReason: "queue-send-failed"`. The existing relay leaves that outbox
+entry unpublished. After its lease expires, a later call can report zero new
+due reminders yet publish that same entry. The
+[connected runtime test](tests/integration/schedule-dispatch-runtime.test.ts)
+proves this using controlled stores and the actual due-delivery and relay code;
+it does not prove real database transactions or AWS delivery.
+
+`stopReason` distinguishes `requested-stop`, `attempt-limit`, `idle`,
+`contended`, `queue-send-failed` and `publish-marker-failed`. Only a
+`published` relay outcome increases the published count. A successful Result
+therefore does **not** mean all waiting work was sent. Idle means this relay
+call observed no eligible work, not that the whole database is empty.
+
+A returned dependency error or thrown value is preserved unchanged. Due-pass
+failure stops before relay; existing backlog then waits for a later successful
+pass. Prior writes are not undone, and failure Results do not include partial
+counters. Source diagnostics remain available alongside an optional independent
+dispatcher boundary record. The exported
+`persistenceScheduleDispatchConfigurationDiagnostic` and
+`persistenceScheduleDispatchBoundaryDiagnostic`, their `...Record` builders
+and `PersistenceScheduleDispatchConfigurationDetail` /
+`PersistenceScheduleDispatchBoundaryDetail` types define these safe, closed
+records. They contain logical conditions and observed call boundaries, not
+submitted values, job IDs or raw error text.
+
+There is **no automatic timer in this package**. The caller chooses when to
+invoke `runOnce`. `createPlatformScheduleDelivery` accepts `maximumSchedules`
+(1–100, default 100) and checks the stop callback between reminders. Stopping
+cannot interrupt a database or queue call already in progress. Target composition
+must still provide dependency timeouts and a function-time budget.
+
+### From a selected job to a checked delivery
+
+`createPlatformScheduleJobOutboxFactory` takes the registrations actually mounted
+in this runtime, a Core delivery-policy reference and a clock. Its
+`PlatformScheduleJobOutboxOptions` describes those inputs. A job's declared
+message type can differ from its name; the factory preserves that type and
+reuses the reminder UUID as the stable outbox ID. Repeated construction cannot
+invent a second work identity. An unavailable job returns `null`, causing the
+due pass to block the reminder instead of continually selecting it.
+
+`PlatformSchedule.subject` is an optional Core record reference: a kind and ID
+chosen by the job owner, not arbitrary arguments. The outbox points to the
+reminder; the reminder can point to an entity. A cleanup job must reject old
+subjectless reminders rather than treating them as permission to sweep all rows.
+
+```text
+selected app job → reminder → outbox → queue {outboxEntryId}
+                                ↑          │
+                     checked durable reads ← loadPlatformScheduleDelivery
+```
+
+`loadPlatformScheduleDelivery(message, options)` returns a Result containing the
+due reminder. `PlatformScheduleDeliveryReferenceOptions` supplies scoped
+`outbox`/`schedules` readers, the expected job/message type, one `asOf` timestamp
+and optional diagnostics. It checks identity, version, tenant, stored linkage
+and due time. Missing, early or mismatched references return
+`PLATFORM_PERSISTENCE_QUEUE_MAPPING_INVALID`; store throws remain unchanged.
+The job must still check its own subject, lifecycle and retention rules.
+
+`listDue` is normally read-only and fails closed on invalid data. The due runner
+explicitly passes `blockInvalid: true`. PostgreSQL locks at most that page,
+preserves invalid rows in `blocked-invalid-row`, commits their isolation and
+returns valid rows. Later passes can reach later work. `resumeBlocked` first
+revalidates a repaired row; an unrepaired row stays blocked. Unknown valid jobs
+use `blocked-job-unavailable`. These controls do not repair data, cancel already
+queued work or make a failed database call successful.
+
+The exported scheduling diagnostic definitions, `...Record` builders and
+`PersistenceSchedule...Detail` types cover configuration, due boundaries, job
+mapping, subjects, control rejection, stored control rows, delivery references
+and confirmed blocking. They contain finite conditions, not IDs or payloads.
+Historical definition versions remain. The [bounded-pass tests](tests/integration/schedule-delivery-bounds-runtime.test.ts)
+and [reference tests](tests/integration/schedule-reference-runtime.test.ts) exercise
+shared code; real-engine and AWS proof remain separate obligations.
 
 ## Transition observability
 
@@ -150,6 +263,14 @@ reclaim it; a final failure records `terminal-failure` before the worker
 reports dead-lettering. The concrete adapter still owns receipt handles and
 physical acknowledgement.
 
+Processing release can now persist `retryAt`. A claim before that timestamp
+returns `retry-not-due` without advancing the durable attempt. A restarted
+worker cannot forget the delay. `validatePlatformProcessingRetryAt` checks that
+the deadline is valid and not before release; `decodePlatformProcessingRetryAt`
+rejects malformed stored timing instead of treating it as immediate retry.
+Omission preserves existing immediate-release callers. The worker's checked
+policy chooses the delay; these helpers do not choose it or start a timer.
+
 ## The atomic-write seam
 
 The `PlatformPersistenceAtomicWriter` is a port for an adapter that can make a
@@ -164,7 +285,7 @@ identifier while the worker retrieves the durable work record by reference.
 There is deliberately no in-memory implementation of this port. The existing
 Core in-memory repository rejects a transaction handle because it cannot make
 that promise. A fake that silently writes outside the transaction would be a
-false proof of atomicity; the DynamoDB adapter must provide the real one.
+false proof of atomicity; the selected persistence adapter must provide the real one.
 
 ## Boundaries
 

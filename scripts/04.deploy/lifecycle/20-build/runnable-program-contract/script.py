@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.runnable-program-contract
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -129,6 +129,18 @@ def validate_programs(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
             raise ContractFailure("program-record-duplicate")
         if not isinstance(item.get("runtime_executable"), str) or item.get("runtime_executable") not in {"node", "python3", "ruby", "java"}:
             raise ContractFailure("program-runtime-unsupported")
+        execution = item.get("execution_kind", "process")
+        if execution not in ("process", "managed-handler"):
+            raise ContractFailure("program-execution-kind-invalid")
+        if execution == "managed-handler":
+            if (item["runtime_executable"] != "node"
+                    or not item["entrypoint"].endswith((".js", ".cjs", ".mjs"))
+                    or any(part in (".", "..") for part in item["entrypoint"].split("/"))
+                    or not isinstance(item.get("handler_export"), str)
+                    or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", item["handler_export"])):
+                raise ContractFailure("program-handler-invalid")
+        elif "handler_export" in item:
+            raise ContractFailure("program-handler-invalid")
         approved = item.get("approved_dependencies")
         observed = item.get("observed_dependencies")
         if not isinstance(approved, list) or not isinstance(observed, list):
@@ -164,7 +176,15 @@ def validate_images(document: dict[str, Any], programs: dict[str, dict[str, Any]
         program_id = item.get("program")
         if not is_id(program_id) or program_id not in programs:
             raise ContractFailure("program-record-missing")
-        if item.get("command_mode") != "exec" or not is_safe_command(item.get("command"), programs[program_id]["entrypoint"], programs[program_id]["runtime_executable"]):
+        program = programs[program_id]
+        if program.get("execution_kind", "process") == "managed-handler":
+            # A managed runtime selects exactly one exported function; it does
+            # not execute an arbitrary shell command or silently change a process.
+            handler = program["entrypoint"].rsplit(".", 1)[0] + "." + program["handler_export"]
+            valid_command = item.get("command_mode") == "handler" and item.get("command") == [handler]
+        else:
+            valid_command = item.get("command_mode") == "exec" and is_safe_command(item.get("command"), program["entrypoint"], program["runtime_executable"])
+        if not valid_command:
             raise ContractFailure("image-command-invalid")
         images[image_id] = item
     return images
@@ -245,6 +265,7 @@ def validate_declared_builds(document: dict[str, Any], contract: str, *, root: P
             raise ContractFailure('program-build-observation-unavailable') from None
         if result.returncode != 0:
             supported = {'program-build-binding-invalid', 'program-build-project-invalid',
+                         'program-build-entrypoint-invalid', 'program-build-execution-invalid', 'program-build-handler-invalid',
                          'program-build-dependency-not-approved', 'program-build-external-dependency-not-approved',
                          'workspace-dependency-not-approved', 'workspace-dependency-unresolved',
                          'workspace-export-source-missing', 'workspace-export-target-unsupported',

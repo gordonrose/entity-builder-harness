@@ -7,7 +7,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -454,10 +454,11 @@ def validate_change_shape(contract: dict[str, Any]) -> None:
         # to execute. The separately governed provider controller must establish
         # those facts before exposing its single-submission deletion capability.
         cleanup = shape["disposable_restore_cleanup"]
-        requirements = {"original_readback_required", "positive_ownership_required",
-                        "explicit_execution_approval_required", "preserve_source_and_shared_resources"}
+        common = {"positive_ownership_required", "explicit_execution_approval_required", "preserve_source_and_shared_resources"}
+        variants = (common | {"original_readback_required"},
+                    common | {"original_terminal_failure_required", "no_unresolved_dependents_required"})
         if (contract["schema"] != SERVICE_CONTRACT_SCHEMA or not isinstance(cleanup, dict)
-                or set(cleanup) != requirements or any(cleanup[key] is not True for key in requirements)
+                or set(cleanup) not in variants or any(value is not True for value in cleanup.values())
                 or allowed != {"delete"} or forbidden != {"create", "update", "replace", "broaden-permission"}):
             raise ContractFailure("change-shape-invalid")
     elif not allowed or allowed & forbidden or not {"delete", "replace", "broaden-permission"}.issubset(forbidden):

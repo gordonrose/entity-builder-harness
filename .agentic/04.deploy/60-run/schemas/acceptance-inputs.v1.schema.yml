@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -29,6 +29,7 @@ required_fields:
 - values
 optional_fields:
   release_mode: first-qualification or ordinary-update; absent means first-qualification.
+  qualification_profile: Explicit declared additional qualification; absent preserves the existing HTTP-only route. scheduling-a2-v1 requires the owning route's additional receipt and component-custody inputs and does not replace the primary HTTP image.
 values: exact keys and types from the owning acceptance route inputs (ordinary_update_inputs
   for an explicitly selected ordinary-update); references only,
   never secret values. An optional-path is explicitly null when the route is

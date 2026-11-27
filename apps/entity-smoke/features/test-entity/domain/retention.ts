@@ -9,8 +9,9 @@ export function testEntityRetentionSatisfied(entity: TestEntity, asOf: Date): bo
   return Date.parse(isoDateTimeFromDate(asOf)) > Date.parse(entity.lifecycle.deletedAt) + testEntityRetentionWindowMs;
 }
 
-/** The cleanup job is eligible one millisecond after the strict retention rule. */
+/** Both retention and recovery must expire before the single reminder can run. */
 export function testEntityExpiredPurgeDueAt(entity: TestEntity): Date | undefined {
   if (entity.lifecycle.state !== "deleted") return undefined;
-  return new Date(Date.parse(entity.lifecycle.deletedAt) + testEntityRetentionWindowMs + 1);
+  return new Date(Math.max(Date.parse(entity.lifecycle.deletedAt) + testEntityRetentionWindowMs,
+    Date.parse(entity.lifecycle.restoreEligibleUntil)) + 1);
 }

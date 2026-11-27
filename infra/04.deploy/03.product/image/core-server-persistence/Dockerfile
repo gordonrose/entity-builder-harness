@@ -5,7 +5,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -45,6 +45,7 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diag
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+COPY infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts ./infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json

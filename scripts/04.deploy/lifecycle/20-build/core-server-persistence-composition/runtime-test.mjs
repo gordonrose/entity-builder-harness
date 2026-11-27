@@ -5,7 +5,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-31"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -26,11 +26,23 @@
 import { request as httpRequest } from "node:http";
 import { deepEqual, equal, rejects, throws } from "node:assert/strict";
 import { join } from "node:path";
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { readProgramBuildInputs } from "../runnable-program-contract/build-inputs.mjs";
+import { planRuntimePackages, writeRuntimePackages } from "../../../../repo/workspace-build/runtime-packages.mjs";
 
 import { fixtureRuntime } from "./fixture-runtime.mjs";
 const buildOutput = fixtureRuntime(process.argv[2]);
 if (typeof buildOutput !== "string" || buildOutput.length === 0) {
   throw new Error("Usage: runtime-test.mjs <compiled-output-directory>");
+}
+
+if (process.argv[3] === "--scheduling") {
+  await proveSchedulingComposition();
+  console.log("Scheduler target controlled composition proof passed; no database or AWS state was contacted.");
+  process.exit(0);
 }
 
 const program = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.js")));
@@ -52,8 +64,443 @@ await proveHealthObservationSelection();
 await proveAcceptanceDiagnosticDelivery();
 await proveAcceptanceObserverIsolation();
 await proveAcceptanceRequestPredicates();
+await proveSchedulingSyntheticOperations();
 
 console.log("Core-server persistence composition local runtime proof passed.");
+
+async function proveSchedulingSyntheticOperations() {
+  const require = createRequire(join(buildOutput, "scheduling-proof-fixture.cjs"));
+  const source = name => require(join(buildOutput, "infra/04.deploy/03.product/entrypoints", name + ".js"));
+  const helper = source("shared/persistence/scheduling-administration"), config = source("shared/persistence/configuration");
+  const policy = source("kanbien-core-server-persistence-administration.main").kanbienCoreSchedulingDatabasePolicy("kanbienpersistence", "core_schema_migration", "core_runtime");
+  const { kanbienCoreScheduledProofJobName: jobName, kanbienCoreScheduledProofMessageType: messageType } = source("kanbien-core-server-persistence-scheduling.app");
+  const configuration = config.persistenceConfiguration({ PERSISTENCE_POSTGRES_HOST: "postgres", PERSISTENCE_POSTGRES_PORT: "5432", PERSISTENCE_POSTGRES_DATABASE: "kanbienpersistence",
+    PERSISTENCE_POSTGRES_SCHEMA: "platform", PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic" }, "administration");
+  const id = "a0b1c2d3-e4f5-4a67-8b90-123456789abc", other = "b0b1c2d3-e4f5-4a67-8b90-123456789abc", dueAt = "2026-11-27T12:00:00.000Z";
+  const native = Object.freeze(new Error("PRIVATE-PROOF-QUERY-CANARY"));
+  const lease = { lease_owner: null, lease_fence: null, lease_acquired_at: null, lease_expires_at: null };
+  function fixture() {
+    const state = { schedule: null, outbox: null, processing: null, inserted: 0, releases: 0, connected: 0, events: [], selection: null,
+      fail: undefined, releaseFailure: undefined, rollbackFailure: undefined };
+    const client = { async query(statement) {
+      state.events.push(statement);
+      const { text, values } = statement;
+      if (state.fail && state.fail(text)) throw native;
+      if (text === "ROLLBACK" && state.rollbackFailure) throw state.rollbackFailure;
+      if (/^(BEGIN|SET LOCAL|COMMIT|ROLLBACK)/.test(text)) return { rows: [] };
+      if (text === "SELECT clock_timestamp() AS observed_at") return { rows: [{ observed_at: new Date(dueAt) }] };
+      if (text.startsWith("SELECT id FROM")) {
+        deepEqual(values, ["entity-smoke.test-entity", other, ...(text.includes("due_at=$3") ? [dueAt] : [])]); equal(text.endsWith("LIMIT 2"), true);
+        return { rows: state.selection ?? [] };
+      }
+      if (text.startsWith("INSERT INTO")) {
+        state.inserted++; deepEqual(values, [id, jobName, dueAt, "waiting", null, null]);
+        state.schedule = { id, job_name: jobName, due_at: new Date(dueAt), state: "waiting", outbox_entry_id: null, subject_kind: null, subject_id: null };
+        return { rows: [state.schedule] };
+      }
+      deepEqual(values, [id], "every durable lookup must bind only the reserved ID");
+      if (text.includes('"platform_schedule"')) return { rows: state.schedule === null ? [] : [state.schedule] };
+      if (text.includes('"platform_outbox"')) return { rows: state.outbox === null ? [] : [state.outbox] };
+      if (text.includes('"platform_processing"')) return { rows: state.processing === null ? [] : [state.processing] };
+      throw new Error("unexpected synthetic proof SQL");
+    }, release() { state.releases++; if (state.releaseFailure) throw state.releaseFailure; } };
+    const pool = { query() { throw new Error("proof must use one transaction connection"); }, async connect() { state.connected++; return client; }, async end() {} };
+    return { state, client, options: { pool, configuration, policy, jobName, messageType } };
+  }
+  const f = fixture();
+  const seed = await helper.seedSchedulingProof({ ...f.options, id, dueAt });
+  deepEqual(seed, { schema: "kanbien/scheduling-proof-seed/v1", schedule_id: id, job_name: jobName, due_at: dueAt, disposition: "created" });
+  equal((await helper.seedSchedulingProof({ ...f.options, id, dueAt })).disposition, "already-exists"); equal(f.state.inserted, 1);
+  await rejects(() => helper.seedSchedulingProof({ ...f.options, id, dueAt: "2026-11-27T12:01:00.000Z" })); equal(f.state.inserted, 1, "different request cannot reuse an existing ID");
+  let application = { kind: "acceptance", present: false };
+  const observe = (overrides = {}) => helper.observeSchedulingProof({ ...f.options, selection: { kind: "schedule", id },
+    readApplication: async (client, selected) => { equal(client, f.client); equal(selected, id); return application; }, ...overrides });
+  let before = f.state.events.length;
+  const waiting = await observe(); equal(waiting.schedule.state, "waiting"); equal(waiting.outbox, null); equal(waiting.processing, null); equal(waiting.application.present, false);
+  equal(f.state.events[before].text, "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
+  equal(f.state.events.slice(before).some(({ text }) => /^(INSERT|UPDATE|DELETE|CREATE|ALTER|GRANT)/.test(text)), false);
+  f.state.schedule = { ...f.state.schedule, state: "delivery-created", outbox_entry_id: id };
+  f.state.outbox = { id, subject_kind: "platform.schedule", subject_id: id, message_type: messageType, message_version: 1, delivery_policy: "scheduling.standard",
+    created_at: new Date(dueAt), tenant_id: null, correlation_id: null, causation_id: null, state: "published", attempt: 1, ...lease, published_at: new Date(dueAt) };
+  f.state.processing = { outbox_entry_id: id, state: "completed", attempt: 1, ...lease, released_at: null, retry_at: null, completion_outcome: "succeeded", completed_at: new Date(dueAt) };
+  application = { kind: "acceptance", present: true, fact_digest: createHash("sha256").update(JSON.stringify([id, jobName, dueAt])).digest("hex") };
+  const completed = await observe(); equal(completed.outbox.state, "published"); equal(completed.processing.completion.outcome, "succeeded"); deepEqual(completed.application, application);
+  deepEqual(completed.delivery_message, { id, type: messageType, version: 1, enqueuedAt: dueAt, idempotencyKey: id, payload: { outboxEntryId: id } });
+  equal(waiting.delivery_message, null, "a missing outbox has no repeatable message");
+  f.state.outbox.subject_id = other;
+  await rejects(observe, error => error.message === "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED");
+  f.state.outbox.subject_id = id;
+  f.state.processing.completion_outcome = "terminal-failure";
+  equal((await observe()).processing.completion.outcome, "terminal-failure", "terminal failure is an observation, never relabelled successful");
+  f.state.outbox.attempt = -1;
+  await rejects(observe, error => error.diagnosticRecord?.code === "persistence.stored-record-observed", "invalid nullable reads must not be reported as physical absence");
+  f.state.outbox.attempt = 1;
+  const readFailure = Object.freeze({ code: "CONTROLLED_APPLICATION_READ_FAILURE" });
+  f.state.rollbackFailure = Object.freeze(new Error("PRIVATE-ROLLBACK-CANARY")); f.state.releaseFailure = Object.freeze(new Error("PRIVATE-RELEASE-CANARY"));
+  const observed = [];
+  await rejects(() => helper.observeSchedulingProof({ ...f.options, selection: { kind: "schedule", id }, readApplication: async () => { throw readFailure; } },
+    { onObservation: record => { observed.push(record); throw native; } }), error => error === readFailure);
+  equal(observed.some(record => record.detail.phase === "rollback"), true); equal(observed.some(record => record.detail.phase === "client-release"), true);
+  equal(JSON.stringify(observed).includes("PRIVATE-"), false); equal(f.state.inserted, 1);
+  for (const input of [undefined, 7, "PRIVATE-NOT-A-UUID"]) {
+    const invalid = fixture();
+    await rejects(() => helper.seedSchedulingProof({ ...invalid.options, id: input, dueAt })); equal(invalid.state.connected, 0);
+  }
+  for (const input of [undefined, {}, "PRIVATE-NOT-A-TIME"]) {
+    const invalid = fixture();
+    await rejects(() => helper.seedSchedulingProof({ ...invalid.options, id, dueAt: input })); equal(invalid.state.connected, 0);
+  }
+  const subject = fixture(); subject.state.selection = [{ id }, { id: other }];
+  const subjectObserve = () => helper.observeSchedulingProof({ ...subject.options, selection: { kind: "subject", id: other, dueAt, subjectKind: "entity-smoke.test-entity" },
+    readApplication: async () => ({ kind: "entity", present: false }) });
+  await rejects(subjectObserve, error => error.message === "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED");
+  subject.state.selection = [];
+  const absent = await subjectObserve(); deepEqual(absent.selection, { kind: "subject", id: other, due_at: dueAt }); equal(absent.schedule, null); equal(absent.application.present, false);
+  const untouched = () => helper.observeSchedulingProof({ ...subject.options, selection: { kind: "subject", id: other, subjectKind: "entity-smoke.test-entity" },
+    readApplication: async () => ({ kind: "entity", present: true, visibility: "active", lifecycle_state: "active" }) });
+  const control = await untouched(); deepEqual(control.selection, { kind: "subject", id: other }); equal(control.schedule, null); equal(control.application.present, true);
+  const selectionQuery = subject.state.events.filter(({ text }) => text.startsWith("SELECT id FROM")).at(-1);
+  deepEqual(selectionQuery.values, ["entity-smoke.test-entity", other]); equal(selectionQuery.text.includes("due_at"), false);
+  subject.state.selection = [{ id }];
+  await rejects(untouched, error => error.message === "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "an unexpected reminder is not ignored");
+  equal(subject.state.events.some(({ text }) => /^(INSERT|UPDATE|DELETE)/.test(text)), false);
+}
+
+async function proveSchedulingComposition() {
+  const selected = readProgramBuildInputs(process.cwd(), { programId: "kanbien-core-server-persistence-scheduling-worker" });
+  writeRuntimePackages(planRuntimePackages({ compiledRoot: buildOutput, assetRoot: process.cwd(), packages: selected.inputs.packages }));
+  const require = createRequire(join(buildOutput, "scheduler-fixture.cjs"));
+  const source = name => require(join(buildOutput, "infra/04.deploy/03.product/entrypoints", name + ".js"));
+  const { schedulingConfiguration } = source("shared/scheduling/configuration");
+  const { createSchedulingTargetHandler } = source("shared/scheduling/invocation");
+  const { createSchedulingComposition, schedulingRuntimeBudgets } = source("shared/scheduling/composition");
+  const proof = source("kanbien-core-server-persistence-scheduling.app");
+  const { kanbienCoreAcceptanceDiagnosticCatalog } = source("kanbien-core-server-persistence-diagnostics");
+  equal(typeof source("kanbien-core-server-persistence-scheduling-worker.handler").handler, "function");
+  const shared = require("@kanbien/core/shared"), persistence = require("@kanbien/platform-persistence");
+  const canary = "PRIVATE-SCHEDULER-TARGET-DO-NOT-REPORT";
+  const raw = Object.freeze(new Error(canary));
+  const certificate = readFileSync("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt", "utf8");
+  const scope = { schema: "platform", dispatchUsername: "core_scheduling_dispatch", workerUsername: "core_scheduling_worker" };
+  const env = { PERSISTENCE_POSTGRES_HOST: "postgres", PERSISTENCE_POSTGRES_PORT: "5432", PERSISTENCE_POSTGRES_DATABASE: "kanbienpersistence",
+    PERSISTENCE_POSTGRES_SCHEMA: "platform", PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-1", AWS_REGION: "eu-west-1",
+    PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: "arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-ABCDEFGHIJKLMNOP/core_scheduling_worker",
+    PERSISTENCE_SCHEDULING_DATABASE_USERNAME: "core_scheduling_worker", PERSISTENCE_POSTGRES_CA_PATH: "/app/assets/fixture.crt",
+    SCHEDULING_QUEUE_URL: "https://sqs.eu-west-1.amazonaws.com/123456789012/scheduler-proof",
+    SCHEDULING_QUEUE_ARN: "arn:aws:sqs:eu-west-1:123456789012:scheduler-proof" };
+  const checked = schedulingConfiguration(env, scope, "worker", () => certificate);
+  equal(checked.persistence.maximumPoolSize, 1);
+  equal(checked.persistence.connectionTimeoutMs, 5000);
+  equal(checked.persistence.statementTimeoutMs, 3000);
+  // Source-owned PG constructors are independently tested to bind query_timeout
+  // to statementTimeoutMs + 1000ms. At most eight worker queries include
+  // completion reconciliation; handler failure can require a reconnect before
+  // release and one bounded visibility change. This is a modeled dependency
+  // bound, not a claim about arbitrary code or a hard AWS network SLA.
+  const queryDeadline = checked.persistence.statementTimeoutMs + 1000;
+  equal(8 * queryDeadline + checked.persistence.connectionTimeoutMs < schedulingRuntimeBudgets.workerMinimumRemainingMs, true);
+  equal(7 * queryDeadline + 2 * checked.persistence.connectionTimeoutMs + schedulingRuntimeBudgets.queueRequestTimeoutMs
+    < schedulingRuntimeBudgets.workerMinimumRemainingMs, true);
+  equal(checked.credentials.username, scope.workerUsername);
+  // A relay can perform four PG calls including publication reconciliation,
+  // one SQS send and one reconnect. Its reserve is independent of due scanning.
+  equal(4 * queryDeadline + 2 * checked.persistence.connectionTimeoutMs + schedulingRuntimeBudgets.queueRequestTimeoutMs
+    < schedulingRuntimeBudgets.dispatchMinimumRemainingMs, true);
+  equal(6 * queryDeadline + checked.persistence.connectionTimeoutMs < schedulingRuntimeBudgets.dueMinimumRemainingMs, true);
+  equal(checked.credentials.region, checked.queue.region);
+  let regionReads = 0;
+  const regionSource = { ...env };
+  Object.defineProperty(regionSource, "PERSISTENCE_POSTGRES_IAM_REGION", { get() { regionReads++; return "eu-west-1"; } });
+  equal(schedulingConfiguration(regionSource, scope, "worker", () => certificate).credentials.region, "eu-west-1");
+  equal(regionReads, 2, "the existing persistence/IAM owners each snapshot once; relationship validation adds no raw source read");
+  const invalid = [
+    { SCHEDULING_QUEUE_URL: undefined }, { SCHEDULING_QUEUE_ARN: "bad-" + canary },
+    { SCHEDULING_QUEUE_ARN: "arn:aws:sqs:eu-west-2:123456789012:scheduler-proof" },
+    { SCHEDULING_QUEUE_URL: "https://sqs.eu-west-1.amazonaws.com/123456789012/other-scope" },
+    { PERSISTENCE_POSTGRES_SCHEMA: "entity_smoke" }, { PERSISTENCE_SCHEDULING_DATABASE_USERNAME: "core_runtime" },
+    { PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: env.PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE.replace("core_scheduling_worker", "core_scheduling_dispatch") },
+    { PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-2" },
+  ];
+  let milliseconds = Date.parse("2026-11-27T00:00:00.000Z");
+  const clock = { now: () => new Date(milliseconds) };
+  const ids = { generate: () => shared.uuid("ab583987-27e9-42df-a592-0356205f6fc8") };
+  const logs = [];
+  const app = resources => proof.createKanbienCoreServerSchedulingApp({ ...resources, persistence: { async createAcceptanceRecord() { return "created"; } } });
+  const binding = { ...scope, purpose: "worker", appDiagnosticCatalogs: [kanbienCoreAcceptanceDiagnosticCatalog], createApp: app };
+  const fullTime = { getRemainingTimeInMillis: () => 60_000 };
+  for (const mutation of invalid) {
+    let resources = 0;
+    const handler = createSchedulingTargetHandler(binding, { env: { ...env, ...mutation }, clock, uuidGenerator: ids,
+      logger: { write: record => { logs.push(record); } }, readCertificate: () => certificate,
+      createPool() { resources++; throw raw; }, createClient() { resources++; throw raw; } });
+    await rejects(() => handler({ Records: [] }, fullTime), error => error.message === "SCHEDULING_INVOCATION_FAILED" && error.cause === undefined);
+    equal(resources, 0, "invalid scope/identity/queue bindings must fail before constructing either client");
+  }
+  equal(JSON.stringify(logs).includes(canary), false);
+  for (const failure of ["client", "close", "none"]) {
+    let poolEnds = 0, clientEnds = 0, queries = 0;
+    const pool = { async query() { queries++; throw raw; }, async connect() { queries++; throw raw; }, async end() { poolEnds++; if (failure === "close") throw raw; } };
+    const handler = createSchedulingTargetHandler({ ...binding, createApp(resources) {
+      return { ...app(resources), lifecycle: { beforeStop: resources.close } };
+    } }, { env, clock, uuidGenerator: ids,
+      logger: { write: record => { logs.push(record); } }, readCertificate: () => certificate, createPool: () => pool,
+      createClient() { if (failure === "client") throw raw; return { async send() { throw raw; }, destroy() { clientEnds++; } }; } });
+    if (failure === "client") await rejects(() => handler({ Records: [] }, fullTime), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+    else deepEqual(await handler({ Records: [] }, fullTime), { batchItemFailures: [] });
+    equal(poolEnds, 1, `every created pool closes once (${failure}); selected diagnostics: ${logs.map(record => record.fields?.diagnostic?.code).join(",")}`);
+    equal(clientEnds, failure === "client" ? 0 : 1);
+    equal(queries, 0, "empty managed batches never access persistence");
+  }
+  const failedSource = { ...env };
+  Object.defineProperty(failedSource, "PERSISTENCE_POSTGRES_HOST", { get() { throw raw; } });
+  for (const write of [() => { throw raw; }, () => Promise.reject(raw)]) {
+    const handler = createSchedulingTargetHandler(binding, { env: failedSource, clock, logger: { write } });
+    await rejects(() => handler({}, fullTime), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+  }
+  await new Promise(resolve => setImmediate(resolve));
+  equal(JSON.stringify(logs).includes(canary), false, "neither selected source reports nor outer errors expose provider strings");
+  let rejectedPoolEnds = 0, rejectedClientEnds = 0;
+  const failingDispatch = createSchedulingTargetHandler({ ...binding, purpose: "dispatch" }, {
+    env: { ...env, PLATFORM_SOURCE_COMMIT_SHA: "a".repeat(40), PERSISTENCE_SCHEDULING_DATABASE_USERNAME: scope.dispatchUsername,
+      PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: env.PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE.replace(scope.workerUsername, scope.dispatchUsername) },
+    clock, uuidGenerator: ids, logger: { write: record => { logs.push(record); } }, readCertificate: () => certificate,
+    createPool: () => ({ async query() { throw raw; }, async connect() { throw raw; }, async end() { rejectedPoolEnds++; } }),
+    createClient: () => ({ async send() { throw raw; }, destroy() { rejectedClientEnds++; } }),
+  });
+  await rejects(() => failingDispatch({}, fullTime), error => error.message === "SCHEDULING_INVOCATION_FAILED" && error.cause === undefined);
+  equal(rejectedPoolEnds, 1); equal(rejectedClientEnds, 1);
+  const reservedContext = { ...fullTime, awsRequestId: "f85b1263-0d22-44a8-8fa1-77485af9d875",
+    invokedFunctionArn: "arn:aws:lambda:eu-west-1:123456789012:function:scheduler-proof:1",
+    clientContext: { custom: { scheduling_proof_operation_id: "c1c6c162-c9c8-4a2f-9ef9-158d8ce66f1f" } } };
+  await rejects(() => failingDispatch({}, reservedContext), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+  const startMarkers = logs.flatMap(record => record.fields?.scheduling_invocation ?? []);
+  deepEqual(startMarkers, [{ schema: "kanbien/scheduling-proof-invocation/v1",
+    operation_id: reservedContext.clientContext.custom.scheduling_proof_operation_id,
+    request_id: reservedContext.awsRequestId, function_arn: reservedContext.invokedFunctionArn,
+    source_revision: "a".repeat(40), checked_at: clock.now().toISOString() }]);
+  equal(logs.some(record => record.fields?.scheduling_runtime?.kind === "dispatch-completed"), false,
+    "a start marker must never claim failed dispatch work completed");
+  const hostileContext = { ...reservedContext };
+  Object.defineProperty(hostileContext, "clientContext", { get() { throw raw; } });
+  await rejects(() => failingDispatch({}, hostileContext), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+  equal(rejectedPoolEnds, 3); equal(rejectedClientEnds, 3,
+    "optional marker metadata cannot prevent or repeat normal invocation resources");
+  equal(logs.filter(record => record.fields?.scheduling_invocation).length, 1);
+  equal(JSON.stringify(logs).includes(canary), false);
+  const badCatalog = createSchedulingTargetHandler({ ...binding, appDiagnosticCatalogs: [kanbienCoreAcceptanceDiagnosticCatalog, kanbienCoreAcceptanceDiagnosticCatalog] }, {
+    env, clock, logger: { write: record => { logs.push(record); } }, createPool() { throw new Error("invalid catalog constructed a pool"); },
+  });
+  await rejects(() => badCatalog({}, fullTime), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+  equal(logs.some(record => record.fields?.diagnostic?.code === "scheduling-target.invocation-failed"), true);
+
+  // The same deployed entrypoint can prove connectivity without composing an
+  // application, inspecting business rows, or writing scheduler work.
+  const preflightContext = { ...fullTime, awsRequestId: "f85b1263-0d22-44a8-8fa1-77485af9d875",
+    invokedFunctionArn: "arn:aws:lambda:eu-west-1:123456789012:function:scheduler-proof:1",
+    clientContext: { custom: { scheduling_preflight_operation_id: "c1c6c162-c9c8-4a2f-9ef9-158d8ce66f1f" } } };
+  const preflightEvent = { kind: "scheduling-preflight/v1" };
+  for (const purpose of ["dispatch", "worker"]) {
+    for (const failure of ["none", "identity", "privileges", "connect", "query", "rollback", "dns", "queue", "end", "destroy"]) {
+      if (purpose === "dispatch" && ["dns", "queue", "destroy"].includes(failure)) continue;
+      const statements = [], commands = [], observed = [];
+      let ends = 0, releases = 0, destroys = 0, clients = 0, apps = 0;
+      const username = purpose === "dispatch" ? scope.dispatchUsername : scope.workerUsername;
+      const selectedEnv = { ...env, PLATFORM_SOURCE_COMMIT_SHA: "a".repeat(40),
+        PERSISTENCE_SCHEDULING_DATABASE_USERNAME: username,
+        PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: env.PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE.replace(scope.workerUsername, username) };
+      const handler = createSchedulingTargetHandler({ ...binding, purpose, createApp() { apps++; throw raw; } }, {
+        env: selectedEnv, clock, logger: { write: record => observed.push(record) }, readCertificate: () => certificate,
+        createPool: () => ({ async query() { throw raw; }, async connect() {
+          if (failure === "connect") throw raw;
+          return { async query(statement) {
+            statements.push(statement);
+            if (statement.text.startsWith("SELECT")) {
+              if (failure === "query") throw raw;
+              return { rows: [{ username: failure === "identity" ? "unexpected" : username, session_username: username,
+                database: "kanbienpersistence", allowed: failure !== "privileges" }] };
+            }
+            if (statement.text === "ROLLBACK" && failure === "rollback") throw raw;
+            return { rows: [] };
+          }, release() { releases++; } };
+        }, async end() { ends++; if (failure === "end") throw raw; } }),
+        resolveQueueAddresses: async hostname => { equal(hostname, "sqs.eu-west-1.amazonaws.com");
+          if (failure === "dns") return ["invalid-" + canary];
+          return ["10.1.2.4", "10.1.2.3", "10.1.2.4"]; },
+        createClient() { clients++; return { async send(command) {
+          commands.push(command); return { Attributes: { QueueArn: failure === "queue" ? "wrong-" + canary : env.SCHEDULING_QUEUE_ARN } };
+        }, destroy() { destroys++; if (failure === "destroy") throw raw; } }; },
+      });
+      if (failure === "none") {
+        const result = await handler(preflightEvent, preflightContext);
+        deepEqual(result, { schema: "kanbien/scheduling-runtime-preflight/v1", purpose,
+          operation_id: preflightContext.clientContext.custom.scheduling_preflight_operation_id,
+          source_revision: selectedEnv.PLATFORM_SOURCE_COMMIT_SHA, request_id: preflightContext.awsRequestId,
+          function_arn: preflightContext.invokedFunctionArn, checked_at: clock.now().toISOString(),
+          database: { name: "kanbienpersistence", schema: "platform", username },
+          queue: purpose === "dispatch" ? null : { arn: env.SCHEDULING_QUEUE_ARN, address_count: 2,
+            address_sha256: createHash("sha256").update(JSON.stringify(["10.1.2.3", "10.1.2.4"])).digest("hex") } });
+        equal(JSON.stringify(result).includes("10.1.2."), false);
+        deepEqual(observed.filter(record => record.fields?.scheduling_preflight).map(record => record.fields.scheduling_preflight), [result],
+          "one selected log receipt retains original operation/request correlation");
+      } else {
+        await rejects(() => handler(preflightEvent, preflightContext), error => error.message === "SCHEDULING_INVOCATION_FAILED" && error.cause === undefined);
+        const expectedCheck = { identity: "database-user", privileges: "database-privileges", connect: "database-connection",
+          query: "database-identity", rollback: "database-rollback", dns: "queue-dns", queue: "queue-identity", end: "cleanup", destroy: "cleanup" }[failure];
+        equal(observed.some(record => record.fields?.diagnostic?.code === "scheduling-target.preflight-failed"
+          && record.fields.diagnostic.detail.check === expectedCheck), true, failure);
+      }
+      equal(apps, 0); equal(ends, 1); equal(releases, failure === "connect" ? 0 : 1);
+      equal(clients, destroys); if (purpose === "dispatch") equal(clients, 0, "dispatch preflight needs no queue permission");
+      equal(statements.every(statement => ["BEGIN READ ONLY", "ROLLBACK"].includes(statement.text)
+        || statement.text.startsWith("SELECT current_user")), true, "only bounded read-only statements execute");
+      equal(commands.every(command => command.constructor.name === "GetQueueAttributesCommand"
+        && command.input.QueueUrl === env.SCHEDULING_QUEUE_URL && command.input.AttributeNames.join() === "QueueArn"), true);
+      equal(JSON.stringify(observed).includes(canary), false);
+    }
+  }
+  for (const [event, context] of [
+    [{ kind: "other" }, preflightContext], [{ kind: "scheduling-preflight/v1", private: canary }, preflightContext],
+    [preflightEvent, { ...preflightContext, getRemainingTimeInMillis: () => 30_000 }],
+    [preflightEvent, { ...preflightContext, invokedFunctionArn: preflightContext.invokedFunctionArn.replace(":1", ":$LATEST") }],
+    [preflightEvent, { ...preflightContext, clientContext: undefined }],
+  ]) {
+    let resources = 0;
+    const handler = createSchedulingTargetHandler(binding, { env: { ...env, PLATFORM_SOURCE_COMMIT_SHA: "a".repeat(40) },
+      clock, logger: { write: record => logs.push(record) }, readCertificate: () => certificate,
+      createPool() { resources++; throw raw; }, createClient() { resources++; throw raw; } });
+    await rejects(() => handler(event, context), error => error.message === "SCHEDULING_INVOCATION_FAILED");
+    equal(resources, 0);
+  }
+
+  // This single-process fixture connects public capabilities, not database atomicity.
+  const outbox = persistence.createInMemoryPlatformOutboxStore();
+  const memorySchedules = persistence.createInMemoryPlatformScheduleStore();
+  const schedules = { ...memorySchedules, async handoverDue(input) {
+    const result = await memorySchedules.handoverDue(input);
+    if (result.ok && result.value.disposition === "outbox-created") required(await outbox.create(input.outboxEntry));
+    return result;
+  } };
+  const processing = persistence.createInMemoryPlatformProcessingStore();
+  const sent = [], visibility = [], reports = [], runtimeLogs = [];
+  let sendFails = true, effects = 0, proofFails = false, logFails = false;
+  const observationIdentity = { source_revision: "a".repeat(40), request_id: preflightContext.awsRequestId,
+    function_arn: preflightContext.invokedFunctionArn };
+  const client = { async send(command) {
+    if (command.constructor.name === "SendMessageCommand") { if (sendFails) throw raw; sent.push(command.input.MessageBody); return {}; }
+    if (command.constructor.name === "ChangeMessageVisibilityCommand") { visibility.push(command.input); return {}; }
+    throw new Error("Managed worker must not receive or delete queue messages directly.");
+  } };
+  const resources = { configuration: checked, pool: { async end() {} }, clock, uuidGenerator: ids, outbox, schedules, processing, client,
+    close: async () => undefined, observationIdentity,
+    logger: { write(record) { if (logFails) throw raw; runtimeLogs.push(record); } },
+    reporter: { report(record) { reports.push(record); return { status: "written" }; } },
+    extraCatalogs: [persistence.platformPersistenceDiagnosticCatalog], diagnosticDefinitions: [...persistence.platformPersistenceDiagnosticCatalog.definitions,
+      ...kanbienCoreAcceptanceDiagnosticCatalog.definitions] };
+  const application = proof.createKanbienCoreServerSchedulingApp({ ...resources, persistence: { async createAcceptanceRecord() {
+    effects++; return proofFails ? "unavailable" : "created";
+  } } });
+  const lifecycleWorker = required(await require("@kanbien/platform-workers").createPlatformWorkerShell({
+    apps: [{ ...application, lifecycle: { beforeStart() {}, beforeStop() {} } }],
+    deps: { ...require("@kanbien/platform-runtime").createPlatformRuntimeContextDeps({ clock }), diagnostics: resources.reporter },
+  }));
+  required(await lifecycleWorker.start()); required(await lifecycleWorker.shutdown());
+  equal(lifecycleWorker.lifecycle.events().every(event => event.at === clock.now().toISOString()), true,
+    "worker lifecycle timestamps use the same injected clock as its durable processing");
+  const schedule = required(persistence.createPlatformSchedule({ jobName: proof.kanbienCoreScheduledProofJobName, dueAt: clock.now().toISOString() }, ids));
+  required(await schedules.create(schedule));
+  const dispatch = await createSchedulingComposition({ ...resources, app: application, purpose: "dispatch" });
+  await rejects(() => dispatch.run({ ignored: canary }, fullTime), error => error.diagnosticRecord.code === "aws-lambda.dispatch-outcome-failed");
+  equal(runtimeLogs.length, 0, "failed relay is not logged as a completed dispatch");
+  equal((await schedules.get(schedule.id)).state, "delivery-created");
+  equal(sent.length, 0);
+  sendFails = false; milliseconds += 90_001;
+  const later = await dispatch.run({}, fullTime);
+  equal(later.delivery.inspected, 0); equal(later.published, 1, "an idle due scan still relays old backlog");
+  deepEqual(runtimeLogs[0].fields.scheduling_runtime, { schema: "kanbien/scheduling-runtime-observation/v1",
+    ...observationIdentity, purpose: "dispatch", observed_at: clock.now().toISOString(), kind: "dispatch-completed", result: later, trigger: null });
+  const trigger = { schedule_arn: "arn:aws:scheduler:eu-west-1:123456789012:schedule/proof/due-pass",
+    scheduled_at: clock.now().toISOString(), execution_id: "opaque/aws:scheduler=execution", attempt: "1" };
+  await dispatch.run({ scheduler: trigger }, fullTime);
+  deepEqual(runtimeLogs.at(-1).fields.scheduling_runtime.trigger, { schedule_arn: trigger.schedule_arn, scheduled_at: trigger.scheduled_at,
+    execution_sha256: createHash("sha256").update(trigger.execution_id).digest("hex"), attempt: 1 });
+  const unsafeTrigger = {}; Object.defineProperty(unsafeTrigger, "scheduler", { enumerable: true, get() { throw raw; } });
+  await dispatch.run(unsafeTrigger, fullTime);
+  equal(runtimeLogs.at(-1).fields.scheduling_runtime.trigger, null, "malformed event metadata cannot prevent a due pass");
+  equal(JSON.stringify(runtimeLogs).includes(trigger.execution_id), false);
+  equal(sent.length, 1);
+  const native = body => ({ Records: [{ eventSource: "aws:sqs", eventSourceARN: env.SCHEDULING_QUEUE_ARN,
+    messageId: "native-id", receiptHandle: "fixture-receipt", body }] });
+  const worker = await createSchedulingComposition({ ...resources, app: application, purpose: "worker" });
+  deepEqual(await worker.run(native(sent[0]), { getRemainingTimeInMillis: () => 44_999 }), { batchItemFailures: [{ itemIdentifier: "native-id" }] });
+  equal(effects, 0); equal(await processing.get(schedule.id), null);
+  await worker.close();
+  const deliver = async body => { const next = await createSchedulingComposition({ ...resources, app: application, purpose: "worker" });
+    try { return await next.run(native(body), fullTime); } finally { await next.close(); } };
+  deepEqual(await deliver(sent[0]), { batchItemFailures: [] });
+  equal(effects, 1); equal((await processing.get(schedule.id)).completion.outcome, "succeeded");
+  deepEqual(await deliver(sent[0]), { batchItemFailures: [] }); equal(effects, 1, "new invocation suppresses duplicate completed work");
+  const deliveredLogs = runtimeLogs.map(row => row.fields?.scheduling_runtime).filter(row => row?.kind === "delivery-completed");
+  deepEqual(deliveredLogs.map(row => [row.outbox_sha256, row.attempt, row.idempotency]), [
+    [createHash("sha256").update(schedule.id).digest("hex"), 1, "durable-processed"],
+    [createHash("sha256").update(schedule.id).digest("hex"), 1, "durable-skipped"],
+  ]);
+  equal(JSON.stringify(runtimeLogs).includes(schedule.id), false, "no raw outbox identity leaves runtime evidence");
+  logFails = true;
+  deepEqual(await deliver(sent[0]), { batchItemFailures: [] }); equal(effects, 1, "logger failure cannot replay completed work");
+  logFails = false;
+  const withoutMetadata = await createSchedulingComposition({ ...resources, observationIdentity: undefined, app: application, purpose: "worker" });
+  const beforeMissingMetadata = runtimeLogs.filter(row => row.fields?.scheduling_runtime).length;
+  deepEqual(await withoutMetadata.run(native(sent[0]), fullTime), { batchItemFailures: [] });
+  await withoutMetadata.close();
+  equal(runtimeLogs.filter(row => row.fields?.scheduling_runtime).length, beforeMissingMetadata, "missing real invocation metadata omits evidence, not execution");
+  const wrongSource = native(sent[0]); wrongSource.Records[0].eventSourceARN += "-other";
+  const guarded = await createSchedulingComposition({ ...resources, app: application, purpose: "worker" });
+  await rejects(() => guarded.run(wrongSource, fullTime)); await guarded.close(); equal(effects, 1);
+
+  const nextIds = { generate: () => shared.uuid("7bd34f60-9fbe-42c9-8ea9-dd5df2775ba6") };
+  const retrySchedule = required(persistence.createPlatformSchedule({ jobName: proof.kanbienCoreScheduledProofJobName, dueAt: clock.now().toISOString() }, nextIds));
+  required(await schedules.create(retrySchedule)); await dispatch.run({}, fullTime); proofFails = true;
+  const retryBody = sent[1];
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    deepEqual(await deliver(retryBody), { batchItemFailures: [{ itemIdentifier: "native-id" }] });
+    const state = await processing.get(retrySchedule.id); equal(state.attempt, attempt);
+    if (attempt < 3) { equal(state.state, "retry-eligible"); equal(Date.parse(state.retryAt), milliseconds + 5000); }
+    else equal(state.completion.outcome, "terminal-failure");
+    milliseconds += 5000;
+  }
+  equal(visibility.length, 2); equal(visibility.every(value => value.VisibilityTimeout === 5), true);
+  const beforeTerminal = effects; deepEqual(await deliver(retryBody), { batchItemFailures: [{ itemIdentifier: "native-id" }] });
+  equal(effects, beforeTerminal, "terminal work remains unacknowledged for native redrive without executing again");
+  equal(JSON.stringify(reports).includes(canary), false);
+  equal(runtimeLogs.filter(row => row.fields?.scheduling_runtime?.kind === "delivery-completed").length, 2,
+    "failed and terminal work is never logged as successful delivery");
+  equal(JSON.stringify(runtimeLogs).includes(canary), false);
+  // Feed actual target-composition log projections through the provider proof
+  // reader, rather than keeping a second hand-written DTO fixture in Python.
+  // Only AWS transport/system messages are controlled in this handoff test.
+  const runtimeObservations = runtimeLogs.map(row => row.fields?.scheduling_runtime).filter(Boolean);
+  const readback = execFileSync("python3", ["-B", "-c", `
+import importlib.util,json,sys
+from datetime import datetime,timedelta
+spec=importlib.util.spec_from_file_location("runtime_proof","scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/proof.py")
+owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
+rows=json.load(sys.stdin)
+for body in rows:
+ at=datetime.fromisoformat(body["observed_at"].replace("Z","+00:00")); stamp=int(at.timestamp()*1000)
+ messages=[{"type":"platform.start","record":{"requestId":body["request_id"],"version":body["function_arn"].rsplit(":",1)[1]}},
+  {"level":"info","message":"Scheduling runtime observation.","fields":{"scheduling_runtime":body}},
+  {"type":"platform.report","record":{"requestId":body["request_id"],"status":"success","metrics":{"billedDurationMs":1000,"memorySizeMB":512}}}]
+ function,version=body["function_arn"].rsplit(":",2)[1:]
+ stream=f"{at:%Y/%m/%d}/{function}[{version}][controlled-runtime-handoff]"
+ events=[{"eventId":str(i),"logStreamName":stream,"timestamp":stamp+i-1,"message":json.dumps(value)} for i,value in enumerate(messages)]
+ expected={"purpose":body["purpose"],"source_revision":body["source_revision"],"version_arn":body["function_arn"],"image_uri":"controlled","log_group":"controlled"}
+ result=owner.runtime_records(events,expected=expected,started_at=(at-timedelta(seconds=1)).isoformat().replace("+00:00","Z"),ended_at=(at+timedelta(seconds=1)).isoformat().replace("+00:00","Z"))
+ assert result[0]["observation"]==body
+print(len(rows))
+`], { input: JSON.stringify(runtimeObservations), encoding: "utf8", timeout: 10_000 });
+  equal(Number(readback.trim()), runtimeObservations.length);
+  function required(result) { if (!result.ok) throw result.error; return result.value; }
+}
 
 async function proveAcceptanceRequestPredicates() {
   const routes = [], catalogs = [];

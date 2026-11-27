@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 42
+#   version: 45
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -828,6 +828,7 @@ checks:
     scope_inputs: false
     # Catalog compilation consumes target configuration and its package imports.
     inputs:
+    - scripts/04.deploy/shared/scheduling-database-state.py
     - scripts/repo/workspace-build
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
@@ -930,6 +931,15 @@ checks:
     runtime:
       <<: *package_runtime
       node_packages: [typescript, '@types/node', '@aws-sdk/client-sqs', '@kanbien/core', '@kanbien/platform-adapter-aws-queue-sqs']
+  lambda-runtime:
+    <<: *package_unit
+    argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, lambda]
+    feedback: {development: true, expected_seconds: 30, isolation: worktree, rationale: Prove checked invocation deadlines and retained dispatcher failures locally without contacting AWS.}
+    inputs: [scripts/repo/diagnostic-coverage/verify.sh, platform/adapters/aws/runtime/lambda, package.json, package-lock.json]
+    runtime:
+      <<: *package_runtime
+      node_packages: [typescript, '@types/node', '@kanbien/core', '@kanbien/platform-persistence', '@kanbien/platform-adapter-aws-runtime-lambda']
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS]
   platform-runtime-runtime:
     <<: *package_unit
     argv: [bash, scripts/repo/diagnostic-coverage/verify.sh, --unit, runtime]
@@ -1474,6 +1484,7 @@ checks:
     owner: deploy.test.postgresql-disposable-connection-diagnostics
     inputs:
     - platform/adapters/aws/persistence/postgresql
+    - platform/adapters/aws/queue/sqs
     - platform/persistence
     - packages/core
     - platform/contracts
@@ -1484,7 +1495,29 @@ checks:
     - platform/runtime
     - platform/server
     - platform/workers
+    - platform/testing
     - apps/platform-smoke
+    - apps/entity-smoke
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/verification.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/proof-facts.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts
+    - infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts
+    - infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-operation-diagnostics.ts
     - infra/04.deploy/03.product/entrypoints/kanbien-platform-configuration-diagnostics.ts
@@ -2006,6 +2039,15 @@ checks:
       - typescript
       - yaml
     inputs:
+    - .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+    - .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+    - apps/entity-smoke/package.json
+    - platform/persistence/package.json
+    - platform/workers/package.json
+    - platform/adapters/aws/persistence/postgresql/package.json
+    - platform/adapters/aws/queue/sqs/package.json
+    - platform/adapters/aws/runtime/lambda/package.json
+    - platform/adapters/aws/observability/cloudwatch/package.json
     - scripts/repo/workspace-build
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - package.json
@@ -2081,6 +2123,388 @@ checks:
     - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
     - infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore
     - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore
+  managed-handler-payload:
+    boundary: integration
+    argv: [node, scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler-test.mjs]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.prepare-runtime-payload.managed-handler
+    applicability: &managed_handler_local_applicability
+      kind: bound
+      program_ids: [kanbien-core-server-persistence-scheduling-dispatch, kanbien-core-server-persistence-scheduling-worker, kanbien-entity-smoke-scheduling-dispatch, kanbien-entity-smoke-scheduling-worker]
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 10, isolation: disposable-fixture, rationale: Prove declared handler selection and runtime dependency closure without Docker or AWS.}
+    inputs: &managed_handler_payload_inputs
+    - apps/entity-smoke/package.json
+    - apps/entity-smoke/src/index.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-dispatch.handler.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-dispatch.tsconfig.json
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.handler.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.tsconfig.json
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-dispatch.handler.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-dispatch.tsconfig.json
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-worker.handler.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-worker.tsconfig.json
+    - packages/core/package.json
+    - packages/core/src/audit/index.ts
+    - packages/core/src/authn/index.ts
+    - packages/core/src/authz/index.ts
+    - packages/core/src/config/contract/reporting/diagnostics.v1.json
+    - packages/core/src/config/index.ts
+    - packages/core/src/diagnostics/index.ts
+    - packages/core/src/events/index.ts
+    - packages/core/src/files/index.ts
+    - packages/core/src/i18n/index.ts
+    - packages/core/src/index.ts
+    - packages/core/src/localization/index.ts
+    - packages/core/src/logging/index.ts
+    - packages/core/src/monitoring/index.ts
+    - packages/core/src/persistence/index.ts
+    - packages/core/src/queues/index.ts
+    - packages/core/src/security/index.ts
+    - packages/core/src/shared/index.ts
+    - packages/core/src/tenancy/index.ts
+    - packages/core/src/validation/index.ts
+    - platform/adapters/aws/persistence/postgresql/package.json
+    - platform/adapters/aws/persistence/postgresql/src/index.ts
+    - platform/adapters/aws/queue/sqs/package.json
+    - platform/adapters/aws/queue/sqs/src/configuration/contract/reporting/diagnostics.v1.json
+    - platform/adapters/aws/queue/sqs/src/diagnostics.v1.json
+    - platform/adapters/aws/queue/sqs/src/index.ts
+    - platform/adapters/aws/queue/sqs/src/lambda-batch-diagnostics.v1.json
+    - platform/adapters/aws/runtime/lambda/package.json
+    - platform/adapters/aws/runtime/lambda/src/diagnostics.v1.json
+    - platform/adapters/aws/runtime/lambda/src/index.ts
+    - platform/config/package.json
+    - platform/config/src/index.ts
+    - platform/contracts/package.json
+    - platform/contracts/src/index.ts
+    - platform/health/package.json
+    - platform/health/src/index.ts
+    - platform/observability/package.json
+    - platform/observability/src/index.ts
+    - platform/persistence/package.json
+    - platform/persistence/src/index.ts
+    - platform/persistence/src/leasing/contract/reporting/diagnostics.v1.json
+    - platform/persistence/src/maintenance/contract/reporting/diagnostics.v1.json
+    - platform/runtime/package.json
+    - platform/runtime/src/index.ts
+    - platform/security/package.json
+    - platform/security/src/index.ts
+    - platform/security/src/jwt-configuration/contract/reporting/diagnostics.v1.json
+    - platform/server/package.json
+    - platform/server/src/index.ts
+    - platform/server/src/main.ts
+    - platform/workers/package.json
+    - platform/workers/src/configuration/contract/reporting/diagnostics.v1.json
+    - platform/workers/src/index.ts
+    - platform/workers/src/main.ts
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler-test.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/assemble.mjs
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-dependencies
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - scripts/repo/workspace-build
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [node]
+      node_packages: [yaml]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH]
+      config_inputs: [.node-version, .nvmrc]
+  managed-handler-image-contracts:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification-test.py]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.managed-handler-image-qualification
+    applicability: *managed_handler_local_applicability
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 5, isolation: disposable-fixture, rationale: Reject incorrect image/source/runtime declarations and failed runtime protocol proof with controlled command responses only.}
+    inputs: &managed_handler_image_inputs
+    - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image
+    - scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
+    - scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
+    - infra/04.deploy/03.product/image/scheduling-lambda
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-scheduling-package-custody.delivery-access.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/entity-smoke-scheduling-package-custody.delivery-access.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+    - .github/workflows/publish-kanbien-core-platform-scheduling.yml
+    runtime:
+      tools: [python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  foundation-access-update-contracts:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/50-deploy/capabilities/foundation-access-update/smoke-test.py]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.foundation-access-update
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 30, isolation: disposable-fixture, rationale: Prove the exact repository-read permission update and original-intent reconciliation without provider effects.}
+    inputs: &foundation_access_update_inputs
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/foundation-access-update
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    - .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/update-delivery-observation-access.md
+    - .agentic/aws/standards/operational-realization-applicability.md
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - platform/persistence/contracts/diagnostics.v1.json
+    runtime:
+      tools: [python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  scheduling-provider-controls:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.scheduling-control
+    applicability: *managed_handler_local_applicability
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 5, isolation: disposable-fixture, rationale: "Prove exact legacy queue routes, immutable releases and observe-only recovery with controlled provider responses."}
+    inputs: &scheduling_proof_inputs
+    - .agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml
+    - .agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
+    - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+    - infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/scheduling-realization-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-record-schema.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/scheduling-realization-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+    - platform/persistence/contracts/diagnostics.v1.json
+    - scripts/01.harness/artifact-metadata/header_discovery.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py
+    - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py
+    - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/change-set-operations.py
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof-test.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-updates.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/deployment-diagnostics/binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-controls.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-evidence.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-state.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/acceptance-evaluation/implementation/acceptance-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/bindings/local-qualification/entity-smoke-proof/binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/control-completion.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/credential-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/deployment-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/preflight-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/unready-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/failure-handling/implementation/failure-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/image-delivery-repair/implementation/image-delivery-repair.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/collect-acceptance.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-history.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-state.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/recovery-state/recovery-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restart/restart-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/restore/restore-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/snapshot/snapshot-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/source-transition/source-transition.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-completion.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-evidence.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-graph.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-runner.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+    - scripts/04.deploy/operational-realization-gate/script.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/shared/postgresql-version.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/shared/scheduling-database-state.py
+    - scripts/repo/check-selection/check-inputs.mjs
+    - scripts/repo/check-selection/checks.yml
+    - scripts/repo/check-selection/execution_policy.py
+    - scripts/repo/check-selection/local_cache.py
+    - scripts/repo/check-selection/script.py
+    - scripts/repo/check-selection/workspace_context.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - scripts/repo/workspace-build/compile.mjs
+    - scripts/repo/workspace-build/declarations.mjs
+    - scripts/repo/workspace-build/project-selection.mjs
+    - scripts/repo/workspace-build/script.mjs
+    runtime:
+      tools: [python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  scheduling-runtime-proof-contracts:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/proof-test.py]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.scheduling-runtime-proof
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 10, isolation: disposable-fixture, rationale: Reject incomplete runtime and cost evidence without provider effects.}
+    inputs: *scheduling_proof_inputs
+    runtime:
+      tools: [python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  scheduling-acceptance-contracts:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof-test.py]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.scheduling-acceptance-proof
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 30, isolation: disposable-fixture, rationale: Prove typed scheduler custody through both existing collectors and reject unavailable live provenance without AWS.}
+    runtime:
+      tools: [python3, bash, git]
+      node_packages: []
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+    inputs: *scheduling_proof_inputs
+  scheduling-core-target:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh, --target, kanbien-core-platform, --scope, core-server-persistence, --operation, observe-current, --json]
+    stage: deploy
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.scheduling-control
+    applicability:
+      kind: bound
+      program_ids: [kanbien-core-server-persistence-scheduling-dispatch, kanbien-core-server-persistence-scheduling-worker]
+      image_ids: [kanbien-core-server-persistence-scheduling-dispatch-image, kanbien-core-server-persistence-scheduling-worker-image]
+      target: kanbien-core-platform
+      scope: core-server-persistence
+  scheduling-entity-target:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh, --target, kanbien-core-platform, --scope, entity-smoke, --operation, observe-current, --json]
+    stage: deploy
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.scheduling-control
+    applicability:
+      kind: bound
+      program_ids: [kanbien-entity-smoke-scheduling-dispatch, kanbien-entity-smoke-scheduling-worker]
+      image_ids: [kanbien-entity-smoke-scheduling-dispatch-image, kanbien-entity-smoke-scheduling-worker-image]
+      target: kanbien-core-platform
+      scope: entity-smoke
+  scheduling-core-dispatch-image:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py, --program, kanbien-core-server-persistence-scheduling-dispatch, --image, 'kanbien-core-server-persistence-scheduling-dispatch:qualification', --report, '{qualification_report}']
+    stage: package
+    evidence_class: container-qualification
+    effects: [read-only, writes-files]
+    owner: deploy.command.qualify-managed-handler-image
+    parameters:
+      qualification_report: {kind: path, required: true, schema: deploy/managed-runtime-qualification/v1}
+    applicability: {kind: bound, program_id: kanbien-core-server-persistence-scheduling-dispatch, image_id: kanbien-core-server-persistence-scheduling-dispatch-image}
+  scheduling-core-worker-image:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py, --program, kanbien-core-server-persistence-scheduling-worker, --image, 'kanbien-core-server-persistence-scheduling-worker:qualification', --report, '{qualification_report}']
+    stage: package
+    evidence_class: container-qualification
+    effects: [read-only, writes-files]
+    owner: deploy.command.qualify-managed-handler-image
+    parameters:
+      qualification_report: {kind: path, required: true, schema: deploy/managed-runtime-qualification/v1}
+    applicability: {kind: bound, program_id: kanbien-core-server-persistence-scheduling-worker, image_id: kanbien-core-server-persistence-scheduling-worker-image}
+  scheduling-entity-dispatch-image:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py, --program, kanbien-entity-smoke-scheduling-dispatch, --image, 'kanbien-entity-smoke-scheduling-dispatch:qualification', --report, '{qualification_report}']
+    stage: package
+    evidence_class: container-qualification
+    effects: [read-only, writes-files]
+    owner: deploy.command.qualify-managed-handler-image
+    parameters:
+      qualification_report: {kind: path, required: true, schema: deploy/managed-runtime-qualification/v1}
+    applicability: {kind: bound, program_id: kanbien-entity-smoke-scheduling-dispatch, image_id: kanbien-entity-smoke-scheduling-dispatch-image}
+  scheduling-entity-worker-image:
+    boundary: integration
+    argv: [python3, scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py, --program, kanbien-entity-smoke-scheduling-worker, --image, 'kanbien-entity-smoke-scheduling-worker:qualification', --report, '{qualification_report}']
+    stage: package
+    evidence_class: container-qualification
+    effects: [read-only, writes-files]
+    owner: deploy.command.qualify-managed-handler-image
+    parameters:
+      qualification_report: {kind: path, required: true, schema: deploy/managed-runtime-qualification/v1}
+    applicability: {kind: bound, program_id: kanbien-entity-smoke-scheduling-worker, image_id: kanbien-entity-smoke-scheduling-worker-image}
   runtime-payload-assembly:
     boundary: integration
     argv: [bash, scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/script.sh]
@@ -2149,6 +2573,7 @@ checks:
       environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.npmrc, .node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
     inputs:
+    - scripts/04.deploy/shared/scheduling-database-state.py
     - scripts/repo/check-selection/execution_policy.py
     - scripts/04.deploy/lifecycle/20-build/capabilities/local-qualification/entity-smoke-proof
     - scripts/04.deploy/shared/postgresql-version.py
@@ -2308,6 +2733,53 @@ checks:
       expected_seconds: 910
       isolation: worktree
       rationale: Require both registered members for full composition verification; development feedback selects the leaves.
+  scheduling-composition:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh, --scheduling]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.core-server-persistence-composition
+    applicability: {kind: bound, program_id: kanbien-core-server-persistence-scheduling-worker, image_id: kanbien-core-server-persistence-scheduling-worker-image}
+    scope_inputs: false
+    feedback: {development: true, expected_seconds: 120, isolation: worktree, rationale: Compile the declared managed worker and prove shared dispatch/outbox/worker handoff and safe target failures with controlled local dependencies only.}
+    inputs: &scheduling_composition_inputs
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/fixture-runtime.mjs
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/proof.py
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
+    - scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload
+    - scripts/repo/workspace-build
+    - infra/04.deploy/03.product/entrypoints/shared/persistence
+    - infra/04.deploy/03.product/entrypoints/shared/scheduling
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.handler.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.tsconfig.json
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - packages/core
+    - platform/config
+    - platform/contracts
+    - platform/health
+    - platform/observability
+    - platform/persistence
+    - platform/runtime
+    - platform/security
+    - platform/server
+    - platform/workers
+    - platform/adapters/aws/persistence/postgresql
+    - platform/adapters/aws/queue/sqs
+    - platform/adapters/aws/runtime/lambda
+    - package.json
+    - package-lock.json
+    runtime:
+      tools: [bash, node, npm, typescript, python3]
+      node_packages: [typescript, yaml, '@types/node', '@types/pg', pg, '@aws-sdk/rds-signer', '@aws-sdk/client-sqs']
+      environment: [PATH, LANG, LC_ALL, TMPDIR, NODE_OPTIONS, NODE_PATH, TS_NODE_PROJECT, TS_NODE_COMPILER_OPTIONS, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
+      config_inputs: [.npmrc, .node-version, .nvmrc, .python-version, pyproject.toml, requirements.txt]
   persistence-composition:
     boundary: integration
     argv:
@@ -2358,6 +2830,8 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - .agentic/04.deploy/schemas/change-impact.v1.schema.yml
+    - scripts/04.deploy/shared/scheduling-database-state.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
@@ -2587,6 +3061,38 @@ checks:
       image_id: kanbien-core-server-image
       target: kanbien-core-platform
       scope: bootstrap-runtime
+  scheduling-core-acceptance:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json, --require-qualification-profile, scheduling-a2-v1]
+    stage: acceptance
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance.wrapper
+    applicability:
+      kind: bound
+      program_ids: [kanbien-core-server-persistence-scheduling-dispatch, kanbien-core-server-persistence-scheduling-worker]
+      image_ids: [kanbien-core-server-persistence-scheduling-dispatch-image, kanbien-core-server-persistence-scheduling-worker-image]
+      target: kanbien-core-platform
+      scope: core-server-persistence
+    parameters:
+      acceptance_inputs: {kind: path, required: true, schema: deploy/acceptance-inputs/v1}
+    acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+  scheduling-entity-acceptance:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json, --require-qualification-profile, scheduling-a2-v1]
+    stage: acceptance
+    evidence_class: live
+    effects: [network, writes-files]
+    owner: deploy.command.entity-smoke.collect-acceptance
+    applicability:
+      kind: bound
+      program_ids: [kanbien-entity-smoke-scheduling-dispatch, kanbien-entity-smoke-scheduling-worker]
+      image_ids: [kanbien-entity-smoke-scheduling-dispatch-image, kanbien-entity-smoke-scheduling-worker-image]
+      target: kanbien-core-platform
+      scope: entity-smoke
+    parameters:
+      acceptance_inputs: {kind: path, required: true, schema: deploy/acceptance-inputs/v1}
+    acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
   entity-smoke-acceptance:
     boundary: integration
     argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/commands/collect-acceptance.sh, --inputs, '{acceptance_inputs}', --write-candidate, --json]
@@ -3207,6 +3713,7 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - scripts/04.deploy/shared/scheduling-database-state.py
     - scripts/04.deploy/shared/postgresql-version.py
     - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
@@ -3362,6 +3869,12 @@ checks:
       - pyproject.toml
       - requirements.txt
     inputs:
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
     - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
@@ -5139,6 +5652,38 @@ checks:
     inputs:
     - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
 repository_inputs:
+- inputs:
+  - .agentic/04.deploy/schemas/change-impact.v1.schema.yml
+  checks: [persistence-composition]
+- inputs:
+  - .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  - .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-dispatch.tsconfig.json
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.tsconfig.json
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-dispatch.tsconfig.json
+  - infra/04.deploy/03.product/entrypoints/kanbien-entity-smoke-scheduling-worker.tsconfig.json
+  - apps/entity-smoke/package.json
+  - platform/persistence/package.json
+  - platform/workers/package.json
+  - platform/adapters/aws/persistence/postgresql/package.json
+  - platform/adapters/aws/queue/sqs/package.json
+  - platform/adapters/aws/runtime/lambda/package.json
+  - platform/adapters/aws/observability/cloudwatch/package.json
+  checks: [core-dependency-boundary]
+- inputs: *managed_handler_payload_inputs
+  checks: [managed-handler-payload]
+- inputs: *managed_handler_image_inputs
+  checks: [managed-handler-image-contracts]
+- inputs: *scheduling_proof_inputs
+  checks: [scheduling-provider-controls]
+- inputs: *scheduling_proof_inputs
+  checks: [scheduling-runtime-proof-contracts]
+- inputs: *foundation_access_update_inputs
+  checks: [foundation-access-update-contracts]
+- inputs: *scheduling_proof_inputs
+  checks: [scheduling-acceptance-contracts]
+- inputs: *scheduling_composition_inputs
+  checks: [scheduling-composition]
 - inputs: *workspace_check_inputs
   checks: [check-selection-workspace-inputs]
 - inputs:
@@ -5636,16 +6181,16 @@ repository_inputs:
   checks: [diagnostic-adoption]
 - inputs:
   - scripts/repo/diagnostic-coverage/smoke-test.py
+  - scripts/repo/diagnostic-coverage/tsconfig.json
   checks: [diagnostic-catalog-readers]
 - inputs:
   - scripts/repo/diagnostic-coverage/verify.sh
   - scripts/repo/diagnostic-coverage/runtime_contract.py
   - scripts/repo/diagnostic-coverage/export-catalogs.mjs
   - scripts/repo/diagnostic-coverage/compatibility.mjs
-  - scripts/repo/diagnostic-coverage/tsconfig.json
   checks: [diagnostic-runtime-contracts]
 - inputs: [platform/config/contracts, platform/server/contracts, platform/workers/contracts, platform/persistence/contracts, apps/platform-smoke/contracts, infra/04.deploy/03.product/entrypoints/contracts]
-  checks: [diagnostic-runtime-contracts]
+  checks: [diagnostic-catalog-readers]
 - inputs: [docs/03.product/rules/core/layers/packages-core.yml, docs/03.product/rules/core/concerns/validation-api-errors.yml, docs/03.product/rules/platform/layers/platform.yml, .agentic/03.product/standards/config-runtime-settings.md]
   checks: [diagnostic-adoption, diagnostic-runtime-contracts]
 - inputs:
@@ -5730,6 +6275,10 @@ repository_inputs:
   checks: [entity-smoke-composition]
 - inputs:
   - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence
@@ -5795,6 +6344,22 @@ repository_inputs:
 
 - inputs:
   - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  - platform/adapters/aws/queue/sqs
+  - platform/testing
+  - apps/entity-smoke
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/configuration.ts
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.ts
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/verification.ts
+  - infra/04.deploy/03.product/entrypoints/entity-smoke/proof-facts.ts
+  - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts
+  - infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts
+  - infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-diagnostics.ts
   checks:
   - postgresql-disposable-diagnostics
 - inputs:
@@ -5848,6 +6413,9 @@ repository_inputs:
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
   checks: [diagnostic-catalog-readers, entity-smoke-composition, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression, restore-connection-diagnostics, persistence-payload-regression]
+- inputs:
+  - scripts/04.deploy/shared/scheduling-database-state.py
+  checks: [entity-smoke-composition-base, persistence-composition, persistence-payload-regression, diagnostic-catalog-readers]
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py

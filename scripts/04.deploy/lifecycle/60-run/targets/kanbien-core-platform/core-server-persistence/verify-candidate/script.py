@@ -313,6 +313,13 @@ def task_journal():
     return module
 
 
+def task_cost_owner():
+    path = Path(__file__).resolve().parents[1] / "task-operations.py"
+    spec = importlib.util.spec_from_file_location("persistence_verifier_task_cost", path)
+    owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(owner)
+    return owner
+
+
 def operation_paths(mode: str) -> tuple[Path, Path]:
     git_directory = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], check=True, capture_output=True, text=True).stdout.strip()
     journal = task_journal()
@@ -430,12 +437,18 @@ def execute_reserved(args, seconds: int, task_definition: str, network: str, ove
     expected = None if args.expected_operation == "none" else args.expected_operation
     journal, tasks = task_journal(), task_execution()
     with locked_operation(args.mode) as (path, descriptor, value):
+        costs = task_cost_owner()
         try:
-            reserved, fresh = journal.reserve(path, descriptor, value, schema="deploy/private-persistence-verifier-operation/v1",
-                marker=b"private-persistence-verifier-operation/v1\n", mode=args.mode, request=request,
-                new_operation=args.new_operation, expected=expected, completed=retained_completion)
+            def reserve():
+                return journal.reserve(path, descriptor, value, schema="deploy/private-persistence-verifier-operation/v1",
+                    marker=b"private-persistence-verifier-operation/v1\n", mode=args.mode, request=request,
+                    new_operation=args.new_operation, expected=expected, completed=retained_completion)
+            fresh_requested = value is None or args.new_operation and value["operation_id"] == expected
+            reserved, fresh = costs.reserve_task_cost(request, reserve) if fresh_requested else reserve()
         except journal.JournalFailure as error:
             return report("blocked", "private-persistence-verifier-" + str(error), facts={"operation_id": value["operation_id"]} if value is not None else None)
+        except costs.OperationFailure:
+            return report("blocked", "private-persistence-verifier-task-cost-admission-not-confirmed", facts={"operation_id": value["operation_id"]} if value is not None else None)
         value = reserved
         if not fresh: return observe_reserved(value, path, seconds, args.mode)
         operation_id = value["operation_id"]

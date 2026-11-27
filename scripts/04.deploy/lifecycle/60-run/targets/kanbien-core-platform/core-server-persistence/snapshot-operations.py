@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-persistence
 #   disciplines: [security, sre]
@@ -37,6 +37,7 @@ RESERVATIONS = module("persistence_snapshot_reservations", SHARED / "resource_re
 SNAPSHOTS = module("persistence_snapshot_execution", SHARED / "snapshots.py")
 DATABASE = "kanbien-core-platform-persistence"
 PATTERN = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
+ROOT = Path(__file__).resolve().parents[7]
 
 
 class OperationFailure(Exception):
@@ -84,6 +85,39 @@ def store(root):
         raise OperationFailure("persistence-recovery-point-store-unavailable") from None
 
 
+def reserve_resource_cost(phase, request, reserve):
+    """Price the original under the existing goal budget, never submit here."""
+    native_failure = None
+    def original():
+        nonlocal native_failure
+        try: return reserve()
+        except Exception as failure:
+            native_failure = failure
+            raise
+    try:
+        owner = module("persistence_recovery_cost", Path(__file__).resolve().parents[4] / "50-deploy/capabilities/scheduling-control/script.py")
+        return owner.reserve_recovery_cost_admission(target="kanbien-core-platform", scope="core-server-persistence",
+            phase=phase, request=request, reserve=original)
+    except Exception as failure:
+        if failure is native_failure: raise
+        raise OperationFailure("persistence-recovery-cost-admission-not-confirmed") from None
+
+
+def scheduling_resource_census():
+    return store(ROOT).records()
+
+
+def proof_cleanup_admission(original, *, required=False):
+    """Only a new proof-budget original can select the expanded cleanup rule."""
+    try:
+        owner = module("persistence_recovery_cleanup", Path(__file__).resolve().parents[4] / "50-deploy/capabilities/scheduling-control/script.py")
+        if not required and not owner.cost_intent_active(target="kanbien-core-platform"): return
+        if owner.recovery_cleanup_admission(target="kanbien-core-platform", scope="core-server-persistence", original=original) != original:
+            raise ValueError()
+    except Exception:
+        raise OperationFailure("persistence-recovery-cleanup-admission-not-confirmed") from None
+
+
 def create(m, root, snapshot, resource_id, emit, observe):
     request = {"database": DATABASE, "snapshot": snapshot, "source_resource_id": resource_id}
     facts = {"snapshot": snapshot}
@@ -107,9 +141,12 @@ def create(m, root, snapshot, resource_id, emit, observe):
         if fresh: return emit("pending", "persistence-recovery-point-submitted", facts=facts)
         return observe(m, snapshot, reservation=reservation)
     try:
-        return SNAPSHOTS.create(provider, store(root), phase="create-recovery-point", request=request,
+        owned = store(root)
+        return SNAPSHOTS.create(provider, owned, phase="create-recovery-point", request=request,
             arguments=arguments, precondition=precondition,
-            validate_reservation=lambda reservation: None, observe=observation)
+            validate_reservation=lambda reservation: None, observe=observation,
+            reserve=lambda: reserve_resource_cost("create-recovery-point", request,
+                lambda: owned.reserve("create-recovery-point", request)))
     except OperationFailure as failure:
         return emit("blocked", failure.code, facts=facts)
     except SNAPSHOTS.SnapshotFailure as failure:

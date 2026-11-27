@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.replacement.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -237,6 +237,7 @@ def parse(arguments=None):
     parser.add_argument("--expected-digest", required=True)
     parser.add_argument("--expected-predecessor")
     parser.add_argument("--proof-stage", choices=("baseline", "credential-recovery"), default="baseline")
+    parser.add_argument("--qualification-profile", choices=("scheduling-a2-v1",))
     parser.add_argument("--approved-plan")
     parser.add_argument("--wait-seconds", type=int, default=30)
     parser.add_argument("--json", action="store_true")

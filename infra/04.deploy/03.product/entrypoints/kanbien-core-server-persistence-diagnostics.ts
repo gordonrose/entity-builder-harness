@@ -4,7 +4,7 @@
 //   version: 1
 //   status: active
 //   created_on: "2026-10-30"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [architecture, security, sre]
@@ -15,7 +15,7 @@
 //   - id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-app
 //     path: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 
-import { createDiagnosticRecord, defineDiagnostic } from "@kanbien/core/diagnostics";
+import { captureDiagnosticRecord, createDiagnosticRecord, defineDiagnostic, requireDiagnosticRecord } from "@kanbien/core/diagnostics";
 
 export const kanbienCoreAcceptanceRequestDiagnostic = defineDiagnostic({
   code: "kanbien-core-server.acceptance.request-invalid", version: 1,
@@ -29,9 +29,26 @@ export const kanbienCoreAcceptanceRequestDiagnostic = defineDiagnostic({
   } },
 } as const);
 
+export const kanbienCoreScheduledProofDiagnostic = defineDiagnostic({
+  code: "kanbien-core-server.acceptance.scheduling-proof-not-completed", version: 1,
+  classification: { failureKind: "unknown", failureSource: "unknown", severity: "error", recovery: "manual_investigation" },
+  detail: { type: "object", properties: {
+    outcome: { type: "enum", values: ["conflict", "unavailable", "uncertain"] },
+    effect: { type: "enum", values: ["proof-not-confirmed"] },
+  } },
+} as const);
+
 export const kanbienCoreAcceptanceDiagnosticCatalog = {
-  owner: "kanbien-core-server.acceptance", definitions: [kanbienCoreAcceptanceRequestDiagnostic],
+  owner: "kanbien-core-server.acceptance", definitions: [kanbienCoreAcceptanceRequestDiagnostic, kanbienCoreScheduledProofDiagnostic],
 } as const;
+
+export function kanbienCoreScheduledProofFailure(outcome: "conflict" | "unavailable" | "uncertain") {
+  const diagnosticRecord = requireDiagnosticRecord(kanbienCoreAcceptanceDiagnosticCatalog.definitions, captureDiagnosticRecord(() => {
+    const result = createDiagnosticRecord(kanbienCoreScheduledProofDiagnostic, { outcome, effect: "proof-not-confirmed" });
+    return result.ok ? result.value : undefined;
+  }));
+  return { code: "SCHEDULED_PROOF_NOT_COMPLETED", defaultMessage: "Scheduled persistence proof was not confirmed.", diagnosticRecord };
+}
 
 export function kanbienCoreAcceptanceRequestFailure(
   operation: "create" | "read" | "delete", source: "body" | "query",

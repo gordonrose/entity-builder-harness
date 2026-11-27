@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -96,7 +96,7 @@ def fresh_enough(receipt, required_after):
 
 
 def run_owned_task(provider, store, key, request, receipt_root, *, required_after=None, preflight=None, revocation=None,
-                   clock=lambda: datetime.now(timezone.utc).isoformat(), monotonic=time.monotonic, sleep=time.sleep, on_progress=None):
+                   clock=lambda: datetime.now(timezone.utc).isoformat(), monotonic=time.monotonic, sleep=time.sleep, on_progress=None, cost_required=False):
     """Only the owning gated route may supply the live provider capability.
 
     An immutable retained receipt is historical proof for this exact reserved
@@ -145,7 +145,7 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
             guarded_admission(lambda: UNREADY.retain_admission(receipt_root, reservation, revocation, clock()))
         elif not is_preflight:
             guarded_admission(lambda: PREFLIGHT.retain_admission(receipt_root, reservation, preflight, state_required_after, clock()))
-    reservation, current = CONTROL.invoke_once(provider, store, key, request, before_submit=before_submit)
+    reservation, current = CONTROL.invoke_once(provider, store, key, request, before_submit=before_submit, cost_required=cost_required)
     if is_unready:
         after = guarded_admission(lambda: UNREADY.read_admission(receipt_root, reservation, revocation))
         required_after = max(required_after, after, key=EVIDENCE.timestamp)

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.runnable-program.build-inputs
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-15"
-//   updated_on: "2026-11-15"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines: [architecture, security, sre]
@@ -69,6 +69,17 @@ export function readProgramBuildInputs(repository, options = {}) {
   if (!list(ids, id)) fail("program-build-records-invalid");
   const program = declaration.runnable_programs.find(program => program.id === options.programId);
   if (!program) fail("program-build-record-missing");
+  const executionKind = program.execution_kind ?? "process";
+  if (!["process", "managed-handler"].includes(executionKind)) fail("program-build-execution-invalid");
+  if (!path(program.source_entrypoint) || !program.source_entrypoint.endsWith(".ts")
+    || !path(program.entrypoint) || !/\.(?:js|cjs|mjs)$/.test(program.entrypoint)) fail("program-build-entrypoint-invalid");
+  source(graph.root, program.source_entrypoint);
+  if (executionKind === "managed-handler" && (program.runtime_executable !== "node"
+    || typeof program.handler_export !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(program.handler_export))) fail("program-build-handler-invalid");
+  if (executionKind === "process" && program.handler_export !== undefined) fail("program-build-handler-invalid");
+  const runtimeEntry = { executionKind, source: program.source_entrypoint,
+    compiled: program.source_entrypoint.replace(/\.ts$/, ".js"), output: program.entrypoint,
+    ...(executionKind === "managed-handler" ? { handlerExport: program.handler_export } : {}) };
   if (!object(program.build) || program.build.kind !== "workspace-typescript"
     || !path(program.build.typescript_project) || !program.build.typescript_project.endsWith(".json")) fail("program-build-project-invalid");
   source(graph.root, program.build.typescript_project);
@@ -96,7 +107,7 @@ export function readProgramBuildInputs(repository, options = {}) {
   const selection = { roots: roots.sort(), allowedPackages: [...roots].sort() };
   const inputs = deriveWorkspaceInputs(graph, selection);
   if (inputs.externalDependencies.some(dependency => !external.has(dependency))) fail("program-build-external-dependency-not-approved");
-  return { programId: program.id, project: program.build.typescript_project, selection, inputs,
+  return { programId: program.id, project: program.build.typescript_project, runtimeEntry, selection, inputs,
     approvedDependencies: [...program.approved_dependencies], observedDependencies: [...program.observed_dependencies],
     forbiddenDependencies: [...program.forbidden_dependencies], externalOwners,
     nodeBuiltins: [...builtinModules].sort(),

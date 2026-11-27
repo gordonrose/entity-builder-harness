@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -30,6 +30,16 @@ cd "$ROOT"
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 COMPILED_DIRECTORY="$TEMPORARY_DIRECTORY/compiled"
+
+if [[ "${1:-}" == "--scheduling" && $# -eq 1 ]]; then
+  node scripts/04.deploy/lifecycle/20-build/runnable-program-contract/compile.mjs --program kanbien-core-server-persistence-scheduling-worker --outDir "$COMPILED_DIRECTORY" --incremental false
+  NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$COMPILED_DIRECTORY" --scheduling
+  exit 0
+fi
+if [[ $# -ne 0 ]]; then
+  printf '%s\n' 'Usage: smoke-test.sh [--scheduling]' >&2
+  exit 2
+fi
 
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/build.sh --out-dir "$COMPILED_DIRECTORY"
 node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root "$COMPILED_DIRECTORY"

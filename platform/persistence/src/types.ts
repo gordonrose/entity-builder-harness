@@ -51,6 +51,7 @@ export interface PlatformProcessingRecord {
   readonly attempt: PlatformPersistenceAttempt;
   readonly lease?: PlatformPersistenceLease;
   readonly releasedAt?: ISODateTime;
+  readonly retryAt?: ISODateTime;
   readonly completion?: PlatformProcessingCompletion;
 }
 
@@ -196,6 +197,7 @@ export function platformProcessingRecord(input: {
   readonly attempt: PlatformPersistenceAttempt;
   readonly lease?: PlatformPersistenceLease;
   readonly releasedAt?: ISODateTime;
+  readonly retryAt?: ISODateTime;
   readonly completion?: PlatformProcessingCompletion;
 }): PlatformProcessingRecord {
   return {
@@ -204,6 +206,7 @@ export function platformProcessingRecord(input: {
     attempt: input.attempt,
     ...(input.lease === undefined ? {} : { lease: { ...input.lease } }),
     ...(input.releasedAt === undefined ? {} : { releasedAt: input.releasedAt }),
+    ...(input.retryAt === undefined ? {} : { retryAt: input.retryAt }),
     ...(input.completion === undefined ? {} : { completion: { ...input.completion } }),
   };
 }

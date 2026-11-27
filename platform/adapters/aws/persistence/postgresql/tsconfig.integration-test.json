@@ -7,6 +7,12 @@
     "src/**/*.ts",
     "tests/integration/postgresql-persistence-adapter-integration.test.ts",
     "../../../../../apps/platform-smoke/src/persistence/**/*.ts",
+    "../../../../../apps/entity-smoke/src/**/*.ts",
+    "../../../../../apps/entity-smoke/features/**/*.ts",
+    "../../../../../infra/04.deploy/03.product/entrypoints/entity-smoke/postgresql.ts",
+    "../../../../../infra/04.deploy/03.product/entrypoints/entity-smoke/runtime.ts",
+    "../../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts",
+    "../../../../../infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts",
     "../../../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts",
     "../../../../../platform/persistence/src/**/*.ts"
   ],

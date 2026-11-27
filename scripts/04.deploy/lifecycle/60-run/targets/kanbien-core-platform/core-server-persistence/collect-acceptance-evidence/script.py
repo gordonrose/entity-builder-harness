@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime, timezone, timedelta
 import importlib.util
 import json
@@ -60,6 +61,90 @@ class EvidenceFailure(Exception):
 
 def updates():
     return controller("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-updates.py")
+
+
+def scheduling_module():
+    return controller("scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py")
+
+
+def validate_scheduling(record, *, required=False):
+    helper = scheduling_module()
+    try: selected = helper.record_profile(record)
+    except helper.ProofFailure as error: raise EvidenceFailure(error.code) from None
+    bundle = record.get("scheduling_qualification")
+    if bundle is None:
+        if required: raise EvidenceFailure("scheduling-proof-required")
+        return
+    try:
+        helper.validate(bundle, root=ROOT, target=TARGET, scope=SCOPE,
+            source=record["release"]["source_revision"], primary_image=record["release"]["image_digest"],
+            historical=True, evidence_class=EVIDENCE_CLASS)
+    except helper.ProofFailure as error: raise EvidenceFailure(error.code) from None
+
+
+def attach_scheduling(record, args, database=None):
+    if getattr(args, "qualification_profile", None) is None: return record
+    helper = scheduling_module()
+    try:
+        record["qualification_profile"] = helper.profile(args.qualification_profile)
+        record["scheduling_qualification"] = helper.collect(root=ROOT, target=TARGET, scope=SCOPE,
+            source=record["release"]["source_revision"], primary_image=record["release"]["image_digest"],
+            proof=args.scheduling_receipt, packages=args.scheduling_packages,
+            observed_at=record["acceptance"]["accepted_at"], evidence_class=EVIDENCE_CLASS)
+    except helper.ProofFailure as error: raise EvidenceFailure(error.code) from None
+    try:
+        record["scheduling_migrations"] = {"prefix": helper.read(args.scheduling_prefix_receipt)}
+        if args.scheduling_apply_receipt is not None:
+            record["scheduling_migrations"]["apply"] = helper.read(args.scheduling_apply_receipt)
+    except helper.ProofFailure as error: raise EvidenceFailure(error.code) from None
+    validate_scheduling_migrations(record, database=database)
+    return record
+
+
+def validate_scheduling_migrations(record, *, database=None):
+    """Read original receipts, not an invented apply or caller-supplied hash."""
+    if record.get("qualification_profile") is None:
+        if "scheduling_migrations" in record: raise EvidenceFailure("acceptance-scheduling-migration-profile-mismatch")
+        return None
+    receipts, helper = receipt_module(), scheduling_module()
+    try:
+        archives = record.get("scheduling_migrations")
+        if not isinstance(archives, dict) or set(archives) not in ({"prefix"}, {"prefix", "apply"}): raise ValueError()
+        prefix = receipts.validate(archives["prefix"])
+        selected = prefix["context"]["migration_prefix"]
+        receipts.SCHEDULING_STATE.validate_prefix(selected, minimum_applied_migrations=2, manifest_migration_count=7)
+        if (selected["state"] == "partial") != ("apply" in archives): raise ValueError()
+        path = Path(record["provider_observation"]["proofs"]["migration-applied-state"]["receipt"])
+        full = receipts.validate(helper.read(path if path.is_absolute() else ROOT / path))
+        binding = receipts.validate_scheduling_binding(prefix["context"].get("scheduling_binding"))
+        if any(binding[key] != record["release"][key] for key in ("source_revision", "image_digest")): raise ValueError()
+        if database is not None and binding["dependency_incarnation_sha256"] != receipts.digest({"resource_id": database["source_resource_id"], "database": "kanbienpersistence", "schema": "platform"}): raise ValueError()
+        expected = [(prefix, "administration", "observe-scheduling-prefix", "PERSISTENCE_SCHEDULING_PREFIX_CONFIRMED", "run-administration")]
+        if "apply" in archives:
+            applied = receipts.validate(archives["apply"])
+            if applied["context"].get("migration_profile") != "scheduling" or applied["context"].get("prefix_receipt_sha256") != "sha256:" + hashlib.sha256(receipts.document_bytes(prefix)).hexdigest(): raise ValueError()
+            expected.append((applied, "migration", "apply", "PERSISTENCE_MIGRATION_APPLIED", "run-migration"))
+        expected.append((full, "administration", "observe-scheduling-state", "PERSISTENCE_SCHEDULING_STATE_CONFIRMED", "run-administration"))
+        previous, identities = None, set()
+        for receipt_value, kind, operation, code, controller_name in expected:
+            task, context, provenance = receipt_value["task"], receipt_value["context"], receipt_value["provenance"]
+            if ((receipt_value["proof_type"], receipt_value["operation"], task["result_code"], provenance["controller"])
+                    != (kind, operation, code, controller_name) or provenance.get("evidence_class", "live") != EVIDENCE_CLASS
+                    or provenance["collection_method"] != "ecs-terminal-task+task-definition+safe-log"
+                    or context.get("scheduling_binding") != binding or task["image_digest"] != binding["image_digest"]
+                    or task["exit_code"] != 0 or task["terminal_status"] != "STOPPED" or task["arn"] in identities
+                    or re.fullmatch(rf"arn:aws:ecs:{REGION}:{ACCOUNT}:task-definition/kanbien-core-platform-persistence-{kind}:[1-9][0-9]*", task["definition"]) is None): raise ValueError()
+            started, stopped = parsed_time(task["started_at"]), parsed_time(task["stopped_at"])
+            if (not started <= stopped <= parsed_time(provenance["collected_at"]) <= parsed_time(record["acceptance"]["accepted_at"])
+                    or previous is not None and started < previous
+                    or int((stopped - started).total_seconds()) != context["completion_duration_seconds"]
+                    or context["completion_duration_seconds"] > context["completion_deadline_seconds"]): raise ValueError()
+            previous = stopped; identities.add(task["arn"])
+        if full["task"]["definition"] != prefix["task"]["definition"]: raise ValueError()
+        helper.complete_database_state(full["context"].get("database_state"), manifest_sha256=selected["manifest_sha256"])
+        return binding
+    except (ValueError, TypeError, KeyError, helper.ProofFailure):
+        raise EvidenceFailure("acceptance-scheduling-migration-lineage-invalid") from None
 
 
 def owner():
@@ -417,7 +502,7 @@ def proof_applicability_module():
     return module
 
 
-def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, str, str, str]], deadlines: dict[str, int], receipt_root: Path | None = None, applicability: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, str, str, str]], deadlines: dict[str, int], receipt_root: Path | None = None, applicability: dict[str, Any] | None = None, *, qualification_profile=None) -> dict[str, dict[str, Any]]:
     """Validate retained controller receipts without re-querying aged ECS tasks."""
     result: dict[str, dict[str, Any]] = {}
     receipt_paths: dict[str, Path] = {}
@@ -448,7 +533,7 @@ def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, 
         "restore": "rehearse-isolated-database-restore",
         "server-replacement": "rehearse-server-replacement",
     }
-    operations = {name: proof["operation"] for name, proof in route_contract()["proofs"].items()}
+    operations = {name: proof["operation"] for name, proof in route_contract(qualification_profile)["proofs"].items()}
     for name, (kind, family, expected_digest, code, workload) in required.items():
         item = result[name]
         task = item["task"]
@@ -471,6 +556,10 @@ def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, 
         if duration < 0 or (workload is not None and duration > deadlines[workload]):
             raise EvidenceFailure("acceptance-evidence-proof-receipt-deadline-exceeded")
         context = item["context"]
+        if name == "migration-applied-state" and qualification_profile is not None:
+            helper = scheduling_module()
+            try: helper.complete_database_state(context.get("database_state"))
+            except helper.ProofFailure as error: raise EvidenceFailure(error.code) from None
         if "completion_duration_seconds" in context and context["completion_duration_seconds"] != duration:
             raise EvidenceFailure("acceptance-evidence-proof-receipt-duration-mismatch")
         if workload is not None and context.get("completion_deadline_seconds") != deadlines[workload]:
@@ -740,6 +829,8 @@ def write_successor(record: dict[str, Any], retained=None) -> dict[str, str]:
     separate compare-and-swap command and must name the expected predecessor.
     """
     succession = succession_module()
+    validate_scheduling(record)
+    validate_scheduling_migrations(record)
     if EVIDENCE_CLASS == "simulated" and (not EVIDENCE_ROOT.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or EVIDENCE_ROOT.resolve().is_relative_to(IMPLEMENTATION_ROOT.resolve())):
         raise EvidenceFailure("acceptance-evidence-simulation-production-write-forbidden")
     # Same terminal proof and current observations reconcile to their original
@@ -759,7 +850,15 @@ def write_successor(record: dict[str, Any], retained=None) -> dict[str, str]:
     package = {**record["release"], "receipt_reference": record["release"].get("receipt_reference", record["release"].get("package_custody_reference"))}
     if "predecessor" in record:
         package["expected_predecessor"] = record["predecessor"]["release_id"]
-    path, value = publish_candidate_record(package, proofs, record["acceptance"]["accepted_at"], retained or {})
+    retained = dict(retained or {})
+    if "scheduling_qualification" in record:
+        retained.update(scheduling_module().retain(record["scheduling_qualification"], EVIDENCE_ROOT, succession))
+        for name, receipt_value in record["scheduling_migrations"].items():
+            payload = receipt_module().document_bytes(receipt_value)
+            target = EVIDENCE_ROOT / "proof-receipts" / ("scheduling-migration-" + name + "-" + hashlib.sha256(payload).hexdigest() + ".json")
+            succession.immutable_write(target, payload)
+            retained["scheduling-migration-" + name] = target
+    path, value = publish_candidate_record(package, proofs, record["acceptance"]["accepted_at"], retained)
     return {"candidate_record": path.resolve().relative_to(ROOT.resolve()).as_posix(), "release_id": value["release"]["id"]}
 
 
@@ -809,16 +908,16 @@ def scope_contract() -> Path:
     return ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"
 
 
-def route_contract() -> dict:
+def route_contract(qualification_profile=None) -> dict:
     route, _ = route_module().load_route(scope_contract(), ROOT)
     if route.get("schema") != "deploy/acceptance-route/v1" or not isinstance(route.get("proofs"), dict):
         raise EvidenceFailure("acceptance-evidence-route-invalid")
-    return route
+    return route_module().qualification_route(route, qualification_profile)
 
 
-def required_proofs(candidate: dict, rollback: dict, restoration: dict | None = None, *, selected=None) -> dict:
+def required_proofs(candidate: dict, rollback: dict, restoration: dict | None = None, *, selected=None, qualification_profile=None) -> dict:
     result = {}
-    route = route_contract()
+    route = route_contract(qualification_profile)
     obligations = route_module().document(ROOT / route["accepted_record"]["schema_path"]).get("required_proofs")
     if not isinstance(obligations, list) or any(not isinstance(name, str) for name in obligations) or set(obligations) != set(route["proofs"]):
         raise EvidenceFailure("acceptance-evidence-required-proofs-mismatch")
@@ -868,6 +967,8 @@ def sequence_valid(observed: dict, values: dict) -> None:
 def validate_record(record: object, *, evidence_class: str = "live", historical=False) -> None:
     """Validate historical custody and proof without provider queries."""
     if not isinstance(record, dict): raise EvidenceFailure("accepted-release-record-invalid")
+    validate_scheduling(record)
+    validate_scheduling_migrations(record)
     if record.get("schema") == updates().SCHEMA:
         updates().validate(owner(), record)
         return
@@ -914,7 +1015,8 @@ def validate_record(record: object, *, evidence_class: str = "live", historical=
         if not isinstance(item, dict) or not isinstance(item.get("receipt"), str): raise EvidenceFailure("accepted-release-proof-reference-invalid")
         path = ROOT / item["receipt"]
         arguments.append(name + "=" + str(path))
-    observed = parse_proof_receipts(arguments, required_proofs(release, rollback, restoration), contract_deadlines(), applicability=applicability)
+    selected_profile = record.get("qualification_profile")
+    observed = parse_proof_receipts(arguments, required_proofs(release, rollback, restoration, qualification_profile=selected_profile), contract_deadlines(), applicability=applicability, qualification_profile=selected_profile)
     try:
         observability_arguments = [name + "=" + str(ROOT / item["receipt"]) for name, item in observability.items()]
     except (TypeError, KeyError):
@@ -945,6 +1047,7 @@ def validate_record(record: object, *, evidence_class: str = "live", historical=
 def parse_arguments(argv=None):
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
     parser.add_argument("--inputs", type=Path)
+    parser.add_argument("--require-qualification-profile", choices=("scheduling-a2-v1",))
     parser.add_argument("--ordinary-update", action="store_true")
     parser.add_argument("--expected-predecessor")
     parser.add_argument("--receipt", type=Path); parser.add_argument("--rollback-receipt", type=Path); parser.add_argument("--restoration-verifier-receipt", type=Path)
@@ -955,11 +1058,28 @@ def parse_arguments(argv=None):
     try: args, unknown = parser.parse_known_args(argv)
     except argparse.ArgumentError as error: raise EvidenceFailure("acceptance-evidence-arguments-invalid") from error
     if unknown or (args.write and args.write_candidate): raise EvidenceFailure("acceptance-evidence-arguments-invalid")
+    if args.require_qualification_profile is not None and args.inputs is None:
+        raise EvidenceFailure("acceptance-input-qualification-profile-required")
+    args.qualification_profile = None
+    args.scheduling_receipt = None
+    args.scheduling_packages = None
+    args.scheduling_prefix_receipt = None
+    args.scheduling_apply_receipt = None
     if args.inputs is not None:
         if args.receipt or args.rollback_receipt or args.restoration_verifier_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.observability_receipt: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
         if args.validate_arguments: return args
+        input_document = route_module().document(args.inputs)
+        if args.require_qualification_profile is not None and input_document.get("qualification_profile") != args.require_qualification_profile:
+            raise EvidenceFailure("acceptance-input-qualification-profile-required")
         try: values = route_module().input_values(args.inputs, route_contract(), root=ROOT)
         except ValueError as error: raise EvidenceFailure(str(error)) from error
+        args.qualification_profile = input_document.get("qualification_profile")
+        if args.qualification_profile is not None:
+            if args.qualification_profile != "scheduling-a2-v1": raise EvidenceFailure("acceptance-input-qualification-profile-invalid")
+            args.scheduling_receipt = Path(values["scheduling_receipt"])
+            args.scheduling_packages = values["scheduling_packages"]
+            args.scheduling_prefix_receipt = Path(values["scheduling_prefix_receipt"])
+            args.scheduling_apply_receipt = Path(values["scheduling_apply_receipt"]) if values["scheduling_apply_receipt"] is not None else None
         mode = route_module().document(args.inputs).get("release_mode", "first-qualification")
         if mode == "ordinary-update":
             if args.ordinary_update or args.expected_predecessor:
@@ -1009,9 +1129,9 @@ def main() -> int:
         candidate, rollback, restoration = receipt(args.receipt), receipt(args.rollback_receipt), receipt(args.restoration_verifier_receipt)
         if candidate["image_digest"] == rollback["image_digest"]: raise EvidenceFailure("acceptance-evidence-rollback-identity-invalid")
         compatibility = qualified_rollback_compatibility(rollback) if EVIDENCE_CLASS == "live" else None
-        required = required_proofs(candidate, rollback, restoration)
+        required = required_proofs(candidate, rollback, restoration, qualification_profile=args.qualification_profile)
         applicability = None  # Historical v1 applicability is reader-only.
-        observed = parse_proof_receipts(args.proof_receipt, required, contract_deadlines(), applicability=applicability)
+        observed = parse_proof_receipts(args.proof_receipt, required, contract_deadlines(), applicability=applicability, qualification_profile=args.qualification_profile)
         observability = parse_observability_receipts(args.observability_receipt, candidate["image_digest"], applicability=applicability, observed_proofs=observed)
         values = retained_context(args.proof_receipt, args.recovery_snapshot, args.server_replacement_original, args.server_replacement_successor)
         sequence_valid(observed, values)
@@ -1035,6 +1155,7 @@ def main() -> int:
         acceptance = {"accepted_at":stamp,"collector":"collect-acceptance-evidence","retained_for_restoration":True,"rollback_release":rollback}
         if compatibility is not None: acceptance["rollback_compatibility"] = compatibility
         record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"restoration_verifier_release":{"source_revision":restoration["source_revision"],"image_digest":restoration["image_digest"],"package_custody_reference":restoration["receipt_reference"]},"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":acceptance,"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"observability":observability,"server_replacement":{"original_task":original,"replacement_task":successor}}}
+        attach_scheduling(record, args, database)
         validate_record(record, evidence_class=EVIDENCE_CLASS)
         if args.write_candidate:
             record["qualification"] = updates().qualification(owner(), candidate, database)

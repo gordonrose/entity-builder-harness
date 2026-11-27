@@ -1,10 +1,12 @@
-// One-shot migration only: apply the reviewed immutable two-entry manifest,
+// One-shot migration only: apply the reviewed immutable manifest,
 // then exit. The runtime identity never executes this path.
 import { reportTargetConfigurationError } from "./kanbien-platform-configuration-diagnostics";
 
 import {
   createPostgreSqlMigrationRunner,
   postgreSqlPersistenceFoundationMigration,
+  postgreSqlPlatformProcessingRetryMigration,
+  type PostgreSqlMigration,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { kanbienPlatformSmokePostgreSqlMigration } from "./kanbien-platform-postgresql-persistence";
 import { reportKanbienPlatformPostgreSqlDiagnostic, reportKanbienPlatformPostgreSqlTaskDiagnostic, reportKanbienPlatformPostgreSqlMigrationInvocationFailure } from "./kanbien-platform-postgresql-operation-diagnostics";
@@ -32,15 +34,18 @@ async function main(): Promise<void> {
     try {
       await pool.query({ text: "ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime" });
     } catch (cause) { reportKanbienPlatformPostgreSqlMigrationInvocationFailure(cause); throw cause; }
+    let migrations: readonly PostgreSqlMigration[];
     let result: Awaited<ReturnType<ReturnType<typeof createPostgreSqlMigrationRunner>["apply"]>>;
     try {
       result = await createPostgreSqlMigrationRunner(adapterConfiguration, { pool }, "stage6-staging").apply({
         schema: configuration.schema,
-        migrations: [postgreSqlPersistenceFoundationMigration(configuration.schema), kanbienPlatformSmokePostgreSqlMigration(configuration.schema, { onDiagnostic: reportKanbienPlatformPostgreSqlDiagnostic })],
+        migrations: (migrations = [postgreSqlPersistenceFoundationMigration(configuration.schema),
+          kanbienPlatformSmokePostgreSqlMigration(configuration.schema, { onDiagnostic: reportKanbienPlatformPostgreSqlDiagnostic }),
+          postgreSqlPlatformProcessingRetryMigration(configuration.schema, "v0003_platform_processing_retry")]),
       });
     } catch (cause) { reportKanbienPlatformPostgreSqlMigrationInvocationFailure(cause); throw cause; }
     let returnedFailure = false;
-    if ((returnedFailure = !result.ok) || (result as Extract<typeof result, { readonly ok: true }>).value.length !== 2) {
+    if ((returnedFailure = !result.ok) || (result as Extract<typeof result, { readonly ok: true }>).value.length !== migrations.length) {
       if (returnedFailure) reportKanbienPlatformPostgreSqlTaskDiagnostic("migration", persistenceBoundaryDiagnosticRecord({ operation: "migration", phase: "returned-result", boundary: "body", condition: "returned-failure", effect: "unknown" }), targetDeliveryErrorSource(result));
       else reportKanbienPlatformPostgreSqlTaskDiagnostic("migration", persistenceLocalRejectionDiagnosticRecord({ operation: "migration", field: "manifest", condition: "predicate-rejected", phase: "after-statements", effect: "unknown" }));
       throw new Error("RELATIONAL_TASK_MIGRATION_FAILED");

@@ -16,6 +16,10 @@ export type { PersistenceScheduleRejectionDetail } from "./diagnostics";
 export { persistenceScheduleStoreRejectionDiagnostic, persistenceScheduleStoreRejectionDiagnosticRecord,
   persistenceScheduleStoredRecordDiagnostic, persistenceScheduleStoredRecordDiagnosticRecord } from "./diagnostics";
 export type { PersistenceScheduleStoreRejectionDetail, PersistenceScheduleStoredRecordDetail } from "./diagnostics";
+export { persistenceScheduleSubjectDiagnostic, persistenceScheduleSubjectDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleSubjectDetail } from "./diagnostics";
+export { persistenceProcessingRetryRejectedDiagnostic, persistenceProcessingRetryStoredInvalidDiagnostic } from "./diagnostics";
+export { validatePlatformProcessingRetryAt, decodePlatformProcessingRetryAt } from "./processing-retry";
 export { persistenceCommandConditions, persistenceCommandDiagnosticDefinitions, persistenceCommandConditionDiagnostic, persistenceCommandDiagnosticRecord,
   persistenceStoredAttributeDiagnostic, persistenceStoredAttributeDiagnosticRecord,
   persistenceStateReconciliationDiagnostic, persistenceStateReconciliationDiagnosticRecord,
@@ -30,9 +34,29 @@ export { createInMemoryPlatformScheduleStore, createPlatformSchedule } from "./s
 export type { PlatformSchedule, PlatformScheduleHandover, PlatformScheduleId, PlatformScheduleState, PlatformScheduleStore } from "./scheduling";
 
 export { createPlatformScheduleDelivery } from "./schedule-delivery";
+export { createPlatformScheduleJobOutboxFactory } from "./schedule-jobs";
+export { loadPlatformScheduleDelivery } from "./schedule-reference";
+export type { PlatformScheduleDeliveryReferenceOptions } from "./schedule-reference";
+export { persistenceScheduleDeliveryReferenceDiagnostic, persistenceScheduleDeliveryReferenceDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleDeliveryReferenceDetail } from "./diagnostics";
+export { persistenceScheduleInvalidRowBlockedDiagnostic, persistenceScheduleInvalidRowBlockedDiagnosticRecord } from "./diagnostics";
+export type { PlatformScheduleJobOutboxOptions } from "./schedule-jobs";
+export { createPlatformScheduleDispatcher } from "./schedule-dispatch";
+export type { PlatformScheduleDispatcher, PlatformScheduleDispatchOptions, PlatformScheduleDispatchInvocation, PlatformScheduleDispatchRunResult } from "./schedule-dispatch";
+export { persistenceScheduleDispatchConfigurationDiagnostic, persistenceScheduleDispatchConfigurationDiagnosticRecord,
+  persistenceScheduleDispatchBoundaryDiagnostic, persistenceScheduleDispatchBoundaryDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleDispatchConfigurationDetail, PersistenceScheduleDispatchBoundaryDetail } from "./diagnostics";
+export { persistenceScheduleDeliveryConfigurationDiagnostic, persistenceScheduleDeliveryConfigurationDiagnosticRecord,
+  persistenceScheduleDeliveryBoundaryDiagnostic, persistenceScheduleDeliveryBoundaryDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleDeliveryConfigurationDetail, PersistenceScheduleDeliveryBoundaryDetail } from "./diagnostics";
+export { persistenceScheduleControlDiagnosticDefinitions, persistenceScheduleControlRejectionDiagnosticRecord,
+  persistenceScheduleControlStoredRecordDiagnosticRecord,
+  persistenceScheduleJobMappingDiagnostic, persistenceScheduleJobMappingDiagnosticRecord } from "./diagnostics";
+export type { PersistenceScheduleJobMappingDetail } from "./diagnostics";
 export type {
   PlatformScheduleDelivery,
   PlatformScheduleDeliveryOptions,
+  PlatformScheduleDeliveryInvocation,
   PlatformScheduleDeliveryRunResult,
   PlatformScheduleOutboxEntryFactory,
 } from "./schedule-delivery";

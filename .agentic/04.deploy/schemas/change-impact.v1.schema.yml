@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [agentic, architecture, sre]
@@ -23,6 +23,12 @@ inputs: existing repository-relative files or directories; directory matching re
 requirements:
   required_fields: [id, purpose, owner, required_by, declarations, expectation, local_proofs, package_proofs, target_proofs, run_proofs]
   unique: id
+  subjects:
+    optional: true
+    default: the existing scope program and image, unchanged
+    shape: nonempty unique list of exact {program_id, image_id, image_contract} objects
+    identity: resolve exact program and image association in the scope runnable_program_contract; managed-handler image families select an indexed managed-handler and its exact handler command
+    proof_binding: every listed proof must apply to every declared subject; separate requirements preserve independent package qualification
   required_by: nonempty existing repository-relative consumer paths
   declarations: nonempty existing repository-relative implementation paths
   expectation: non-secret description of the required value or shape

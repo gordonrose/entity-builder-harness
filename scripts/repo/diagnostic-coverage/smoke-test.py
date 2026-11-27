@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.diagnostics.regression
-#   version: 12
+#   version: 13
 #   status: active
 #   created_on: "2026-10-27"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 06.shared
 #   domain: diagnostics
 #   disciplines: [architecture, security, sre]
@@ -146,6 +146,7 @@ class DiscoveryTests(unittest.TestCase):
             'node scripts/repo/diagnostic-coverage/export-catalogs.mjs --compiled-root .cache/diagnostic-catalog-export --check',
             'python3 -B scripts/repo/diagnostic-coverage/smoke-test.py'])
         self.assertEqual(len(calls), 3)
+        self.assertEqual(self.verification_fixture(path, ['--unit', 'lambda']), (0, ['npm --ignore-scripts run platform:adapter:aws:runtime:lambda:check']))
         for unit, command in [('entity-smoke', 'app:entity-smoke:check'), ('server', 'platform:server:check'), ('product', 'product:kanbien-platform:check'), ('cloudwatch', 'platform:adapter:aws:observability:cloudwatch:check'), ('ecs-fargate', 'platform:adapter:aws:runtime:ecs-fargate:check'), ('dynamodb-persistence', 'platform:adapter:aws:persistence:dynamodb:check'), ('sqs-queue', 'platform:adapter:aws:queue:sqs:check')]:
             self.assertEqual(self.verification_fixture(path, ['--unit', unit]), (0, ['npm --ignore-scripts run ' + command]))
             self.assertEqual(self.verification_fixture(path, ['--unit', unit], fail=7), (7, ['npm --ignore-scripts run ' + command]))
@@ -460,6 +461,41 @@ class ReaderTests(unittest.TestCase):
         result = subprocess.run(['node', '-e', javascript], cwd=ROOT, input=json.dumps({'catalog': str(local), 'records': records + malformed}),
                                 capture_output=True, text=True, check=True)
         self.assertEqual(json.loads(result.stdout), [True] * len(records) + [False] * len(malformed))
+
+    def test_lambda_and_managed_sqs_catalogues_use_explicit_reader_selection(self):
+        lambda_catalog = ROOT / 'platform/adapters/aws/runtime/lambda/src/diagnostics.v1.json'
+        batch_catalog = ROOT / 'platform/adapters/aws/queue/sqs/src/lambda-batch-diagnostics.v1.json'
+        sqs_catalog = ROOT / 'platform/adapters/aws/queue/sqs/src/diagnostics.v1.json'
+        target_catalog = ROOT / 'infra/04.deploy/03.product/entrypoints/contracts/scheduling-target-diagnostics.v1.json'
+        cases = [
+            (lambda_catalog, 'aws-lambda.invocation-budget-invalid',
+             {'field': 'minimum-delivery-remaining-ms', 'reason': 'not-after-total-margin', 'effect': 'next-operation-not-started'}),
+            (lambda_catalog, 'aws-lambda.dispatch-outcome-failed',
+             {'status': 'publish-marker-failed', 'effect': 'earlier-effects-possible'}),
+            (batch_catalog, 'aws-sqs.batch-boundary-observed',
+             {'field': 'source', 'reason': 'mismatch', 'effect': 'not-started'}),
+            (target_catalog, 'scheduling-target.invocation-failed',
+             {'operation': 'dispatch', 'phase': 'execution', 'effect': 'earlier-effects-possible'}),
+        ]
+        self.assertEqual(json.loads(lambda_catalog.read_text())['catalog']['owner'], 'aws-lambda')
+        configuration = json.loads((ROOT / 'platform/adapters/aws/queue/sqs/src/configuration/contract/reporting/diagnostics.v1.json').read_text())['catalog']['definitions']
+        batch = json.loads(batch_catalog.read_text())['catalog']['definitions']
+        self.assertEqual(json.loads(sqs_catalog.read_text())['catalog']['definitions'], configuration + batch)
+        inputs, expected = [], []
+        for catalog, code, detail in cases:
+            record = {'schema': 'core/diagnostic-record/v1', 'code': code, 'definitionVersion': 1, 'detail': detail}
+            self.assertEqual(reader.validate_record(record, catalog), record)
+            if catalog == batch_catalog:
+                self.assertEqual(reader.validate_record(record, sqs_catalog), record)
+            with self.assertRaises(reader.DiagnosticContractError): reader.validate_configuration_record(record)
+            for selected in [record, {**record, 'definitionVersion': 2}, {**record, 'detail': {**detail, 'private': 'PRIVATE_CANARY'}}]:
+                valid = selected == record
+                inputs.append({'catalog': str(catalog), 'record': selected}); expected.append(valid)
+                if not valid:
+                    with self.assertRaises(reader.DiagnosticContractError): reader.validate_record(selected, catalog)
+        javascript = "const fs=require('node:fs'),path=require('node:path');const {parseDiagnosticRecord}=require(path.resolve('.cache/diagnostic-catalog-export/packages/core/src/diagnostics/index.js'));const xs=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(xs.map(x=>{const ds=JSON.parse(fs.readFileSync(x.catalog,'utf8')).catalog.definitions;const d=ds.find(d=>d.code===x.record.code&&d.version===x.record.definitionVersion);return !!d&&parseDiagnosticRecord(d,x.record).ok})));"
+        result = subprocess.run(['node', '-e', javascript], cwd=ROOT, input=json.dumps(inputs), capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(result.stdout), expected)
 
     def test_jwt_configuration_catalogue_readers(self):
         local = ROOT / 'platform/security/src/jwt-configuration/contract/reporting/diagnostics.v1.json'

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.credential-steps
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -70,9 +70,11 @@ def initial(route, context, args, provider):
     read = observe(route, context, args, provider, "verifier", "read", "initial-recovery")
     after = ordered(route, read, after)
     require(read["receipt"]["result"].get("record_digest") == args.expected_digest, "credential-original-digest-mismatch")
-    history = observe(route, context, args, provider, "administration", "observe-migration-state", "initial-recovery")
+    selected = route.ACCEPTANCE.database_proof(args)
+    history = observe(route, context, args, provider, "administration", selected["operation"], selected["stage"])
     after = ordered(route, history, after)
-    require(history["receipt"]["result"].get("code") == "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED", "credential-applied-history-required")
+    require(history["receipt"]["result"].get("code") == selected["result_code"], "credential-applied-history-required")
+    require_database_state(route, args, history)
     packets.update({"initial-recovery-original-read": read, "initial-recovery-applied-history": history})
     return {**initial, "required_after": after, "packets": packets, "baseline_read": read,
         "original_task": initial["restart"]["server"]["task"], "definition": initial["restart"]["packet"]["request"]["definition"]}
@@ -85,18 +87,20 @@ def successor_initial(route, context, args, provider):
     require(parent["applicability"].get("mode") == "requalify", "credential-requalification-not-required")
     deployed = C.completed_deployment(provider, context["binding"], context["parameters"], context["delivery"])
     read = observe(route, context, args, provider, "verifier", "read", "baseline")
-    history = observe(route, context, args, provider, "administration", "observe-migration-state", "initial-recovery")
+    selected_proof = route.ACCEPTANCE.database_proof(args)
+    history = observe(route, context, args, provider, "administration", selected_proof["operation"], selected_proof["stage"])
     after = ordered(route, history, deployed["required_after"])
     after = ordered(route, read, after)
     require(read["receipt"]["result"].get("record_digest") == args.expected_digest
-        and history["receipt"]["result"].get("code") == "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED", "credential-original-digest-mismatch")
+        and history["receipt"]["result"].get("code") == selected_proof["result_code"], "credential-original-digest-mismatch")
+    require_database_state(route, args, history)
     selected = arguments(args, "administration", "observe-permissions")
     checked = route.BINDING.inspect(provider, "administration", context["parameters"], context["resources"], context.get("binding_snapshot"))
     retained = None
     for phase in ("operation", "preflight"):
         current = SimpleNamespace(**{**vars(selected), "phase": phase})
         selected_context = {**context, "checked": checked, "report": {"plan": {"preflight_label":
-            C.delivery_preflight_label(context["delivery"], "credential-recovery", "administration", "observe-permissions")}}}
+            C.delivery_preflight_label(context["delivery"], route.STEPS.identity_stage(current), "administration", "observe-permissions")}}}
         packet = route.STEPS.observe_packet(route, selected_context, current, provider, historical=True)
         if packet is not None:
             retained = packet["prerequisites"]["packets"]["recovery-runtime"]
@@ -114,6 +118,13 @@ def successor_initial(route, context, args, provider):
     return {"required_after": after, "baseline_read": read, "original_task": retained["task"], "definition": definition,
         "packets": {"deployment": deployed["receipt"], "predecessor": parent, "recovery-baseline-read": read,
             "recovery-applied-history": history, "recovery-runtime": retained}}
+
+
+def require_database_state(route, args, packet):
+    if getattr(args, "qualification_profile", None) is None: return
+    owner = route.ACCEPTANCE.SCHEDULING
+    try: owner.complete_database_state(packet["receipt"]["result"].get("database_state"))
+    except owner.ProofFailure as failure: raise CredentialFailure(failure.code) from None
 
 
 def prefix(route, context, args, provider, limit):

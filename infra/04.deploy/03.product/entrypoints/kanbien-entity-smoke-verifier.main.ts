@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-11-08"
-//   updated_on: "2026-11-09"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.entity-smoke
 //   disciplines: [architecture, security, sre]
@@ -20,7 +20,7 @@ import { entitySmokeConfigurationError, reportEntitySmokeFailure } from "./entit
 
 export async function runEntitySmokeVerifier(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const operation = env["ENTITY_SMOKE_VERIFICATION_OPERATION"];
-  if (!operation || !["create", "read", "observe-create", "cleanup", "lifecycle", "ready", "unready"].includes(operation)) {
+  if (!operation || !["create", "read", "observe-create", "cleanup", "lifecycle", "ready", "unready", "scheduling-create", "scheduling-observe-create", "scheduling-delete", "scheduling-restore"].includes(operation)) {
     reportEntitySmokeFailure("verification", "not-started", entitySmokeConfigurationError("operation", "invalid")); process.exitCode = 1; return;
   }
   // This workload has no credential/secret/SQL configuration delivery.
@@ -32,9 +32,10 @@ export async function runEntitySmokeVerifier(env: NodeJS.ProcessEnv = process.en
       baseUrl: env["ENTITY_SMOKE_VERIFICATION_URL"] ?? "", label: env["ENTITY_SMOKE_PROOF_LABEL"] ?? "",
       expectedSource: env["ENTITY_SMOKE_EXPECTED_SOURCE"] ?? "",
       ...(env["ENTITY_SMOKE_EXPECTED_DIGEST"] === undefined ? {} : { expectedDigest: env["ENTITY_SMOKE_EXPECTED_DIGEST"] }),
+      ...(env["ENTITY_SMOKE_EXPECTED_ID"] === undefined ? {} : { expectedId: env["ENTITY_SMOKE_EXPECTED_ID"] }),
       localFixture: env["NODE_ENV"] === "test" });
     console.log(JSON.stringify(result));
-  } catch (cause) { reportEntitySmokeFailure("verification", ["create", "cleanup", "lifecycle"].includes(operation) ? "unknown" : "not-assessed", cause); process.exitCode = 1; }
+  } catch (cause) { reportEntitySmokeFailure("verification", ["create", "cleanup", "lifecycle", "scheduling-create", "scheduling-delete", "scheduling-restore"].includes(operation) ? "unknown" : "not-assessed", cause); process.exitCode = 1; }
 }
 if (typeof require !== "undefined" && require.main === module) void runEntitySmokeVerifier().catch(cause => {
   reportEntitySmokeFailure("verification", "unknown", cause); process.exitCode = 1;

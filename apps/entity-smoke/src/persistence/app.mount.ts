@@ -7,7 +7,7 @@ import type { CoreError } from "@kanbien/core/shared";
 import { testEntityDiagnosticCatalog } from "../../features/test-entity/contract/diagnostics";
 import { handleTestEntityCommand } from "../../features/test-entity/transport/http";
 import type { TestEntityServiceDependencies } from "../../features/test-entity/domain/services/dependencies";
-import { purgeExpiredTestEntitiesService } from "../../features/test-entity/domain/services/purge-expired-test-entities";
+import { handleTestEntityRetentionJob, type TestEntityRetentionDelivery } from "../../features/test-entity/transport/retention-job";
 
 export const entitySmokeExpiredPurgeJobName = required(platformJobName("entity-smoke.test-entity.purge-expired"));
 export const entitySmokeExpiredPurgeMessageType = "entity-smoke.test-entity.purge-expired" as QueueMessageType;
@@ -16,6 +16,7 @@ export interface EntitySmokePersistenceAppOptions {
   readonly services: TestEntityServiceDependencies;
   readonly readiness: () => Promise<{ readonly readiness: "ready" | "not-ready"; readonly diagnosticRecord?: CoreError["diagnosticRecord"]; readonly relatedDiagnosticRecords?: CoreError["relatedDiagnosticRecords"] }>;
   readonly close: () => Promise<void>;
+  readonly retentionDelivery?: TestEntityRetentionDelivery;
 }
 
 /** An explicit durable composition; the existing local static app is unchanged. */
@@ -42,7 +43,8 @@ export function createEntitySmokePersistenceApp(options: EntitySmokePersistenceA
         handler: { handle: (request, context) => handleTestEntityCommand(request.body, options.services, context.onDiagnostic) } }));
       required(registry.registerJob({ name: entitySmokeExpiredPurgeJobName, messageType: entitySmokeExpiredPurgeMessageType,
         observability: { kind: "profile", profile },
-        handler: { handle: async () => { await purgeExpiredTestEntitiesService(options.services); } } }));
+        handler: { handle: message => handleTestEntityRetentionJob(message, options.services, options.retentionDelivery,
+          entitySmokeExpiredPurgeJobName, entitySmokeExpiredPurgeMessageType) } }));
     },
   });
 }

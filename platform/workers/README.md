@@ -19,7 +19,7 @@ and emits safe operational logs, metrics, and traces.
 
 It does not choose SQS, another broker, a cloud SDK, a queue resource, a trace
 exporter, an application job's business meaning, or a retention policy. Those
-belong respectively to a future adapter/target profile, infrastructure, and
+belong respectively to a selected adapter/target profile, infrastructure, and
 the application capability that declares the job.
 
 The shell's `health()` aggregates registered checks through the selected
@@ -75,6 +75,40 @@ profile, whether those become safe logs, metrics, or traces. This never puts
 outbox IDs, tenant data, fence values, attempts, payloads, or receipt handles
 into metric labels or general telemetry fields.
 
+## Delivery supplied by a managed queue
+
+A Lambda invocation already contains messages supplied by AWS. Putting those
+messages into the local proof queue would create a second, non-durable queue.
+Instead, a started `PlatformWorkerShell.runDelivery(message)` runs the existing
+validation, claim, handler and completion pipeline directly.
+
+This path requires `durableOutboxProcessing` with an `outbox` reader for the
+selected scope as well as its processing store, lease owner and duration. It
+checks the envelope's ID, type, version and tenant against that durable entry.
+The stored processing attempt—not the queue's receive count—controls application
+attempt limits. It never calls the local enqueue/retry/dead-letter methods.
+
+`PlatformWorkerDeliveryResult` has three outcomes: `succeeded`, `retry` and
+`terminal`. Only confirmed durable success permits transport acknowledgement.
+A duplicate successful completion also succeeds without running the handler.
+Contention, a future persisted retry deadline, uncertain completion and terminal
+failure keep the delivery for retry or managed redrive. `terminal` does not
+claim that a dead-letter queue has received anything.
+
+For example, a failed first attempt stores its next allowed retry time. A new
+worker arriving early returns a busy failure without executing the handler or
+increasing that attempt; target composition retains the message for retry.
+After the deadline it can claim the next attempt. If the handler
+succeeds but completion throws, `runDelivery` returns a processing failure:
+it does not run a second release/completion action or report success. Redelivery
+must reconcile the durable state.
+
+The [external-delivery tests](tests/integration/external-delivery-runtime.test.ts)
+exercise restart, duplicate, lease, settlement and failure paths. The
+[SQS batch adapter](../adapters/aws/queue/sqs/README.md) translates decisions to
+AWS's native acknowledgement format. Neither local suite establishes live
+Lambda invocation, SQS redrive or real database atomicity.
+
 ## Runtime and process evidence
 
 Worker shell/process options accept optional `diagnosticCatalogs` for explicit
@@ -113,8 +147,10 @@ Delivery predicates now distinguish lifecycle/job/payload/identity/claim-result
 rejections through `delivery-rejected/v1`; lease contention and duplicate skips
 use informational `coordination-observed/v1`. Additive `boundary-failed/v2`
 identifies the actual validator, claim, lookup, completion, recording or cleanup
-boundary without changing v1. In particular a thrown completion keeps the old
-handler-catch settlement path, but is not labelled as a thrown app handler.
+boundary without changing v1. A thrown completion on legacy `runNext` keeps its
+historical handler-catch settlement path, but is not labelled as a thrown app
+handler. Direct `runDelivery` instead retains uncertainty without another
+settlement action, as described above.
 Independent location evidence and selected primary/eight are attempted before
 cleanup can supersede them, only under the matched job's operational-log profile.
 Unmatched admission returns safe evidence for explicit target handling; it does

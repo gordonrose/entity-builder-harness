@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.infrastructure.implementation
-#   version: 8
+#   version: 9
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -178,12 +178,13 @@ def local_qualification(receipt):
 
 def source_paths(revision=None):
     scope = DIRECTORY.relative_to(ROOT)
+    scheduling = ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py"
     if revision is None:
         candidates, flat = DIRECTORY.rglob("*"), False
     else:
         names = ALIGN.command(["git", "ls-tree", "-r", "--name-only", revision,
-            str(scope) + "/"]).splitlines()
-        candidates = (ROOT / name for name in names)
+            str(scope) + "/", str(scheduling.relative_to(ROOT))]).splitlines()
+        candidates = (ROOT / name for name in names if name.startswith(str(scope) + "/"))
         # Old receipts used the original flat controller inventory. Resolve its
         # layout from that revision, never from today's relocated controller.
         flat = str(scope / "script.py") in names
@@ -208,6 +209,10 @@ def source_paths(revision=None):
                     Path(ALIGN.__file__)])
     paths.extend([Path(ALIGN.INPUT_OWNER.__file__), Path(ALIGN.INPUT_OWNER.PATHS.__file__),
                   *(ROOT / reference for reference in ALIGN.INPUTS["references"])])
+    # Old HTTP receipts predate this shared owner. Keep their immutable source
+    # inventory unchanged; current and later revisions bind its actual bytes.
+    if revision is None or str(scheduling.relative_to(ROOT)) in names:
+        paths.append(scheduling)
     return paths
 
 

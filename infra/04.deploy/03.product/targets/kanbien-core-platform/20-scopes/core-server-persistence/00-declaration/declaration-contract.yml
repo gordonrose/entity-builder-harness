@@ -4,7 +4,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -277,7 +277,7 @@ health_recovery:
       persistence_writes: false
       required_workloads: []
       completion: { deadline_seconds: 300, success: { exit_code: 0, result_code: PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED }, interruption: { policy: stop-and-escalate }, retry_policy: no-automatic-retries }
-      administrative_execution: { dependency: postgresql, credential_access_class: administrative, runtime_identity_probe: { dependency: postgresql, credential_access_class: runtime, purpose: effective-runtime-identity-privilege-proof }, allowed_operations: [bootstrap-identities, grant-runtime-application-access, confirm-runtime-iam-access, revoke-runtime, restore-runtime, prove-effective-privilege, observe-migration-state], prohibited_operations: [application-server-startup, ordinary-migration-execution, unrestricted-sql-console], ordinary_migration_boundary: schema-ownership-and-reviewed-ddl-only, runtime_boundary: declared-application-dml-only }
+      administrative_execution: { dependency: postgresql, credential_access_class: administrative, runtime_identity_probe: { dependency: postgresql, credential_access_class: runtime, purpose: effective-runtime-identity-privilege-proof }, allowed_operations: [bootstrap-identities, grant-runtime-application-access, confirm-runtime-iam-access, revoke-runtime, restore-runtime, prove-effective-privilege, observe-migration-state, observe-scheduling-prefix, observe-scheduling-state, grant-scheduling-access, prove-scheduling-access, seed-scheduling-proof, observe-scheduling-proof], prohibited_operations: [application-server-startup, ordinary-migration-execution, unrestricted-sql-console], ordinary_migration_boundary: schema-ownership-and-reviewed-ddl-only, runtime_boundary: declared-application-dml-only }
       proof: { local: { status: planned, command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh, owner: persistence-platform, follow_up: qualify-administration-entrypoint-with-disposable-postgresql, review_before: permissions-transition }, package: { status: planned, command: scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh, owner: persistence-platform, follow_up: qualify-administration-entrypoint-in-immutable-image, review_before: permissions-transition }, completion: { status: planned, owner: persistence-platform, follow_up: execute-governed-administration-task-and-capture-effective-access-proof, review_before: permissions-transition-acceptance } }
     - id: persistence-restoration-verifier
       workload_type: run-to-completion-task
@@ -390,3 +390,49 @@ change_impact:
     - persistence-target-alignment
     run_proofs:
     - persistence-acceptance
+  - id: scheduling-dispatch-runtime-provider-proof
+    purpose: Bind the independent dispatch image to its exact program and reusable scheduler provider control.
+    owner: scheduling-platform
+    subjects:
+    - program_id: kanbien-core-server-persistence-scheduling-dispatch
+      image_id: kanbien-core-server-persistence-scheduling-dispatch-image
+      image_contract: infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+    required_by:
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-dispatch.handler.ts
+    declarations:
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+    expectation: Local control and actual provider wiring observations do not establish end-to-end scheduled business execution; M7 acceptance remains required and incomplete.
+    local_proofs: [runnable-program, managed-handler-payload, managed-handler-image-contracts, scheduling-provider-controls]
+    package_proofs: [scheduling-core-dispatch-image]
+    target_proofs: [scheduling-core-target]
+    run_proofs: [scheduling-core-acceptance]
+  - id: scheduling-worker-runtime-provider-proof
+    purpose: Bind the independent worker image to its exact program and reusable scheduler provider control.
+    owner: scheduling-platform
+    subjects:
+    - program_id: kanbien-core-server-persistence-scheduling-worker
+      image_id: kanbien-core-server-persistence-scheduling-worker-image
+      image_contract: infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+    required_by:
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.sh
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
+    - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling-worker.handler.ts
+    declarations:
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml
+    expectation: Local control and actual provider wiring observations do not establish end-to-end scheduled business execution; M7 acceptance remains required and incomplete.
+    local_proofs: [runnable-program, managed-handler-payload, managed-handler-image-contracts, scheduling-provider-controls, scheduling-composition]
+    package_proofs: [scheduling-core-worker-image]
+    target_proofs: [scheduling-core-target]
+    run_proofs: [scheduling-core-acceptance]

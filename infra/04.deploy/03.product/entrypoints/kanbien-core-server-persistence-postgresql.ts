@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-postgresql
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-30"
+//   updated_on: "2026-11-27"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -22,7 +22,11 @@
 //     path: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
 
 import type { PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { postgreSqlFailureDiagnostic, postgreSqlPersistenceOperationError, postgreSqlSecurityDiagnosticRecords } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { postgreSqlFailureDiagnostic, postgreSqlPersistenceOperationError, postgreSqlSecurityDiagnosticRecords,
+  postgreSqlMigrationChecksum, postgreSqlPersistenceFoundationMigration, postgreSqlPlatformScheduleMigration,
+  postgreSqlPlatformScheduleHandoffMigration, postgreSqlPlatformScheduleSubjectMigration,
+  postgreSqlPlatformProcessingRetryMigration, postgreSqlPlatformScheduleControlMigration,
+  type PostgreSqlMigrationManifest } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { attachCoreDiagnosticRecord } from "@kanbien/core/shared";
 import { observePlatformPersistenceDiagnostic, persistenceCrudObservedDiagnosticRecord, persistenceLocalRejectionDiagnosticRecord, persistenceReconciliationDiagnosticRecord,
   type PlatformPersistenceDiagnosticOptions } from "@kanbien/platform-persistence";
@@ -77,6 +81,33 @@ export function kanbienCoreServerPersistenceAcceptanceMigration(schema: string) 
     text: `CREATE TABLE IF NOT EXISTS ${table} (record_id text PRIMARY KEY, fact_digest char(64) NOT NULL, created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP, CHECK (record_id ~ '^[a-z0-9][a-z0-9-]{7,95}$'), CHECK (fact_digest ~ '^[a-f0-9]{64}$'))`,
   }];
   return { id: "v0002_core_server_persistence_acceptance", statements };
+}
+
+export function kanbienCoreServerPersistenceMigrationManifest(schema: string): PostgreSqlMigrationManifest {
+  const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(schema);
+  return { schema, schemaPreprovisioned: true, migrations: [
+    postgreSqlPersistenceFoundationMigration(schema),
+    { ...acceptance, checksum: postgreSqlMigrationChecksum(acceptance.statements) },
+  ] };
+}
+
+/** Explicit additive route; the existing baseline manifest remains unchanged. */
+export function kanbienCoreServerSchedulingMigrationManifest(schema: string): PostgreSqlMigrationManifest {
+  const baseline = kanbienCoreServerPersistenceMigrationManifest(schema);
+  return { ...baseline, migrations: [
+    ...baseline.migrations,
+    postgreSqlPlatformScheduleMigration(schema, "v0003_platform_schedule"),
+    postgreSqlPlatformScheduleHandoffMigration(schema, "v0004_platform_schedule_handoff"),
+    postgreSqlPlatformScheduleSubjectMigration(schema, "v0005_platform_schedule_subject"),
+    postgreSqlPlatformProcessingRetryMigration(schema, "v0006_platform_processing_retry"),
+    postgreSqlPlatformScheduleControlMigration(schema, "v0007_platform_schedule_control"),
+  ] };
+}
+
+/** Accepted baseline history, selected only for continuation or its observation. */
+export function kanbienCoreServerSchedulingContinuationManifest(schema: string): PostgreSqlMigrationManifest {
+  return { ...kanbienCoreServerSchedulingMigrationManifest(schema),
+    continuation: { minimumAppliedMigrations: kanbienCoreServerPersistenceMigrationManifest(schema).migrations.length } };
 }
 
 async function createRecord(

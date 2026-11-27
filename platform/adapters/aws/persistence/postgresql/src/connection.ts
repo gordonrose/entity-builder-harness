@@ -35,6 +35,9 @@ export interface PostgreSqlConnectionPool extends PostgreSqlQueryClient {
   end(): Promise<void>;
 }
 
+// Allow a bounded server-timeout response to arrive before client-side settlement.
+const postgreSqlQuerySettlementAllowanceMs = 1_000;
+
 export function createNodePostgreSqlConnectionPool(
   configuration: PostgreSqlPersistenceConfiguration,
   credentials: PostgreSqlConnectionCredentials,
@@ -48,6 +51,7 @@ export function createNodePostgreSqlConnectionPool(
     password: credentials.password,
     max: configuration.maximumPoolSize,
     connectionTimeoutMillis: configuration.connectionTimeoutMs,
+    query_timeout: configuration.statementTimeoutMs + postgreSqlQuerySettlementAllowanceMs,
     idleTimeoutMillis: configuration.idleTimeoutMs,
     options: `-c statement_timeout=${configuration.statementTimeoutMs}`,
     ssl: {
@@ -72,6 +76,7 @@ export function createNodePostgreSqlTokenConnectionPool(
     password: () => observePostgreSqlOperation("authentication_value", credentials.authenticationToken),
     max: configuration.maximumPoolSize,
     connectionTimeoutMillis: configuration.connectionTimeoutMs,
+    query_timeout: configuration.statementTimeoutMs + postgreSqlQuerySettlementAllowanceMs,
     idleTimeoutMillis: configuration.idleTimeoutMs,
     options: `-c statement_timeout=${configuration.statementTimeoutMs}`,
     ssl: {
