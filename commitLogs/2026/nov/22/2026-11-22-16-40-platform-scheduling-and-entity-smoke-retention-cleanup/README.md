@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-27T14:34:50Z
-latest_commit_sha: 6c4e0fa89b51e01d23d775bcc21fdf7b1dd6143b
-chat_duration: 424458s (04:21:54:18)
+latest_commit_at_utc: 2026-11-27T21:03:03Z
+latest_commit_sha: ab8d1690
+chat_duration: 447751s (05:04:22:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -616,6 +616,17 @@ Summary: Approved teaching marker clears preparation; preserve scoped scheduler 
 
 Durable evidence: Whole-task preparation passed for36 owned modified paths,30 valid artifact headers, no deterministic-process or governed-command drift. AGENTS diff contains only the previously approved lean-first pointer and the newly approved single explanatory comment; teaching wording and original EOF preserved. Controller1242fc5e7bafb918a11b31573f124600c6e5fd3986c86771f1a0774000ea147b and proof7e7008f91e7ef1f5974acad0f7b339ab9770205dd63c0af783417d4de34435a3 remain reviewed. Final four focused checks already passed at .cache/test-runs/20261127T204958Z-1fbbcae8b19f4cad8dd862f12b7d6f3c/report.json; do not mislabel these full integration. Fresh origin/main remains2220763a974580eb37d3c14f7e38075a4a9e47c7, eight commits behind current HEAD and zero remote-only. Next stage exact approved paths, run commit-boundary gate, checkpoint and run full integration via existing promotion verifier. No AWS mutation, image publication or push yet. No source or process changes beyond the approved marker in this increment.
 
+
+### 2026-11-27T21:03:03Z - Commit recorded
+
+Commit: `ab8d1690`
+
+Message: fix(scheduling): unblock bounded first live proof and trim support
+
+Summary: Checkpointed36 approved paths after whole-task preparation and staged gate passed. Preserved four focused scheduler checks from final report20261127T204958Z; removed duplicate benchmark support, retained scope package identity independently of upfront spend admission, and applied user-approved lean-first pointer plus one explanatory teaching marker only. No runtime instructions changed. Full affected integration and protected image publication remain; no live proof, AWS/shared-data effect or push claimed.
+
+ADR impact: Existing ADR0044 remains sufficient; no new architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -644,6 +655,13 @@ Durable evidence: Whole-task preparation passed for36 owned modified paths,30 va
   Summary: Checkpointed281 reviewed scheduler task paths after preparation90171 and staged gate34429 passed with matching identities/no findings. Final registered focused96599:9 passed,4 reused,5 executed,77.769s. Earlier68020 failure was two obsolete acceptance expectations; direct correction36035 passed24 cases. EOF-only cleanup proved byte equivalence against reviewed index and refreshed6 hashes;142 task source reviews have no stale identities. Script growth20 added,0 removed,0 moved; existing integration-selected checks/admission reviews retained. Full affected integration, six published images, AWS deployment and canonical live proof remain pending. No AWS/shared-database mutations or remote push. Conservative full-route estimate still exceeds unchanged10USD;20USD increase unanswered,25USD/month unproved. Continue through governed integration, then admitted publication/deployment only within approved budget.
   ADR impact: ADR0044 records A2 database reminders with bounded execution; calendar/DST excluded.
 
+
+- Commit: `ab8d1690`
+  Time UTC: 2026-11-27T21:03:03Z
+  Message: fix(scheduling): unblock bounded first live proof and trim support
+  Summary: Checkpointed36 approved paths after whole-task preparation and staged gate passed. Preserved four focused scheduler checks from final report20261127T204958Z; removed duplicate benchmark support, retained scope package identity independently of upfront spend admission, and applied user-approved lean-first pointer plus one explanatory teaching marker only. No runtime instructions changed. Full affected integration and protected image publication remain; no live proof, AWS/shared-data effect or push claimed.
+  ADR impact: Existing ADR0044 remains sufficient; no new architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -657,9 +675,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-27T14:34:50Z
-Latest commit SHA: 6c4e0fa89b51e01d23d775bcc21fdf7b1dd6143b
-Chat duration: 424458s (04:21:54:18)
+Latest commit at UTC: 2026-11-27T21:03:03Z
+Latest commit SHA: ab8d1690
+Chat duration: 447751s (05:04:22:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
