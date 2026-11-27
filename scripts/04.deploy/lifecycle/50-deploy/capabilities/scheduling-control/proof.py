@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.scheduling-runtime-proof
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-27"
@@ -1095,101 +1095,6 @@ def paid_rates(region):
             "sns_email_delivery": Decimal("0.00002"), "sns_https_delivery": Decimal("0.0000006")}
 
 
-def native_workload_context():
-    """Reuse the existing native check, compiler-input projector and hasher."""
-    import subprocess
-    root = Path(__file__).resolve().parents[6]
-    spec = importlib.util.spec_from_file_location("scheduling_cost_check_inputs", root / "scripts/repo/check-selection/script.py")
-    owner = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(owner)
-    catalog = owner.coverage.document(root / "scripts/repo/check-selection/checks.yml")
-    check = catalog.get("checks", {}).get("postgresql-disposable-diagnostics", {})
-    command = ["bash", "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh"]
-    require(check.get("argv") == command and check.get("stage") == "package"
-        and isinstance(check.get("inputs"), list), "native-measurement-owner-mismatch")
-    request = {"scripts": [{"npmScript": "platform:adapter:aws:persistence:postgresql:integration", "ignoreScripts": None}]}
-    try:
-        result = subprocess.run(["node", "scripts/repo/check-selection/check-inputs.mjs"], cwd=root,
-            input=json.dumps(request), text=True, capture_output=True, timeout=30, check=False)
-    except (OSError, subprocess.SubprocessError): raise ProofFailure("native-measurement-inputs-unavailable") from None
-    require(result.returncode == 0 and len(result.stdout) <= 2 * 1024**2, "native-measurement-inputs-unavailable")
-    try: projected = json.loads(result.stdout)
-    except (ValueError, RecursionError): raise ProofFailure("native-measurement-inputs-unavailable") from None
-    require(isinstance(projected, dict) and isinstance(projected.get("contexts"), dict), "native-measurement-inputs-unavailable")
-    context = projected["contexts"].get("platform:adapter:aws:persistence:postgresql:integration|inherit", {})
-    require(isinstance(context.get("references"), list) and isinstance(projected.get("discoveryInputs"), list), "native-measurement-inputs-unavailable")
-    references = set(check["inputs"]) | set(context["references"]) | set(projected["discoveryInputs"]) | {
-        "scripts/repo/check-selection/check-inputs.mjs", "scripts/repo/check-selection/script.py", command[1]}
-    return {"check_id": "postgresql-disposable-diagnostics", "command": command,
-        "input_sha256": owner.fingerprint(root, references), "contract_sha256": hashlib.sha256(canonical(check)).hexdigest()}
-
-
-def validate_native_workload_measurement(packet, *, expected_context=None):
-    require(isinstance(packet, dict) and set(packet) == {"schema", "context", "completed_at", "elapsed_seconds", "cleanup_confirmed", "measurement"}
-        and packet["schema"] == "deploy/scheduling-native-workload-receipt/v1" and packet["cleanup_confirmed"] is True,
-        "native-measurement-packet-invalid")
-    context = packet["context"]
-    require(isinstance(context, dict) and set(context) == {"check_id", "command", "input_sha256", "contract_sha256"}
-        and context["check_id"] == "postgresql-disposable-diagnostics"
-        and context["command"] == ["bash", "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh"]
-        and all(isinstance(context[key], str) and re.fullmatch(r"[a-f0-9]{64}", context[key]) for key in ("input_sha256", "contract_sha256")), "native-measurement-context-invalid")
-    require(expected_context is None or context == expected_context, "native-measurement-inputs-changed")
-    ADMISSION.utc(packet["completed_at"])
-    require(0 < amount(packet["elapsed_seconds"]) <= 90, "native-measurement-time-invalid")
-    measurement = packet["measurement"]
-    require(isinstance(measurement, dict) and set(measurement) == {"event", "schema", "samples"}
-        and measurement["event"] == "postgresql-disposable-scheduling-workload-measured"
-        and measurement["schema"] == "kanbien/scheduling-native-workload/v1"
-        and isinstance(measurement["samples"], list) and len(measurement["samples"]) == 2, "native-measurement-invalid")
-    scopes = set()
-    for row in measurement["samples"]:
-        require(isinstance(row, dict) and set(row) == {"scope", "occurrences", "retained_bytes", "wal_bytes", "retained_bytes_per_occurrence",
-            "wal_bytes_per_occurrence", "server_version_num", "block_size", "full_page_writes"}
-            and row["scope"] in {"core-server-persistence", "entity-smoke"} and row["scope"] not in scopes
-            and row["occurrences"] == 128 and row["block_size"] == 8192 and row["full_page_writes"] is True
-            and type(row["server_version_num"]) is int and 170000 <= row["server_version_num"] < 190000, "native-measurement-sample-invalid")
-        scopes.add(row["scope"])
-        for name, limit in (("retained_bytes", 8192), ("wal_bytes", 262144)):
-            require(type(row[name]) is int and 0 < row[name] <= 128 * limit
-                and type(row[name + "_per_occurrence"]) is int and row[name + "_per_occurrence"] == (row[name] + 127) // 128,
-                "native-measurement-allowance-exceeded")
-    return measurement
-
-
-def capture_native_workload_measurement():
-    """Run the already-governed native owner once; no imported success JSON.
-
-    Prior native execution took about 30 seconds. Ninety seconds includes its
-    compiler, the additional 256 small transactions and bounded engine cleanup;
-    the existing runner's own 20-second assertion deadline is unchanged.
-    The controller retains this packet in existing cost/acceptance material.
-    """
-    import subprocess
-    import time
-    root = Path(__file__).resolve().parents[6]
-    context = native_workload_context()
-    began = time.monotonic()
-    try:
-        result = subprocess.run(context["command"], cwd=root, text=True, capture_output=True, timeout=90, check=False)
-    except (OSError, subprocess.SubprocessError): raise ProofFailure("native-measurement-execution-unconfirmed") from None
-    elapsed = time.monotonic() - began
-    require(result.returncode == 0 and len(result.stdout) + len(result.stderr) <= 1024**2, "native-measurement-execution-unconfirmed")
-    lines = result.stdout.splitlines()
-    require(all(label in lines for label in ("PostgreSQL disposable integration proof passed.",
-        "PostgreSQL disposable fixture engine cleanup passed.", "PostgreSQL disposable fixture directory cleanup passed.")), "native-measurement-cleanup-unconfirmed")
-    records = []
-    for line in lines:
-        if not line.startswith('{"event":"postgresql-disposable-scheduling-workload-measured"'): continue
-        try: records.append(json.loads(line))
-        except (ValueError, RecursionError): raise ProofFailure("native-measurement-invalid") from None
-    require(len(records) == 1 and native_workload_context() == context, "native-measurement-inputs-changed")
-    packet = {"schema": "deploy/scheduling-native-workload-receipt/v1", "context": context,
-        "completed_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "elapsed_seconds": elapsed,
-        "cleanup_confirmed": True, "measurement": records[0]}
-    validate_native_workload_measurement(packet, expected_context=context)
-    return packet
-
-
 def regional_price_facts(*, fetch=None, now=None):
     """Read fixed official regional offers; never follow a caller-supplied URL.
 
@@ -1612,19 +1517,16 @@ def monthly_cost_projection(*, region, samples, image_bytes, priced_extras):
 
 
 def observed_monthly_cost_projection(provider, *, components, database, notification_topic_arn,
-                                     endpoint_id, started_at, ended_at, native_measurement=None, price_fetch=None, now=None):
+                                     endpoint_id, started_at, ended_at, price_fetch=None, now=None):
     """Capture an expected fixed-workload forecast, not an arbitrary-load ceiling.
 
-    The native packet must come from capture_native_workload_measurement and the
-    controller's original retained material, never a caller's numeric estimate.
-    Reuse checks its current compiler/check inputs. Historical validation instead
-    uses the accepted material's existing immutable custody, without live reads.
-    Shared paired metrics remain an attribution assumption, stated in the result.
+    Storage and WAL allowances are checked by the ordinary PostgreSQL tests.
+    Runtime billing, database metrics and image sizes come from AWS observations;
+    the resulting forecast retains its explicit workload assumptions.
+    Historical validation uses accepted material custody without live reads.
     """
     current = now or datetime.now(timezone.utc)
     start, end = cost_observation_window(started_at, ended_at, current)
-    native = native_measurement if native_measurement is not None else capture_native_workload_measurement()
-    validate_native_workload_measurement(native, expected_context=native_workload_context())
     require(isinstance(components, dict) and set(components) == {"core-server-persistence", "entity-smoke"}, "cost-components-incomplete")
     windows, image_uris = {}, set()
     for scope, pair in components.items():
@@ -1725,7 +1627,7 @@ def observed_monthly_cost_projection(provider, *, components, database, notifica
     require({protocol: sum(row["protocol"] == protocol for row in deliveries) for protocol in ("email", "https")} == environment["subscriptions"], "cost-subscriptions-changed")
     material = {"environment": environment, "runtime_windows": windows, "images": images, "endpoint": endpoint,
         "started_at": started_at, "ended_at": ended_at, "observed_at": current.isoformat().replace("+00:00", "Z"),
-        "metrics": metrics, "alarms": sorted(alarms, key=lambda row: row["name"]), "deliveries": deliveries, "native_measurement": native}
+        "metrics": metrics, "alarms": sorted(alarms, key=lambda row: row["name"]), "deliveries": deliveries}
     return project_observed_monthly_cost(material)
 
 
@@ -1737,10 +1639,9 @@ def project_observed_monthly_cost(material):
     runway are reported separately. No completed-metadata cleanup is assumed.
     """
     require(isinstance(material, dict) and set(material) == {"environment", "runtime_windows", "images", "endpoint",
-        "started_at", "ended_at", "observed_at", "metrics", "alarms", "deliveries", "native_measurement"}, "cost-material-invalid")
+        "started_at", "ended_at", "observed_at", "metrics", "alarms", "deliveries"}, "cost-material-invalid")
     observed = ADMISSION.utc(material["observed_at"])
     start, end = cost_observation_window(material["started_at"], material["ended_at"], observed)
-    validate_native_workload_measurement(material["native_measurement"])
     environment = material["environment"]
     require(isinstance(environment, dict) and set(environment) == {"schema", "database", "subscriptions", "prices", "evidence_sha256", "material"}
         and environment["schema"] == "deploy/scheduling-cost-environment/v1"
@@ -1895,13 +1796,11 @@ def project_observed_monthly_cost(material):
         "qualification": "expected-declared-workload-with-assumptions;not-a-guaranteed-spend-ceiling"}
 
 
-def validate_monthly_cost_observation(packet, *, components, native_context, database, notification_topic_arn, endpoint_id):
+def validate_monthly_cost_observation(packet, *, components, database, notification_topic_arn, endpoint_id):
     """Pure historical replay. Original source/material custody is caller-owned."""
     require(isinstance(packet, dict) and isinstance(packet.get("observed_inputs"), dict), "cost-packet-invalid")
     require(isinstance(components, dict) and set(components) == {"core-server-persistence", "entity-smoke"}, "cost-components-incomplete")
     material = packet["observed_inputs"]
-    require(isinstance(native_context, dict), "cost-native-custody-missing")
-    validate_native_workload_measurement(material.get("native_measurement"), expected_context=native_context)
     require(material.get("environment", {}).get("database", {}).get("identifier") == database
         and material.get("environment", {}).get("material", {}).get("topic_arn") == notification_topic_arn
         and material.get("endpoint", {}).get("VpcEndpointId") == endpoint_id, "cost-environment-custody-mismatch")
@@ -1923,13 +1822,13 @@ def cost_observation_window(started_at, ended_at, observed):
     return start, end
 
 
-def cost_evidence_paths(store, binding):
-    """Fixed companions to one original cost intent, not a new operation store."""
+def cost_evidence_path(store, binding):
+    """One retained cost report for the original target budget."""
     control = control_owner()
     require(binding.get("target") == "kanbien-core-platform" and binding.get("scope") in {"core-server-persistence", "entity-smoke"}, "cost-capture-binding-invalid")
-    paths = [store.root / (binding["target"] + suffix) for suffix in ("-monthly-cost.json", "-monthly-native.json")]
-    for path in paths: control.RESERVATIONS.no_symlinks(path)
-    return paths
+    path = store.root / (binding["target"] + "-monthly-cost.json")
+    control.RESERVATIONS.no_symlinks(path)
+    return path
 
 
 def read_cost_evidence(path):
@@ -2019,7 +1918,7 @@ def cost_capture_current_source(intent):
 def validate_cost_evidence(packet, binding, *, components, database, notification_topic_arn, endpoint_id):
     """Pure accepted-material replay, not an authority to trust imported JSON."""
     require(isinstance(packet, dict) and set(packet) == {"schema", "target", "intent", "intent_sha256", "phases", "components", "database",
-        "notification_topic_arn", "endpoint_id", "started_at", "ended_at", "native_context", "projection", "captured_at", "recovery_resources"}
+        "notification_topic_arn", "endpoint_id", "started_at", "ended_at", "projection", "captured_at", "recovery_resources"}
         and packet["schema"] == "deploy/scheduling-cost-evidence/v1" and packet["target"] == binding["target"]
         and packet["intent_sha256"] == control_owner().digest(packet["intent"])
         and packet["components"] == components and packet["database"] == database
@@ -2027,7 +1926,7 @@ def validate_cost_evidence(packet, binding, *, components, database, notificatio
     selected = cost_evidence_context(packet["intent"], packet["phases"], binding, components=components,
         database=database, notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id)
     projection = packet["projection"]
-    validate_monthly_cost_observation(projection, components=components, native_context=packet["native_context"],
+    validate_monthly_cost_observation(projection, components=components,
         database=database, notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id)
     material = projection["observed_inputs"]
     validate_cost_recovery_resources(packet["recovery_resources"], intent=packet["intent"],
@@ -2044,22 +1943,18 @@ def validate_cost_evidence(packet, binding, *, components, database, notificatio
 
 
 def authenticate_cost_evidence(provider, store, binding, packet, *, components, database, notification_topic_arn, endpoint_id, historical=False):
-    """Reuse original observations; live reads never rerun metrics/prices/native SQL."""
+    """Reuse original observations; live reads never rerun metrics or prices."""
     validate_cost_evidence(packet, binding, components=components, database=database,
         notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id)
     if historical:
         return packet
     control = control_owner()
-    path, native_path = cost_evidence_paths(store, binding)
+    path = cost_evidence_path(store, binding)
     require(read_cost_evidence(path) == packet and control.cost_intent(store, binding) == packet["intent"], "cost-capture-original-mismatch")
-    native = read_cost_evidence(native_path)
-    require(native == {"schema": "deploy/scheduling-cost-native/v1", "target": binding["target"], "intent_sha256": packet["intent_sha256"],
-        "measurement": packet["projection"]["observed_inputs"]["native_measurement"]}, "cost-capture-native-original-mismatch")
     current = datetime.now(timezone.utc)
     require(0 <= (current - ADMISSION.utc(packet["ended_at"])).total_seconds() <= 3600
         and ADMISSION.utc(packet["captured_at"]) <= current, "cost-capture-stale")
     cost_capture_current_source(packet["intent"])
-    require(native_workload_context() == packet["native_context"], "native-measurement-inputs-changed")
     for key, phase in packet["phases"].items():
         selected = binding if key == "network-create" else control.load_binding(binding["target"], key)
         control.authenticate_phase_evidence(provider, store, selected, phase)
@@ -2080,11 +1975,10 @@ def collect_cost_evidence(provider, store, binding, *, components, database, not
 
     This distinct capture mutex may span bounded read-only measurements. It does
     not hold the target effect-admission lock or prevent safe control shutdown.
-    A failed later read keeps the immediately retained native result for reuse.
     """
     import os
     control = control_owner()
-    path, native_path = cost_evidence_paths(store, binding)
+    path = cost_evidence_path(store, binding)
     marker = b"scheduling-monthly-cost-capture/v1\n"
     try:
         with control.JOURNAL.locked(path, path.with_suffix(".lock"), marker, read_cost_evidence) as (_path, descriptor, retained):
@@ -2106,28 +2000,15 @@ def collect_cost_evidence(provider, store, binding, *, components, database, not
                 selected = binding if key == "network-create" else control.load_binding(binding["target"], key)
                 control.authenticate_phase_evidence(provider, store, selected, phase)
             recovery = control.recovery_acceptance_resources(provider, store, binding)
-            context = native_workload_context()
-            if native_path.exists():
-                native = read_cost_evidence(native_path)
-                require(isinstance(native, dict) and set(native) == {"schema", "target", "intent_sha256", "measurement"}
-                    and native["schema"] == "deploy/scheduling-cost-native/v1" and native["target"] == binding["target"]
-                    and native["intent_sha256"] == control.digest(intent), "cost-capture-native-original-mismatch")
-            else:
-                native = {"schema": "deploy/scheduling-cost-native/v1", "target": binding["target"], "intent_sha256": control.digest(intent),
-                    "measurement": capture_native_workload_measurement()}
-                validate_native_workload_measurement(native["measurement"], expected_context=context)
-                require(control.RESERVATIONS.write_exclusive(native_path, native), "cost-capture-native-retention-uncertain")
-            validate_native_workload_measurement(native["measurement"], expected_context=context)
             projection = observed_monthly_cost_projection(provider, components=components, database=database,
-                notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id, started_at=started_at, ended_at=ended_at,
-                native_measurement=native["measurement"])
+                notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id, started_at=started_at, ended_at=ended_at)
             packet = {"schema": "deploy/scheduling-cost-evidence/v1", "target": binding["target"], "intent": intent,
                 "intent_sha256": control.digest(intent), "phases": phases, "components": components, "database": database,
                 "notification_topic_arn": notification_topic_arn, "endpoint_id": endpoint_id, "started_at": started_at, "ended_at": ended_at,
-                "native_context": context, "projection": projection, "recovery_resources": recovery,
+                "projection": projection, "recovery_resources": recovery,
                 "captured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
             validate_cost_evidence(packet, binding, components=components, database=database, notification_topic_arn=notification_topic_arn, endpoint_id=endpoint_id)
-            require(control.cost_intent(store, binding) == intent and native_workload_context() == context, "cost-capture-inputs-changed")
+            require(control.cost_intent(store, binding) == intent, "cost-capture-inputs-changed")
             require(control.recovery_acceptance_resources(provider, store, binding) == recovery, "cost-capture-recovery-resources-changed")
             cost_capture_current_source(intent)
             require(len(canonical(packet)) <= 2 * 1024**2 and control.RESERVATIONS.write_exclusive(path, packet), "cost-capture-retention-uncertain")

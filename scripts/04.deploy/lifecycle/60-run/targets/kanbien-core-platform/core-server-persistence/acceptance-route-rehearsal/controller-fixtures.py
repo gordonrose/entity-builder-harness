@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -25,6 +25,7 @@ import io
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -69,6 +70,10 @@ def capture_proofs(root: Path) -> dict:
     destination = root / SCOPE / '30-release-evidence/proof-receipts'
     if destination.exists() and any(destination.iterdir()):
         raise ValueError('controller-fixtures-require-empty-receipt-destination')
+    subprocess.run(['git', 'init', '--quiet', str(root)], check=True)
+    git_directory = subprocess.run(['git', '-C', str(root), 'rev-parse', '--absolute-git-dir'],
+                                   check=True, capture_output=True, text=True).stdout.strip()
+    assert Path(git_directory).resolve() == root / '.git', 'controller fixture Git metadata must remain in its disposable root'
     receipt_module = load(SOURCE / RUN / 'proof-receipts.py')
     receipt_module.ROOT = root
     receipt_module.RECEIPTS = destination

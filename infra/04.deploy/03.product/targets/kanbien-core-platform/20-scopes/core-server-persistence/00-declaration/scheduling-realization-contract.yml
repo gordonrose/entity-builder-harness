@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.core-server-persistence.scheduling-realization
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-27"
@@ -28,8 +28,8 @@ identities:
     permissions: [inspect-declared-target, create-declared-disabled-resources, change-owned-controls, invoke-reserved-read-only-proof]
 configuration_inputs:
   - id: scheduling-inputs
-    required_fields: [scope-identity, source-revision, phase, qualified-dispatcher-image, qualified-worker-image, template-hash, parameter-hash, network-preservation-hash, database-proof-hash, spend-envelope-hash, original-intent-hash]
-    optional_fields: [runtime-connection-proof-hash, monthly-cost-proof-hash, synthetic-proof-hash]
+    required_fields: [scope-identity, source-revision, phase, qualified-dispatcher-image, qualified-worker-image, template-hash, parameter-hash, network-preservation-hash, database-proof-hash, original-intent-hash]
+    optional_fields: [spend-envelope-hash, runtime-connection-proof-hash, monthly-cost-proof-hash, synthetic-proof-hash]
     sensitivity: secret-reference-only
 connections:
   - {id: provider-control-connection, source: scheduling-controller, destination: declared-resource-state, transport_security: verified}

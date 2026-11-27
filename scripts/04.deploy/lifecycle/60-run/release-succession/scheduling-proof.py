@@ -96,10 +96,17 @@ def selected_route(route, value=None):
             and not any(item.split("=", 1)[0] == "--require-qualification-profile" for item in argv), "profile-invalid")
     projected = {**route, "commands": {**commands, collector: {
         **command, "argv": [*argv, "--require-qualification-profile", PROFILE]}}}
-    if "migration-applied-state" not in route.get("proofs", {}): return projected
-    proof = route["proofs"]["migration-applied-state"]
-    command = route["commands"][proof["command"]]
-    argv = list(command["argv"])
+    proofs = route.get("proofs", {})
+    require(isinstance(proofs, dict), "profile-invalid")
+    if "migration-applied-state" not in proofs: return projected
+    proof = proofs["migration-applied-state"]
+    require(isinstance(proof, dict) and isinstance(proof.get("command"), str)
+            and isinstance(commands.get(proof["command"]), dict), "profile-invalid")
+    command = commands[proof["command"]]
+    argv = command.get("argv")
+    require(isinstance(argv, list) and len(argv) >= 2
+            and all(isinstance(item, str) and item for item in argv), "profile-invalid")
+    argv = list(argv)
     indexes = [index for index, item in enumerate(argv[:-1]) if item == "--operation"]
     require(len(indexes) == 1 and argv[indexes[0] + 1] == database_proof()["operation"], "profile-invalid")
     argv[indexes[0] + 1] = selected["database_proof"]["operation"]

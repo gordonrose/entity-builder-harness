@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -69,17 +69,37 @@ class Fixture:
   self.tmp=tempfile.TemporaryDirectory(prefix='verifier-operation-cli-');self.root=Path(self.tmp.name)
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
   for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
-               OWNER.parent/'deployment-diagnostics/binding.py',
+               OWNER.parent/'deployment-diagnostics/binding.py',OWNER.parent/'task-operations.py',
                Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
+               Path('scripts/04.deploy/shared/scheduling-database-state.py'),
+               Path('scripts/04.deploy/lifecycle/60-run/release-succession/scheduling-proof.py'),
                Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
                Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/task_journal.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/change_sets.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py'),
+               Path('scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py'),
+               Path('scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py'),
+               Path('scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py'),
+               Path('scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py'),
+               Path('scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py'),
+               Path('scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py'),
+               Path('scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py'),
+               Path('scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py'),
+               Path('scripts/04.deploy/operational-realization-gate/script.py'),
+               Path('infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml'),
+               Path('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/scheduling-realization-contract.yml'),
+               Path('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml'),
+               Path('infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml'),
+               Path('infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml'),
                Path('packages/core/contracts/diagnostics.v1.json'),Path('platform/persistence/contracts/diagnostics.v1.json'),
                Path('platform/security/contracts/diagnostics.v1.json'),Path('platform/observability/contracts/diagnostics.v1.json'),
                Path('infra/04.deploy/03.product/entrypoints/contracts/diagnostics.v1.json'),
                Path('infra/04.deploy/03.product/entrypoints/contracts/kanbien-core-server-persistence-operation-diagnostics.v1.json')]:
    out=self.root/path;out.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/path,out)
   proof=self.root/OWNER.parent/'proof-receipts.py';proof.write_text(proof.read_text().replace('EVIDENCE_CLASS = "live"','EVIDENCE_CLASS = "simulated"'))
-  contract=self.root/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml';contract.parent.mkdir(parents=True)
+  contract=self.root/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml';contract.parent.mkdir(parents=True,exist_ok=True)
   contract.write_text(yaml.safe_dump({'health_recovery':{'workloads':[{'id':'private-release-verifier','completion':{'deadline_seconds':1}}]}}))
   binary=self.root/'bin';binary.mkdir();(binary/'aws').write_text(FAKE);(binary/'aws').chmod(0o755)
   self.state=self.root/'provider.json';self.state.write_text(json.dumps({'submission':'lost'}))
@@ -125,9 +145,21 @@ class OperationTests(unittest.TestCase):
   self.assertEqual(completed.returncode,0 if value['verdict']=='accepted' else 1)
   return value
  def test_identical_lost_response_retry_reconciles_same_operation(self):
-  f=self.fixture();first=self.invoke(f,verdict='uncertain');second=self.invoke(f,verdict='pending')
+  f=self.fixture();intent=f.root/'.git/scheduling-control/kanbien-core-platform-cost-intent.json'
+  self.assertFalse(intent.exists())
+  first=self.invoke(f,verdict='uncertain');second=self.invoke(f,verdict='pending')
   self.assertEqual(first['facts']['operation_id'],second['facts']['operation_id']);self.assertEqual(len(f.runs()),1)
   self.assertEqual(f.data()['durable_before_submission'],[True])
+  self.assertFalse(intent.exists())
+ def test_malformed_existing_cost_intent_blocks_before_native_reservation(self):
+  f=self.fixture();intent=f.root/'.git/scheduling-control/kanbien-core-platform-cost-intent.json'
+  intent.parent.mkdir();original='{"schema":"malformed","private":"PRIVATE_VERIFIER_LOG_CANARY"}'
+  intent.write_text(original)
+  blocked=self.invoke(f,verdict='blocked')
+  self.assertEqual(blocked['findings'],[{'code':'private-persistence-verifier-task-cost-admission-not-confirmed'}])
+  self.assertFalse(f.state_path().exists());self.assertEqual(f.runs(),[])
+  self.assertEqual(intent.read_text(),original);self.assertEqual(list(intent.parent.glob('cost-*.admission.json')),[])
+  self.assertNotIn('PRIVATE_VERIFIER_LOG_CANARY',json.dumps(blocked))
  def test_explicit_initial_none_is_idempotent_and_checks_predecessor(self):
   f=self.fixture();f.update(submission='normal',status='STOPPED')
   first=self.invoke(f,'--new-operation','--expected-operation','none',verdict='accepted')

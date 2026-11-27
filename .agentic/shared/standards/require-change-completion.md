@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.standard.require-change-completion
-version: 15
+version: 16
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-11-26"
+updated_on: "2026-11-27"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -34,12 +34,72 @@ For README additions or edits, follow the
 [README-writing skill](../skills/write-readme.md). Keep the task's scope and
 verification proportionate; this does not require unrelated documentation work.
 
+## Lean end-to-end first
+
+<!-- deterministic-check: allow reason="selecting the smallest meaningful outcome and judging actual proof requires task-specific evidence; existing stage gates validate their owned boundaries" -->
+For every implementation goal, establish the smallest useful end-to-end outcome
+before expanding functionality. An increment crosses the necessary layers to
+produce one observable result; completing separate layers is not an increment.
+A complete roadmap may describe later work, but implementation starts with this
+first working path.
+
+Before substantial implementation, record briefly in the existing task plan or
+session log:
+
+- The first observable outcome, its actual entry point, dependencies and required
+  environment, plus the existing machinery reused to reach it.
+- The smallest necessary file scope and time/change/cost budget for this proof,
+  preserving any user limits. Resolve deployment access, package publication,
+  compatibility and cost assumptions that could make the path infeasible early.
+- The command or governed operation and observable evidence that will prove the
+  result, then the next behavior to add after it succeeds.
+
+Implement only prerequisites needed for that path and its applicable safety,
+ownership and verification requirements. Use reusable production machinery and
+the normal delivery route. Do not create a throwaway execution engine or bypass
+a gate to get an early success. For a deployed-system goal, local integration is
+a prerequisite; the first deployed proof requires the real target and triggering
+path. Mocks, source declarations and hand-invoked substitutes cannot prove that
+an automatic path ran.
+
+Keep the first proof marked unproved until its actual evidence exists. An
+existing end-to-end proof may supply the starting point only when its source,
+artifact, environment and relevant inputs still match. Build each later increment
+on that observed baseline, add one bounded behavior, and re-prove its affected
+end-to-end path while preserving the established behavior. Reuse unchanged
+evidence through its existing owner. Do not construct multiple unproved features,
+platform subsystems or support frameworks in parallel while the first path
+remains unproved. Delegated work follows the same current increment and budget.
+
+When the first proof stalls, exceeds its budget or repeatedly fails, reassess
+the route before widening implementation. Repair the critical blocker within
+the authorized scope or report the actual decision needed. Do not respond by
+automatically adding another prerequisite programme, expanding the budget or
+weakening acceptance. If current governance cannot admit a bounded first proof,
+resolve that conflict at its existing owner before building the wider feature.
+
+Carry the current increment, last proven baseline, evidence, invalidating changes
+and next unproved behavior through existing progress logs and handoffs. Update
+progress around working outcomes rather than counts of files, completed layers
+or passing isolated tests. Autonomous authority permits the next bounded
+increment within the agreed limits without repeated approval; it does not
+remove this sequencing requirement. The full original goal and its final
+acceptance criteria remain mandatory.
+
+For documentation, process-only work or a small correction, use the actual
+affected caller/workflow through its observable output and relevant checks.
+Scale the record to the task; do not invent a cloud deployment, extra form,
+registry, runner or approval step. This is an agent execution rule. Existing
+checks enforce their own evidence boundaries; this text does not install a
+client hook that mechanically prevents the agent from expanding work.
+
 ## Execution continuity and final-response checklist
 
 <!-- deterministic-check: allow reason="matching user intent, remaining work and genuine blockers requires judgment; repository checks do not intercept the client's final-response event" -->
 For an authorized execution task, continue until the requested outcome and its
-required verification are complete. Do not issue a final response while an
-authorized, actionable step remains. Use intermediate updates for progress;
+required verification are complete. Apply the lean sequence above throughout;
+persistence does not authorize accumulating unproved scope. Do not issue a final
+response while an authorized, actionable step remains. Use intermediate updates for progress;
 a checkpoint, passing stage or running command is not task completion.
 Monitor required commands and delegated work through terminal results, inspect
 those results, and take the next authorized step without another user prompt.
@@ -163,8 +223,8 @@ non-applicability has a reason and does not hide an affected consumer.
 ## Consolidated source review
 
 Exploratory tests are allowed during implementation. Before declaring a final
-focused verification pass, the designated reviewer must review the whole change
-against the consumer inventory and applicable requirements, including the
+focused verification pass for the current increment, the designated reviewer must
+review the whole change against the consumer inventory and applicable requirements, including the
 diagnostic predicate inventory. The parent owns this review for delegated work;
 without delegation or a separate reviewer, perform and record an explicit
 self-review. Collect required corrections in one consolidated list rather than
@@ -202,10 +262,13 @@ path-scoped development selection may execute declared fast checks and leave the
 full integration obligations pending. Report that state as partial, not complete
 verification. Do not run full regression after every edit. The sequence below
 applies when closing integration proof on stable inputs; development feedback
-cannot satisfy or bypass staged, CI or local-main promotion gates.
+cannot satisfy or bypass staged, CI or local-main promotion gates. Apply this
+sequence to each bounded end-to-end increment, not only after implementing the
+whole goal. Each increment must meet the gates required for its actual effects;
+an early proof is not final acceptance of the whole goal.
 
-Before broad verification or image qualification, complete implementation and
-affected-consumer changes required by the applicable requirements, close the
+Before broad verification or image qualification of the current increment,
+complete its implementation and affected-consumer changes, close the
 consolidated source review, pass final focused tests, and validate the existing
 selector plan without executing broad checks. Record the focused commands and
 outcomes and obtain confirmation from every contributing agent that verification

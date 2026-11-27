@@ -71,9 +71,6 @@ const fixtureStart = new Date("2026-09-26T12:00:00.000Z");
 // assertion still fails closed, while CI can identify the exercised boundary
 // without serialising a PostgreSQL error (which can contain connection detail).
 let integrationPhase = "initialization";
-const schedulingMeasurements: { scope: "core-server-persistence" | "entity-smoke"; occurrences: number;
-  retained_bytes: number; wal_bytes: number; retained_bytes_per_occurrence: number; wal_bytes_per_occurrence: number;
-  server_version_num: number; block_size: number; full_page_writes: true }[] = [];
 
 async function main(): Promise<void> {
   const environment = localFixtureEnvironment();
@@ -355,9 +352,6 @@ async function main(): Promise<void> {
     const telemetryText = JSON.stringify(telemetry);
     equal(telemetryText.includes(environment.password), false, "Normal telemetry must not contain the fixture password.");
     equal(telemetryText.includes("synthetic-tenant-a"), false, "Normal telemetry must not contain a tenant identifier.");
-    equal(schedulingMeasurements.length, 2);
-    console.log(JSON.stringify({ event: "postgresql-disposable-scheduling-workload-measured",
-      schema: "kanbien/scheduling-native-workload/v1", samples: schedulingMeasurements }));
     console.log("PostgreSQL disposable integration proof passed.");
   } finally {
     await rawPool.end();
@@ -398,9 +392,6 @@ async function measureSchedulingWorkload(rawPool: Pool, scope: "core-server-pers
   // instance-wide WAL can include background activity, conservatively.
   assertOk(retainedBytes <= occurrences * 8192, "Declared fixed jobs must fit the reviewed 8KiB retained-byte allowance.");
   assertOk(walBytes <= occurrences * 262144, "Declared fixed jobs must fit the reviewed 256KiB WAL allowance.");
-  schedulingMeasurements.push({ scope, occurrences, retained_bytes: retainedBytes, wal_bytes: walBytes,
-    retained_bytes_per_occurrence: Math.ceil(retainedBytes / occurrences), wal_bytes_per_occurrence: Math.ceil(walBytes / occurrences),
-    server_version_num: engine.version, block_size: engine.block_size, full_page_writes: true });
 }
 
 async function migrationContinuationEngineSafety(rawPool: Pool, configuration: PostgreSqlPersistenceConfiguration): Promise<void> {

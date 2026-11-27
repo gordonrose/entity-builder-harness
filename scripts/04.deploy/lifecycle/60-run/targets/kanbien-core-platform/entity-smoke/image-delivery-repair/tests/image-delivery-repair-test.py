@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-10"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -32,7 +32,17 @@ spec = importlib.util.spec_from_file_location("image_repair_fixture", (Path(__fi
 M = importlib.util.module_from_spec(spec); spec.loader.exec_module(M)
 C = M.C
 SOURCE = "8f76ed3480e85d60fb60f547f996628c8554504d"
-BEFORE = C.DEPLOY.CF.template((C.ROOT / C.ALIGN.FOUNDATION).read_text())
+CURRENT = C.DEPLOY.CF.template((C.ROOT / C.ALIGN.FOUNDATION).read_text())
+HISTORICAL_AFTER = copy.deepcopy(CURRENT)
+# The later scheduler publisher observation permission was not part of the
+# historical two-endpoint repair. Remove only that exact same-repository action.
+policies = HISTORICAL_AFTER["Resources"]["DeliveryRole"]["Properties"]["Policies"]
+matches = [row for policy in policies for row in policy["PolicyDocument"]["Statement"]
+           if row.get("Effect") == "Allow" and row.get("Resource") == {"Ref": "ExistingRepositoryArn"}
+           and isinstance(row.get("Action"), list) and "ecr:DescribeRepositories" in row["Action"]]
+assert len(matches) == 1 and matches[0]["Action"].count("ecr:DescribeRepositories") == 1
+matches[0]["Action"].remove("ecr:DescribeRepositories")
+BEFORE = copy.deepcopy(HISTORICAL_AFTER)
 # Reconstruct the exact pinned pre-repair fixture without requiring Git
 # history in hosted shallow checkouts. This hash was independently obtained
 # from SOURCE's original template, not from the reconstruction under test.
@@ -45,7 +55,7 @@ for endpoint in ("EcrApiEndpoint", "EcrDkrEndpoint"):
     matches[0]["Resource"] = {"Ref": "ExistingRepositoryArn"}
 assert C.DEPLOY.fingerprint(BEFORE) == "sha256:aef24b28801c4ada9c405ec908d7c7151d12bb5f854d3734883f8da02b0b8997"
 AFTER = C.ALIGN.repaired_foundation(BEFORE)
-assert C.DEPLOY.CF.templates_equal(AFTER, (C.ROOT / C.ALIGN.FOUNDATION).read_text())
+assert C.DEPLOY.CF.templates_equal(AFTER, json.dumps(HISTORICAL_AFTER))
 
 
 def fails(callback, code):
@@ -60,6 +70,9 @@ for mutate in (lambda value: value["Resources"]["EcrApiEndpoint"]["Properties"].
     changed = copy.deepcopy(AFTER); mutate(changed)
     with patch.object(C.ALIGN, "command", side_effect=lambda args: json.dumps(BEFORE if args[2].startswith(SOURCE + ":") else changed)):
         fails(lambda: C.ALIGN.foundation_sources(SOURCE, "b" * 40), "alignment-foundation-repair-invalid")
+
+with patch.object(C.ALIGN, "command", side_effect=lambda args: json.dumps(BEFORE if args[2].startswith(SOURCE + ":") else CURRENT)):
+    fails(lambda: C.ALIGN.foundation_sources(SOURCE, "b" * 40), "alignment-foundation-repair-invalid")
 
 
 
@@ -108,10 +121,13 @@ with tempfile.TemporaryDirectory(prefix="entity-image-recovery-") as temporary:
         acceptance_spec = importlib.util.spec_from_file_location("image_repair_acceptance_label_fixture", (Path(__file__).resolve().parents[2] / "acceptance-evaluation/implementation/acceptance-evidence.py"))
         acceptance = importlib.util.module_from_spec(acceptance_spec); acceptance_spec.loader.exec_module(acceptance)
         assert acceptance.preflight_label(binding, "baseline", "administration", "bootstrap") == recovery
-        for stage, workload, operation in (("credential-recovery", "administration", "bootstrap"), ("baseline", "migration", "apply")):
+        for stage, workload, operation in (("credential-recovery", "administration", "observe-permissions"), ("baseline", "migration", "apply")):
             suffix = "" if stage == "baseline" else ":" + stage
             ordinary = "entity-smoke-" + C.hashlib.sha256((M.LABEL + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
             assert acceptance.preflight_label(binding, stage, workload, operation) == ordinary
+        fails(lambda: acceptance.preflight_label(binding, "credential-recovery", "administration", "bootstrap"), "task-proof-stage-not-supported")
+        unsupported_stage = SimpleNamespace(**{**vars(args), "proof_stage": "credential-recovery"})
+        assert M.recovery_label(context, unsupported_stage, original) == original
         grant_original = "entity-smoke-" + C.hashlib.sha256((M.LABEL + ":administration:grant-runtime:preflight").encode()).hexdigest()[:24]
         grant_args = SimpleNamespace(proof_label=M.LABEL, workload="administration", operation="grant-runtime", proof_stage="baseline")
         assert acceptance.preflight_label(binding, "baseline", "administration", "grant-runtime") == C.TRANSITION.replacement_label({}, grant_args, grant_original)

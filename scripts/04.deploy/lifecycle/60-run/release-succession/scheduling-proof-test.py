@@ -291,6 +291,43 @@ class SchedulingProofTests(unittest.TestCase):
                     with self.assertRaisesRegex(H.ProofFailure, "profile-invalid"):
                         H.selected_route(changed, H.PROFILE)
 
+    def test_selected_database_proof_rejects_malformed_references_before_probing(self):
+        scope = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"
+        route_path = scope.parent / "acceptance-route-contract.yml"
+        route = yaml.safe_load(route_path.read_text())
+        command = route["proofs"]["migration-applied-state"]["command"]
+        mutations = [
+            lambda value: value.update(proofs=None),
+            lambda value: value.update(proofs=[]),
+            lambda value: value["proofs"].update({"migration-applied-state": None}),
+            lambda value: value["proofs"].update({"migration-applied-state": []}),
+            lambda value: value["proofs"]["migration-applied-state"].pop("command"),
+            lambda value: value["proofs"]["migration-applied-state"].update(command=[]),
+            lambda value: value["proofs"]["migration-applied-state"].update(command="unknown"),
+            lambda value: value["commands"].update({command: None}),
+            lambda value: value["commands"].update({command: []}),
+            lambda value: value["commands"][command].pop("argv"),
+            lambda value: value["commands"][command].update(argv="--operation observe-migration-state"),
+            lambda value: value["commands"][command].update(argv=[]),
+            lambda value: value["commands"][command].update(argv=["bash", None]),
+        ]
+        for index, mutate in enumerate(mutations):
+            with self.subTest(case=index):
+                changed = copy.deepcopy(route); mutate(changed)
+                self.assertIs(H.selected_route(changed), changed)
+                with self.assertRaisesRegex(H.ProofFailure, "^scheduling-proof-profile-invalid$"):
+                    H.selected_route(changed, H.PROFILE)
+        changed = copy.deepcopy(route)
+        changed["proofs"]["migration-applied-state"]["command"] = []
+        read = ROUTE.document
+        with patch.object(ROUTE, "document", side_effect=lambda path: changed if path == route_path else read(path)), \
+             patch.object(ROUTE.subprocess, "run", side_effect=AssertionError("malformed proof executed a command")) as probe:
+            report = ROUTE.inspect(scope, ROOT)
+        codes = {finding["code"] for finding in report["findings"]}
+        self.assertIn("acceptance-route-proof-binding-invalid", codes)
+        self.assertNotIn("acceptance-route-contract-malformed", codes)
+        probe.assert_not_called()
+
     def test_complete_database_observation_is_not_a_prefix_or_empty_work_claim(self):
         state = {"schema": "kanbien/scheduling-database-state/v1", "manifest_sha256": "a" * 64, "migration_count": 7,
                  "work_inventory": {"waiting_schedules": 3, "pending_outbox": 1, "active_processing": 2}}

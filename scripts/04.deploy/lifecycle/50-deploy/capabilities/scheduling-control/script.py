@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.capability.scheduling-control
-#   version: 1
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-27"
@@ -949,16 +949,16 @@ def phase_request(intent):
 def initial_database_readiness(store, binding, intent, selections):
     """Re-read the native task owners; supplied paths are data, never code.
 
-    Only the first resource phases use the zero-work gate. Later phases require
-    proof-owned exact synthetic inventory, not another empty-database assertion.
-    This returns observations, not authorization to submit a provider request.
+    Each disabled scope creation uses its own zero-work gate. Shared network
+    creation has no database dependency. Later phases require proof-owned exact
+    synthetic inventory, not another empty-database assertion.
     """
-    require(intent["phase"] in {"network-create", "scope-create-disabled"}
+    require(intent["phase"] == "scope-create-disabled"
         and phase_read(store, binding, intent["phase"]) == intent, "initial-database-phase-invalid")
-    boundary = intent if intent["phase"] == "network-create" else phase_read(store, binding, "network-create")
+    boundary = phase_read(store, binding, "network-create")
     require(boundary is not None and boundary["source_revision"] == intent["source_revision"], "initial-database-boundary-invalid")
     required_after = boundary["created_at"]
-    scopes = set(CF.template((ROOT / binding["template"]).read_text())["Mappings"]["Scopes"]) if intent["phase"] == "network-create" else {binding["scope"]}
+    scopes = {binding["scope"]}
     require(isinstance(selections, dict) and set(selections) == scopes, "initial-database-selection-invalid")
     result = {}
     base = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/"
@@ -1487,7 +1487,10 @@ def prepare_cost_intent(provider, store, binding, selections, *, expires_at):
         # inspect it without re-evaluating mutable candidate selections.
         require(expires_at == previous["expires_at"] and expected == selections, "cost-intent-already-retained")
         return previous
-    started_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    network = phase_read(store, binding, "network-create")
+    require(network is not None, "phase-intent-required")
+    authenticate_phase_evidence(provider, store, binding, capture_phase(provider, store, binding, "network-create"))
+    started_at = network["created_at"]
     require(0 < (ADMISSION.utc(expires_at) - ADMISSION.utc(started_at)).total_seconds() <= 86400, "cost-window-invalid")
     selected_scopes, images, source_revision = {}, {}, None
     for scope in sorted(selections):
@@ -1547,7 +1550,8 @@ def reserve_cost_original(provider, store, binding, *, request, reserve, task_de
     """
     intent = cost_intent(store, binding)
     if intent is None:
-        require(not required, "cost-intent-required")
+        # Cost observation follows bounded live proof. The native owner still
+        # validates scope, source, request and original-operation identity.
         return reserve()
     if task_definition_arn is not None:
         key = "task_definition" if binding["scope"] == "core-server-persistence" else "definition"
@@ -1671,6 +1675,8 @@ def reserve_cleanup_control(provider, store, binding, phase, request):
     intent = phase_read(store, binding, request["control_phase"])
     budget = cleanup_control_shape(store, binding, intent)
     require(phase_request(intent) == request, "cleanup-control-intent-invalid")
+    if budget is None:
+        return store.reserve(phase, request)
     # Provider freshness, current incarnation and the source-owned change set
     # are checked by phase_control immediately before this short reservation.
     # No new instance/function/endpoint or proof task is admitted, and the fixed
@@ -1687,8 +1693,8 @@ def reserve_cleanup_control(provider, store, binding, phase, request):
 
 def cleanup_control_shape(store, binding, intent):
     budget = cost_intent(store, binding)
-    require(budget is not None and intent is not None and intent["phase"] in {"missed-tick-disable", "fault-disable", "fault-off", "proof-disable"}
-        and intent["mode"] == "UPDATE" and intent["source_revision"] == budget["source_revision"]
+    require(intent is not None and intent["phase"] in {"missed-tick-disable", "fault-disable", "fault-off", "proof-disable"}
+        and intent["mode"] == "UPDATE" and (budget is None or intent["source_revision"] == budget["source_revision"])
         and tuple(intent["parameters"].get(key) for key in ("TickEnabled", "WorkerEnabled", "DenyDispatcherSend")) == ("false", "false", "false"), "cleanup-control-intent-invalid")
     previous_phase = CONTROL_PHASES[intent["phase"]][0]
     previous = phase_read(store, binding, previous_phase)
@@ -1708,32 +1714,32 @@ def control_phase_inputs(store, binding, phase):
     return previous["template"], parameters, previous["source_revision"]
 
 
-def initial_phase_inputs(provider, store, binding, phase):
+def initial_phase_inputs(provider, store, binding, phase, package_paths=None):
     require(phase in {"network-create", "scope-create-disabled"}, "trusted-admission-required")
-    budget = cost_intent(store, binding)
-    require(budget is not None, "cost-intent-required")
+    require(isinstance(package_paths, dict) and set(package_paths) == {"dispatch", "worker"}
+        and all(isinstance(path, str) and path for path in package_paths.values()), "package-receipts-required")
+    packages = qualified_pair(binding, package_paths)
     if phase == "network-create":
         parameters = network_parameters(provider, binding)
         template = rendered_template(binding, "network", parameters)
     else:
-        packages = budget["scopes"][binding["scope"]]["packages"]
         parameters = scope_parameters(provider, binding, packages, False, False)
         template = rendered_template(binding, "scope", parameters)
-    return template, parameters, budget["source_revision"]
+    return template, parameters, packages["dispatch"]["source_revision"]
 
 
-def admit_initial_phase(provider, store, binding, intent, selections):
+def admit_initial_phase(provider, store, binding, intent, selections, package_paths=None):
     """Only disabled resource creation; business-work activation stays closed."""
     require(intent["phase"] in {"network-create", "scope-create-disabled"}, "trusted-admission-required")
-    budget = cost_intent(store, binding)
-    require(budget is not None and budget["source_revision"] == intent["source_revision"], "cost-phase-source-mismatch")
-    template, parameters, revision = initial_phase_inputs(provider, store, binding, intent["phase"])
+    template, parameters, revision = initial_phase_inputs(provider, store, binding, intent["phase"], package_paths)
     require(template == intent["template"] and parameters == intent["parameters"] and revision == intent["source_revision"], "initial-phase-inputs-changed")
-    initial_database_readiness(store, binding, intent, selections)
     if intent["phase"] == "network-create":
         current = ADMISSION.network_facts(provider, binding, intent["parameters"])
         require(current["snapshot"] == intent["network_before"]["snapshot"], "network-before-create-changed")
     else:
+        require(intent["maintenance_selection"] == scope_maintenance_selection(binding, selections[binding["scope"]]),
+            "proof-work-package-selection-mismatch")
+        initial_database_readiness(store, binding, intent, selections)
         network_preservation(provider, store, binding)
 
 
@@ -1807,21 +1813,32 @@ def current_database_observation(provider, store, binding, intent, selection):
     return observed
 
 
+def scope_maintenance_selection(binding, selection):
+    """Keep native package selection in the existing immutable phase intent."""
+    require(isinstance(selection, dict), "proof-work-package-selection-mismatch")
+    key = "qualified_path" if binding["scope"] == "core-server-persistence" else "receipt_path"
+    fields = {key} if binding["scope"] == "core-server-persistence" else {key, "proof_label", "expected_predecessor"}
+    require(fields <= set(selection) and isinstance(selection[key], str) and bool(selection[key]),
+        "proof-work-package-selection-mismatch")
+    return {**{name: selection[name] for name in fields}, key: str(Path(selection[key]).absolute())}
+
+
 def owned_scope_context(provider, store, binding, intent):
     """Derive native identity from original package/resource owners, not input."""
-    budget = cost_intent(store, binding)
-    require(budget is not None and intent["source_revision"] == budget["source_revision"], "proof-work-source-mismatch")
-    selected = budget["scopes"][binding["scope"]]
+    selection = intent["maintenance_selection"]
+    require(scope_maintenance_selection(binding, selection) == selection, "proof-work-package-selection-mismatch")
+    maintenance = maintenance_cost_binding(provider, binding, selection)
+    require(intent["source_revision"] == maintenance["source_revision"], "proof-work-source-mismatch")
     schema = intent["template"]["Mappings"]["Scopes"][binding["scope"]]["Schema"]
-    native = {"source_revision": budget["source_revision"], "image_digest": selected["maintenance"]["image_digest"],
+    native = {"source_revision": intent["source_revision"], "image_digest": maintenance["image_digest"],
         "dependency_incarnation_sha256": cost_owner().proof_semantics().digest({"resource_id": intent["parameters"]["DatabaseResourceId"],
             "database": intent["parameters"]["DatabaseName"], "schema": schema})}
-    require(all(selected["maintenance"].get(key) == value for key, value in native.items()), "proof-work-database-mismatch")
+    require(all(maintenance.get(key) == value for key, value in native.items()), "proof-work-database-mismatch")
     network = capture_phase(provider, store, binding, "network-create")
     authenticate_phase_evidence(provider, store, binding, network)
     require(network["intent"]["source_revision"] == intent["source_revision"], "proof-work-network-source-mismatch")
     key = "qualified_path" if binding["scope"] == "core-server-persistence" else "receipt_path"
-    qualified = Path(selected["selection"][key]).absolute()
+    qualified = Path(selection[key]).absolute()
     require(qualified.is_relative_to(ROOT), "proof-work-package-path-invalid")
     return {"binding": binding, "native_binding": native,
         "required_after": network["terminal"]["Timestamp"].replace("+00:00", "Z")}, qualified.relative_to(ROOT).as_posix()
@@ -1834,7 +1851,7 @@ def current_owned_work(provider, store, binding, intent, database_selection, wor
         and isinstance(database_selection.get(key), str)
         and Path(database_selection[key]).absolute() == (ROOT / qualified_path).absolute(), "proof-work-package-selection-mismatch")
     if binding["scope"] == "entity-smoke":
-        selected = cost_intent(store, binding)["scopes"][binding["scope"]]["selection"]
+        selected = intent["maintenance_selection"]
         require(all(database_selection.get(name) == selected.get(name) for name in ("proof_label", "expected_predecessor")), "proof-work-task-selection-mismatch")
     observed = current_database_observation(provider, store, binding, intent, database_selection)
     owner = cost_owner()
@@ -1894,7 +1911,7 @@ def capture_native_proof(provider, store, binding, phase, selection, *, preparat
             return observed["packet"]
         require(isinstance(selection, dict) and set(selection) == {"operation", "case", "snapshot"}
             and selection["operation"] in owner.SYNTHETIC_TASKS, "proof-capture-native-selection-invalid")
-        original = cost_intent(store, binding)["scopes"][binding["scope"]]["selection"]
+        original = packet["intent"]["maintenance_selection"]
         arguments = ["--receipt", str(ROOT / qualified_path), "--proof-label", original["proof_label"],
             "--expected-predecessor", original["expected_predecessor"], "--proof-stage", "scheduling-proof",
             "--workload", owner.SYNTHETIC_TASKS[selection["operation"]][1], "--operation", selection["operation"], "--scheduling-case", selection["case"]]
@@ -2111,7 +2128,7 @@ def phase_read(store, binding, phase):
         return None
     value = read_json(path)
     require(isinstance(value, dict) and set(value) == {"schema", "target", "scope", "phase", "stack", "mode", "created_at",
-        "template", "parameters", "parameter_inputs", "before", "predecessor_sha256", "source_revision", "network_before"}
+        "template", "parameters", "parameter_inputs", "before", "predecessor_sha256", "source_revision", "network_before", "maintenance_selection"}
         and value["schema"] == "deploy/scheduling-phase-intent/v1" and value["target"] == binding["target"]
         and value["scope"] == ("shared" if phase == "network-create" else binding["scope"])
         and value["phase"] == phase and value["stack"] == (binding["network_stack"] if phase == "network-create" else binding["stack"])
@@ -2121,6 +2138,9 @@ def phase_read(store, binding, phase):
     require(isinstance(value["template"], dict) and isinstance(value["parameters"], dict)
         and isinstance(value["parameter_inputs"], list), "phase-intent-invalid")
     require(isinstance(value["network_before"], dict) if phase == "network-create" else value["network_before"] is None, "phase-network-observation-invalid")
+    require(value["maintenance_selection"] is None if phase == "network-create" else
+        isinstance(value["maintenance_selection"], dict) and scope_maintenance_selection(binding, value["maintenance_selection"]) == value["maintenance_selection"],
+        "proof-work-package-selection-mismatch")
     store.path_for("prepare", phase_request(value))
     return value
 
@@ -2167,12 +2187,15 @@ def validate_phase_evidence(packet, *, target, scope, source_revision, predecess
         and packet["schema"] == "deploy/scheduling-phase-evidence/v1", "phase-evidence-invalid")
     intent = packet["intent"]
     require(isinstance(intent, dict) and set(intent) == {"schema", "target", "scope", "phase", "stack", "mode", "created_at",
-        "template", "parameters", "parameter_inputs", "before", "predecessor_sha256", "source_revision", "network_before"}
+        "template", "parameters", "parameter_inputs", "before", "predecessor_sha256", "source_revision", "network_before", "maintenance_selection"}
         and intent["schema"] == "deploy/scheduling-phase-intent/v1" and intent["target"] == target and intent["scope"] == scope
         and intent["phase"] in CONTROL_PHASES and intent["source_revision"] == source_revision
         and isinstance(source_revision, str) and re.fullmatch(r"[a-f0-9]{40}", source_revision)
         and intent["predecessor_sha256"] == predecessor_sha256, "phase-evidence-intent-mismatch")
     phase = intent["phase"]
+    require(intent["maintenance_selection"] is None if phase == "network-create" else
+        isinstance(intent["maintenance_selection"], dict) and scope_maintenance_selection({"scope": scope}, intent["maintenance_selection"]) == intent["maintenance_selection"],
+        "proof-work-package-selection-mismatch")
     require((scope == "shared") == (phase == "network-create") and intent["mode"] == ("CREATE" if phase in {"network-create", "scope-create-disabled"} else "UPDATE")
         and isinstance(intent["stack"], str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9-]{0,127}", intent["stack"])
         and (predecessor_sha256 is None if phase == "network-create" else isinstance(predecessor_sha256, str) and re.fullmatch(r"[a-f0-9]{64}", predecessor_sha256)), "phase-evidence-intent-mismatch")
@@ -2400,7 +2423,7 @@ def network_preservation(provider, store, binding):
     return {key: value for key, value in current.items() if key != "snapshot"}
 
 
-def phase_control(provider, store, binding, phase, *, action, build_inputs, admit):
+def phase_control(provider, store, binding, phase, *, action, build_inputs, admit, maintenance_selection=None):
     """Original intent is selected before reading any mutable candidate inputs.
 
     Public mutation admission remains closed until the fixed DB, network and
@@ -2447,7 +2470,9 @@ def phase_control(provider, store, binding, phase, *, action, build_inputs, admi
             "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "template": template,
             "parameters": parameters, "parameter_inputs": parameter_inputs, "before": before,
             "predecessor_sha256": None if previous is None else digest(previous), "source_revision": source_revision,
-            "network_before": ADMISSION.network_facts(provider, binding, parameters) if phase == "network-create" else None}
+            "network_before": ADMISSION.network_facts(provider, binding, parameters) if phase == "network-create" else None,
+            "maintenance_selection": None if phase == "network-create" else
+                scope_maintenance_selection(binding, maintenance_selection) if phase == "scope-create-disabled" else previous["maintenance_selection"]}
         require(RESERVATIONS.write_exclusive(phase_path(store, binding, phase), intent), "phase-intent-retention-uncertain")
     if action == "retain":
         return {"verdict": "retained", "code": "initial-network-intent-retained", "intent_sha256": digest(intent), "created_at": intent["created_at"]}
@@ -2566,7 +2591,7 @@ def main(argv=None):
         bounded = args.phase in {"proof-enable", "missed-tick-recovery-enable", "fault-on", "failure-recovery-enable"}
         accepted = args.phase == "accepted-enable"
         if args.operation in {"prepare", "execute"} and not cleanup:
-            if args.database_selections is None or ((bounded or accepted) and args.owned_work is None) or (not bounded and not accepted and args.phase not in {"network-create", "scope-create-disabled"}):
+            if (args.phase != "network-create" and args.database_selections is None) or ((bounded or accepted) and args.owned_work is None) or (not bounded and not accepted and args.phase not in {"network-create", "scope-create-disabled"}):
                 trusted_admission_required()
         provider = Provider(binding)
         if args.operation == "inspect-network":
@@ -2659,7 +2684,8 @@ def main(argv=None):
             return 0
         if args.operation == "retain-network-intent":
             result = phase_control(provider, store, binding, "network-create", action="retain",
-                build_inputs=lambda: initial_phase_inputs(provider, store, binding, "network-create"), admit=lambda _intent: trusted_admission_required())
+                build_inputs=lambda: initial_phase_inputs(provider, store, binding, "network-create",
+                    {"dispatch": args.dispatch_receipt, "worker": args.worker_receipt}), admit=lambda _intent: trusted_admission_required())
             print(json.dumps({"schema": "deploy/scheduling-control-report/v1", **result}, sort_keys=True))
             return 0
         if args.operation == "inspect-preservation":
@@ -2710,10 +2736,15 @@ def main(argv=None):
                     action=args.operation, build_inputs=lambda: control_phase_inputs(store, binding, args.phase),
                     admit=lambda intent: (admit_accepted_phase if accepted else admit_bounded_phase)(provider, store, binding, intent, selections, work))
             else:
-                selections = read_json(args.database_selections)
+                selections = None if args.phase == "network-create" else read_json(args.database_selections)
+                require(selections is None or isinstance(selections, dict) and set(selections) == {binding["scope"]}, "initial-database-selection-invalid")
+                package_paths = {"dispatch": args.dispatch_receipt, "worker": args.worker_receipt}
+                require(all(isinstance(path, str) and path for path in package_paths.values()), "package-receipts-required")
+                maintenance = None if selections is None else selections.get(binding["scope"])
                 result = phase_control(provider, CostAdmittedStore(store, provider, binding), binding, args.phase,
-                    action=args.operation, build_inputs=lambda: initial_phase_inputs(provider, store, binding, args.phase),
-                    admit=lambda intent: admit_initial_phase(provider, store, binding, intent, selections))
+                    action=args.operation, build_inputs=lambda: initial_phase_inputs(provider, store, binding, args.phase, package_paths),
+                    admit=lambda intent: admit_initial_phase(provider, store, binding, intent, selections, package_paths),
+                    maintenance_selection=maintenance)
         else:
             result = phase_control(provider, store, binding, args.phase,
                 action=args.operation, build_inputs=trusted_admission_required, admit=lambda _intent: trusted_admission_required())

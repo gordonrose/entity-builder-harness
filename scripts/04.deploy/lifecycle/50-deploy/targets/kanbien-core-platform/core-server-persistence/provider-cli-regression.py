@@ -5,7 +5,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -67,6 +67,8 @@ class ProviderCliRegression(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='delivery-provider-cli-') as directory:
             root=Path(directory); executable=root/'aws'; executable.write_text(FAKE_AWS); executable.chmod(0o755)
             repository=root/'repository'
+            repository.mkdir()
+            subprocess.run(['git','init','--quiet',str(repository)],check=True,capture_output=True,text=True)
             owner_path=ROOT/'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py'
             spec=importlib.util.spec_from_file_location('fixture_preparation_inputs',owner_path)
             owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)
@@ -74,7 +76,28 @@ class ProviderCliRegression(unittest.TestCase):
                      *map(Path,owner.load(ROOT,'kanbien-core-platform','core-server-persistence')['references'])]
             for relative in sources:
                 destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
-            for relative in [RESTORE.with_name('script.py').relative_to(ROOT),Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py')]:
+            for relative in [RESTORE.with_name('script.py').relative_to(ROOT),Path('scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py'),Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/tasks.py'),
+                             *map(Path,[
+                                 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py',
+                                 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py',
+                                 'scripts/04.deploy/shared/provider-adapters/aws/task_journal.py',
+                                 'scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py',
+                                 'scripts/04.deploy/shared/provider-adapters/aws/snapshots.py',
+                                 'scripts/04.deploy/shared/provider-adapters/aws/change_sets.py',
+                                 'scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py',
+                                 'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py',
+                                 'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py',
+                                 'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py',
+                                 'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py',
+                                 'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py',
+                                 'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py',
+                                 'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py',
+                                 'scripts/04.deploy/operational-realization-gate/script.py',
+                                 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/scheduling-realization-contract.yml',
+                                 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/scheduling-binding.yml',
+                                 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml',
+                                 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml',
+                             ])]:
                 destination=repository/relative;destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/relative,destination)
             inventory=repository/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('import os,sys\nsys.exit(1 if os.environ.get("FIXTURE_SCENARIO")=="inventory-gap" else 0)\n')
             command_path=repository/RESTORE.with_name('script.py').relative_to(ROOT)
@@ -93,6 +116,9 @@ class ProviderCliRegression(unittest.TestCase):
                     operations=[json.loads(line)[1] for line in calls.read_text().splitlines()] if calls.exists() else []
                     self.assertNotIn('delete-db-instance',operations)
                     self.assertNotIn('delete-role-policy',operations)
+                    self.assertFalse((repository/'.git/scheduling-control/kanbien-core-platform-cost-intent.json').exists())
+                    for journal in ('persistence-snapshots','persistence-restores'):
+                        self.assertEqual(list((repository/'.git'/journal).rglob('*.json')),[])
                     if scenario=='policy-present':self.assertEqual(report['findings'][0]['code'],'persistence-restoration-temporary-identity-policy-mismatch')
                     if verdict=='cleaned-up':
                         self.assertIn('get-role-policy',operations)

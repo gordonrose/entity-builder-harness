@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 45
+#   version: 47
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-27"
@@ -2872,6 +2872,15 @@ checks:
     - scripts/04.deploy/shared/postgresql-version.py
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+    - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py
+    - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py
+    - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py
+    - scripts/04.deploy/operational-realization-gate/script.py
     - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
     - infra/04.deploy/03.product/image/core-server-persistence
     - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
@@ -6286,6 +6295,7 @@ repository_inputs:
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal
   checks:
   - acceptance-route-regression
 - inputs:
@@ -6315,6 +6325,20 @@ repository_inputs:
   - deployment-operation-diagnostics-regression
 - inputs:
   - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate
+  checks:
+  - persistence-provider-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+  - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py
+  - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py
+  - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py
+  - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py
+  - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py
+  - scripts/04.deploy/operational-realization-gate/script.py
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling-network.yml
   checks:
   - persistence-provider-regression
 - inputs:

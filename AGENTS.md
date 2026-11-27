@@ -44,7 +44,8 @@ explicitly grants write permission for task files.
 
 <!-- llm-workbench:end -->
 
-For execution tasks, follow `.agentic/shared/standards/require-change-completion.md` alongside the owning workflow.
+For every implementation goal, follow [lean end-to-end first](.agentic/shared/standards/require-change-completion.md#lean-end-to-end-first).
+Use that completion standard alongside the owning workflow for execution tasks.
 For coding changes, also use `.agentic/shared/workflows/verify-diagnostic-coverage.md`.
 
 - Stop when repo state, branch state, task ownership, prompt-level routing, chat lifecycle state, or governance coverage is ambiguous or absent.
@@ -98,6 +99,7 @@ Where previous implementation is recognized as being incorrect, the implementati
 
 When working with me, use small, teachable increments.
 
+<!-- deterministic-check: allow reason="teaching explanations and user agreement require human judgment; this section does not prescribe an executable verification check" -->
 Before making each meaningful code change:
 - explain the goal in plain English;
 - name the exact files likely involved;

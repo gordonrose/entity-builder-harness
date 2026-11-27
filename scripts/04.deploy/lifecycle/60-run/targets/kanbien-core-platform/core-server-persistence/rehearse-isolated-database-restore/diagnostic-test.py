@@ -146,7 +146,7 @@ class DiagnosticTests(unittest.TestCase):
  def target(self):
   src={'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','InstanceCreateTime':'2020-01-01T00:00:00Z','DBInstanceClass':'db.t4g.micro','DBSubnetGroup':{'DBSubnetGroupName':'fixture-subnets'}}
   point={'DBSnapshotIdentifier':SID,'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','SnapshotCreateTime':'2026-10-24T00:00:00Z','Status':'available','Encrypted':True}
-  proof={'task':{'started_at':'2026-10-23T00:00:00Z','stopped_at':'2026-10-23T00:00:01Z'},'integrity':{'payload_sha256':'b'*64}}
+  proof={'task':{'started_at':'2026-10-23T00:00:00Z','stopped_at':'2026-10-23T00:00:01Z'},'integrity':{'payload_sha256':'sha256:'+'b'*64}}
   tags,_=self.m.recovery_point_binding(src,point,SID,RID,proof)[0]
   restored={**src,'DBInstanceIdentifier':RID,'DbiResourceId':'db-RESTORED','DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Endpoint':{'Address':'fixture.invalid'},'TagList':[{'Key':k,'Value':v} for k,v in tags.items()]}
   controls={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':DEFINITION,'PersistenceRestoredDatabaseSecurityGroupId':'sg-'+'a'*17,'PersistenceRestorationVerifierTaskRoleName':'fixture-role','PrivateSubnetIds':'subnet-fixture','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
@@ -213,6 +213,14 @@ class DiagnosticTests(unittest.TestCase):
  def test_clone_creation_retains_original_when_submission_response_is_lost(self):
   provider,stack=self.target()
   with stack,patch.object(self.m,'db',return_value=(None,'aws-resource-missing')):
+   proof=self.m.read_record_proof(Path('fixture-proof.json'))[0]
+   for digest in ('b'*64,'sha256:'+'B'*64,'sha256:'+'b'*63,'SHA256:'+'b'*64,None,{}):
+    malformed=copy.deepcopy(proof);malformed['integrity']['payload_sha256']=digest
+    with patch.object(self.m,'read_record_proof',return_value=(malformed,'ok')):
+     _,blocked=self.capture(self.m.restore,provider,SID,RID,record_proof_path=Path('fixture-proof.json'))
+    self.assertEqual(blocked['findings'][0]['code'],'persistence-restore-original-resource-not-confirmed')
+    self.assertEqual(self.m.scheduling_resource_census(),[])
+    self.assertFalse(any(call[1]=='restore-db-instance-from-db-snapshot' for call in provider.calls))
    invoke=provider.aws
    def lost(*args):
     if args[1]=='restore-db-instance-from-db-snapshot':
@@ -226,7 +234,9 @@ class DiagnosticTests(unittest.TestCase):
    original=originals[0]
    self.assertEqual(original['request']['database'],RID)
    self.assertEqual(original['request']['instance_class'],'db.t4g.micro')
+   self.assertEqual(original['request']['record_proof_sha256'],'b'*64)
    self.assertIn('Key=ResourceOperation,Value='+original['operation_id'],provider.calls[-1])
+   self.assertIn('Key=RecordProofDigest,Value=sha256:'+'b'*64,provider.calls[-1])
    status,second=self.capture(self.m.restore,provider,SID,RID,record_proof_path=Path('fixture-proof.json'))
    self.assertEqual(second['findings'][0]['code'],'persistence-restore-reserved-reconcile-only')
    self.assertEqual(len([call for call in provider.calls if call[1]=='restore-db-instance-from-db-snapshot']),1)
@@ -244,6 +254,13 @@ class DiagnosticTests(unittest.TestCase):
    self.assertEqual(blocked['verdict'],'blocked')
    self.assertFalse(any(call[1]=='delete-db-instance' for call in provider.calls))
    provider.restored['DBInstanceStatus']='failed'
+   digest_tag=next(item for item in provider.restored['TagList'] if item['Key']=='RecordProofDigest')
+   for digest in ('b'*64,'sha256:'+'c'*64):
+    digest_tag['Value']=digest
+    _,blocked=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(blocked['findings'][0]['code'],'persistence-restore-cleanup-terminal-ownership-not-confirmed')
+    self.assertFalse(any(call[1] in {'delete-role-policy','delete-db-instance'} for call in provider.calls))
+   digest_tag['Value']=proof['integrity']['payload_sha256']
    _,first=self.capture(self.m.cleanup,provider,SID,RID)
    self.assertEqual(first['verdict'],'pending',first)
    retained=self.m.restore_cleanup_store().records()

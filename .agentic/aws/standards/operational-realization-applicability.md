@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.standard.operational-realization-applicability
-version: 23
+version: 24
 status: active
 created_on: "2026-10-24"
 updated_on: "2026-11-27"
@@ -75,8 +75,13 @@ declared functions, queues, roles, alarms and immutable versions with both
 automatic controls disabled. The controller must first prove its own complete
 source/artifact/semantic/live-read/change-set/preflight prerequisites, current
 shared-VPC compatibility, qualified package identities, scoped migration and
-permission evidence, and an explicit finite proof-spend envelope within the
-remaining US$10 allowance. Its preflight does not claim execution of a function
+permission evidence. The user's later instruction moves detailed cost checks
+after the first bounded live proof, not before it. Initial proof uses the
+existing phase records for package/database identity and does not require a
+cost intent or the other scope's deployment. Preserve finite execution windows,
+function limits, retries and original-operation reconciliation. Report costs
+afterward; this ordering is not an assertion of a pre-enforced US$10 cap.
+Its preflight does not claim execution of a function
 that does not yet exist. Unknown consumers or changed legacy access block the
 private-DNS change; stopped legacy services must not be repaired or scaled.
 

@@ -354,7 +354,7 @@ PY
 expect_failure "persistence-restoration-identity-binding-invalid" "$restore_source_identity"
 
 python3 -B - "$ROOT" <<'PY'
-import contextlib, importlib.util, io, json, sys
+import contextlib, copy, importlib.util, io, json, sys
 from pathlib import Path
 from unittest.mock import patch
 spec=importlib.util.spec_from_file_location('b10_declaration',Path(sys.argv[1])/'scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py'); module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
@@ -376,5 +376,43 @@ for status in [[],{}]:
     try: module.check_profile(profile)
     except module.DeclarationFailure as error: assert error.codes==('e0-fact-status-invalid',)
     else: raise AssertionError('malformed status accepted')
+target=Path(sys.argv[1])/'infra/04.deploy/03.product/targets/kanbien-core-platform'
+catalogue=module.mapping(target/'40-package-custody/github-actions/pipeline-index.yml','fixture-invalid')
+module.check_pipeline(target)
+def check_pipeline(value, expected=None):
+    with patch.object(module,'mapping',return_value=value):
+        try: module.check_pipeline(target)
+        except module.DeclarationFailure as error: assert error.codes==(expected,), (expected,error.codes)
+        else: assert expected is None, expected
+for pipeline_id in ('core-scheduling-package-custody','entity-smoke-scheduling-package-custody'):
+    for state in ('candidate-not-live','active'):
+        value=copy.deepcopy(catalogue); selected=next(item for item in value['pipelines'] if item['id']==pipeline_id)
+        selected['state']=state; check_pipeline(value)
+    for field,changed,code in [
+        ('provider_identity','unrelated-role','pipeline-record-invalid'),
+        ('package_destination','unrelated-repository','pipeline-record-invalid'),
+        ('permitted_source_ref','refs/heads/chat','pipeline-record-invalid'),
+        ('executable_workflow','.github/workflows/unrelated.yml','pipeline-record-invalid'),
+        ('delivery_access_contract','unrelated.delivery-access.yml','pipeline-record-invalid'),
+        ('trigger','push','pipeline-record-invalid'),
+        ('approval','none','pipeline-record-invalid'),
+        ('state','unreviewed','pipeline-record-invalid'),
+        ('deployment_boundary','deploy-from-publisher','pipeline-authority-invalid'),
+        ('used_by_scopes',['bootstrap-runtime'],'pipeline-authority-invalid'),
+        ('permitted_operations',['qualify-local-image','execute-workload'],'pipeline-authority-invalid'),
+        ('required_proofs',['local-image-qualification','delivery-access-coverage'],'pipeline-authority-invalid'),
+    ]:
+        value=copy.deepcopy(catalogue); selected=next(item for item in value['pipelines'] if item['id']==pipeline_id)
+        selected[field]=changed; check_pipeline(value,code)
+for pipeline_id in ('core-server-package-custody','core-server-persistence-package-custody','core-server-persistence-observability-collector-package-custody'):
+    value=copy.deepcopy(catalogue); next(item for item in value['pipelines'] if item['id']==pipeline_id)['state']='candidate-not-live'
+    check_pipeline(value,'pipeline-record-invalid')
+for mutation in ('missing','unknown','duplicate-replacement','duplicate-extra'):
+    value=copy.deepcopy(catalogue)
+    if mutation=='missing':value['pipelines'].pop()
+    if mutation=='unknown':value['pipelines'][-1]['id']='unknown-publisher'
+    if mutation=='duplicate-replacement':value['pipelines'][-1]=copy.deepcopy(value['pipelines'][0])
+    if mutation=='duplicate-extra':value['pipelines'].append(copy.deepcopy(value['pipelines'][0]))
+    check_pipeline(value,'pipeline-record-missing')
 PY
 echo "Core-platform target declaration tests passed."

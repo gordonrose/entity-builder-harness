@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.scheduling-runtime-proof
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-27"
@@ -104,7 +104,7 @@ def delivery_fixture(scope="core-server-persistence"):
     return {"scope": scope, "before": before, "after": after, "dispatches": [{"observation": dispatch}], "workers": [{"observation": worker}]}
 
 
-def release_fixture(scope="core-server-persistence"):
+def release_fixture(scope="core-server-persistence", maintenance_selection=None):
     control = owner.control_owner()
     binding = control.load_binding("kanbien-core-platform", scope)
     expected = {"target": binding["target"], "scope": scope, "source_revision": "a" * 40,
@@ -145,7 +145,10 @@ def release_fixture(scope="core-server-persistence"):
             intent = {"schema": "deploy/scheduling-phase-intent/v1", "target": binding["target"], "scope": "shared" if component == "network" else scope,
                 "phase": phase, "stack": stack, "mode": mode, "created_at": now(), "template": template, "parameters": parameters,
                 "parameter_inputs": inputs, "before": before, "predecessor_sha256": None if prior is None else control.digest(prior["intent"]),
-                "source_revision": expected["source_revision"], "network_before": {} if component == "network" else None}
+                "source_revision": expected["source_revision"], "network_before": {} if component == "network" else None,
+                "maintenance_selection": None if component == "network" else maintenance_selection or
+                    ({"qualified_path": "/controlled/core-package.json"} if scope == "core-server-persistence" else
+                    {"receipt_path": "/controlled/entity-package.json", "proof_label": "entity-smoke-" + "a" * 24, "expected_predecessor": None})}
             request = control.phase_request(intent)
             preparation, _ = store.reserve("prepare", request); execution, _ = store.reserve("execute", request)
             terminal = {"EventId": "controlled-event-" + phase, "StackId": state["stack_id"], "LogicalResourceId": stack,
@@ -1289,52 +1292,6 @@ class ResourceCostTests(unittest.TestCase):
         self.assertEqual(second["costs_usd"]["resource:kp-controlled"], first["costs_usd"]["resource:kp-controlled"])
 
 
-def native_measurement_fixture():
-    return {"schema": "deploy/scheduling-native-workload-receipt/v1", "context": {
-        "check_id": "postgresql-disposable-diagnostics", "command": ["bash",
-            "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh"],
-        "input_sha256": "a" * 64, "contract_sha256": "b" * 64}, "completed_at": "2026-11-26T11:00:00Z",
-        "elapsed_seconds": 48, "cleanup_confirmed": True, "measurement": {
-            "event": "postgresql-disposable-scheduling-workload-measured", "schema": "kanbien/scheduling-native-workload/v1",
-            "samples": [{"scope": scope, "occurrences": 128, "retained_bytes": 128 * 2400, "wal_bytes": 128 * 4100,
-                "retained_bytes_per_occurrence": 2400, "wal_bytes_per_occurrence": 4100, "server_version_num": 180006,
-                "block_size": 8192, "full_page_writes": True} for scope in ("core-server-persistence", "entity-smoke")]}}
-
-
-class NativeWorkloadTests(unittest.TestCase):
-    def test_measurement_rejects_changed_source_cleanup_and_allowance(self):
-        packet = native_measurement_fixture()
-        self.assertEqual(len(owner.validate_native_workload_measurement(packet, expected_context=packet["context"])["samples"]), 2)
-        for key, value in (("cleanup_confirmed", False), ("elapsed_seconds", 91)):
-            changed = copy.deepcopy(packet); changed[key] = value
-            with self.subTest(key=key), self.assertRaises(owner.ProofFailure): owner.validate_native_workload_measurement(changed)
-        with self.assertRaisesRegex(owner.ProofFailure, "inputs-changed"):
-            owner.validate_native_workload_measurement(packet, expected_context={**packet["context"], "input_sha256": "c" * 64})
-        for field, value in (("wal_bytes", 128 * 262144 + 1), ("occurrences", 127), ("full_page_writes", False), ("scope", "entity-smoke")):
-            changed = copy.deepcopy(packet); changed["measurement"]["samples"][0][field] = value
-            with self.subTest(field=field), self.assertRaises(owner.ProofFailure): owner.validate_native_workload_measurement(changed)
-
-    def test_capture_requires_real_command_terminal_labels_and_unique_measurement(self):
-        import subprocess
-        from types import SimpleNamespace
-        packet = native_measurement_fixture()
-        labels = ["PostgreSQL disposable integration proof passed.", "PostgreSQL disposable fixture engine cleanup passed.",
-            "PostgreSQL disposable fixture directory cleanup passed."]
-        row = json.dumps(packet["measurement"], separators=(",", ":"))
-        for output, okay in (("\n".join([row, *labels]), True), ("\n".join([row, *labels[:-1]]), False),
-                ("\n".join([row, row, *labels]), False)):
-            with patch.object(owner, "native_workload_context", return_value=packet["context"]), \
-                 patch.object(subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=output, stderr="")) as run:
-                if okay: self.assertTrue(owner.capture_native_workload_measurement()["cleanup_confirmed"])
-                else:
-                    with self.assertRaises(owner.ProofFailure): owner.capture_native_workload_measurement()
-                self.assertEqual(run.call_args.args[0], packet["context"]["command"])
-        with patch.object(owner, "native_workload_context", return_value=packet["context"]), \
-             patch.object(subprocess, "run", side_effect=OSError("private-canary")):
-            with self.assertRaisesRegex(owner.ProofFailure, "execution-unconfirmed") as failure: owner.capture_native_workload_measurement()
-            self.assertNotIn("private-canary", str(failure.exception))
-
-
 def monthly_observation_fixture(*, billed_duration_ms=50):
     # Controlled affordable boundary, not a claim about actual AWS performance.
     # Separate 250ms/1250ms fixtures must reject under the unchanged $25 limit.
@@ -1388,24 +1345,18 @@ def monthly_observation_fixture(*, billed_duration_ms=50):
         value = json.loads(price_fixture(url)); value["publicationDate"] = "2026-11-26T00:00:00Z"; return json.dumps(value).encode()
     return provider, {"components": components, "database": "test-database", "notification_topic_arn": TOPIC,
         "endpoint_id": "vpce-12345678", "started_at": "2026-11-26T12:00:00Z", "ended_at": "2026-11-26T12:15:00Z",
-        "native_measurement": native_measurement_fixture(), "price_fetch": prices, "now": datetime.fromisoformat("2026-11-26T12:16:00+00:00")}
+        "price_fetch": prices, "now": datetime.fromisoformat("2026-11-26T12:16:00+00:00")}
 
 
 class ObservedCostTests(unittest.TestCase):
     def validate(self, packet, arguments, **overrides):
         selected = {key: arguments[key] for key in ("components", "database", "notification_topic_arn", "endpoint_id")}
-        selected["native_context"] = arguments["native_measurement"]["context"]
         return owner.validate_monthly_cost_observation(packet, **{**selected, **overrides})
-
-    def setUp(self):
-        selected = patch.object(owner, "native_workload_context", return_value=native_measurement_fixture()["context"])
-        selected.start(); self.addCleanup(selected.stop)
-        capture = patch.object(owner, "capture_native_workload_measurement", side_effect=AssertionError("Unit tests must not launch native integration."))
-        capture.start(); self.addCleanup(capture.stop)
 
     def test_actual_inputs_forecast_declared_workload_with_sensitivity_and_runway(self):
         provider, arguments = monthly_observation_fixture()
-        result = owner.observed_monthly_cost_projection(provider, **arguments)
+        with patch("subprocess.run", side_effect=AssertionError("cost observation launched a local command")):
+            result = owner.observed_monthly_cost_projection(provider, **arguments)
         self.assertEqual(result["combined_jobs"], 100000)
         self.assertGreater(Decimal(result["projected_usd"]), 16)
         self.assertTrue(result["projection_complete"])
@@ -1433,8 +1384,6 @@ class ObservedCostTests(unittest.TestCase):
         foreign = copy.deepcopy(arguments["components"]); foreign["entity-smoke"]["worker"]["source_revision"] = "f" * 40
         with self.assertRaisesRegex(owner.ProofFailure, "custody-mismatch"):
             self.validate(result, arguments, components=foreign)
-        with self.assertRaisesRegex(owner.ProofFailure, "inputs-changed"):
-            self.validate(result, arguments, native_context={})
         for key, value in (("database", "foreign-db"), ("notification_topic_arn", "foreign-topic"), ("endpoint_id", "foreign-endpoint")):
             with self.subTest(key=key), self.assertRaisesRegex(owner.ProofFailure, "environment-custody-mismatch"):
                 self.validate(result, arguments, **{key: value})
@@ -1507,8 +1456,6 @@ class CostEvidenceTests(unittest.TestCase):
         self.store = self.control.Store(Path(self.directory.name))
         self.binding = {"target": "kanbien-core-platform", "scope": "core-server-persistence"}
         provider, arguments = monthly_observation_fixture()
-        self.native = arguments["native_measurement"]
-        self.patches.enter_context(patch.object(owner, "native_workload_context", return_value=self.native["context"]))
         original = owner.observed_monthly_cost_projection(provider, **arguments)
         material = copy.deepcopy(original["observed_inputs"])
         for scope in arguments["components"]:
@@ -1545,7 +1492,9 @@ class CostEvidenceTests(unittest.TestCase):
                 "template": {"Resources": {name: {"Type": value["ResourceType"]} for name, value in resources.items()}}, "parameters": parameters,
                 "parameter_inputs": [{"ParameterKey": name, "ParameterValue": value} for name, value in sorted(parameters.items())], "before": None,
                 "predecessor_sha256": None if network else self.control.digest(self.phases["network-create"]["intent"]), "source_revision": "a" * 40,
-                "network_before": {} if network else None}
+                "network_before": {} if network else None,
+                "maintenance_selection": None if network else {"qualified_path": "/controlled/core-package.json"} if key == "core-server-persistence" else
+                    {"receipt_path": "/controlled/entity-package.json", "proof_label": "entity-smoke-" + "a" * 24, "expected_predecessor": None}}
             request = self.control.phase_request(intent)
             reservations = {phase: {"schema": self.control.Store.schema, "phase": phase, "operation_id": "scheduling-" + str(ordinal * 2 + index + 1).zfill(32),
                 "request": request, "request_sha256": self.control.digest(request), "reserved_at": stamp} for index, phase in enumerate(("prepare", "execute"))}
@@ -1573,39 +1522,26 @@ class CostEvidenceTests(unittest.TestCase):
         self.patches.enter_context(patch.object(self.control, "capture_phase", side_effect=lambda _p, _s, binding, phase: copy.deepcopy(self.phases[phase if phase == "network-create" else binding["scope"]])))
         self.authenticate_phase = self.patches.enter_context(patch.object(self.control, "authenticate_phase_evidence", return_value={}))
         self.source = self.patches.enter_context(patch.object(owner, "cost_capture_current_source"))
-        self.capture = self.patches.enter_context(patch.object(owner, "capture_native_workload_measurement", return_value=copy.deepcopy(self.native)))
         self.observe = self.patches.enter_context(patch.object(owner, "observed_monthly_cost_projection", return_value=copy.deepcopy(self.projection)))
         self.recovery_read = self.patches.enter_context(patch.object(self.control, "recovery_acceptance_resources", side_effect=lambda *_: copy.deepcopy(self.recovery)))
 
     def collect(self, **overrides):
         return owner.collect_cost_evidence(self.provider, self.store, self.binding, **{**self.arguments, **overrides})
 
-    def test_capture_reuses_original_without_native_or_price_metric_recapture(self):
+    def test_capture_reuses_original_without_price_metric_recapture(self):
         first = self.collect()
         self.assertEqual(self.collect(), first)
-        self.assertEqual(self.capture.call_count, 1)
         self.assertEqual(self.observe.call_count, 1)
-        self.assertEqual(self.observe.call_args.kwargs["native_measurement"], self.native)
         self.assertEqual(first["recovery_resources"], self.recovery)
         self.assertEqual(owner.authenticate_cost_evidence(self.provider, self.store, self.binding, first, **self.selection), first)
-        self.assertEqual(self.capture.call_count, 1)
         with self.assertRaisesRegex(owner.ProofFailure, "window-changed"):
             self.collect(started_at="2026-11-26T12:05:00Z")
-        self.assertEqual(owner.read_cost_evidence(owner.cost_evidence_paths(self.store, self.binding)[0]), first)
-
-    def test_native_success_survives_later_read_failure_and_unknown_outcome(self):
-        self.observe.side_effect = [owner.ProofFailure("controlled-observation-unavailable"), copy.deepcopy(self.projection)]
-        with self.assertRaisesRegex(owner.ProofFailure, "controlled-observation-unavailable"): self.collect()
-        path, native = owner.cost_evidence_paths(self.store, self.binding)
-        self.assertFalse(path.exists()); self.assertTrue(native.exists())
-        self.collect()
-        self.assertEqual(self.capture.call_count, 1)
-        self.assertEqual(self.observe.call_count, 2)
+        self.assertEqual(owner.read_cost_evidence(owner.cost_evidence_path(self.store, self.binding)), first)
 
     def test_historical_replay_never_reads_current_source_store_or_provider(self):
         packet = self.collect()
         forbidden = AssertionError("historical replay performed a live read")
-        with patch.object(owner, "native_workload_context", side_effect=forbidden), patch.object(owner, "read_cost_evidence", side_effect=forbidden), \
+        with patch.object(owner, "read_cost_evidence", side_effect=forbidden), \
                 patch.object(owner, "cost_capture_current_source", side_effect=forbidden), patch.object(self.control, "authenticate_phase_evidence", side_effect=forbidden), \
                 patch.object(self.control, "recovery_acceptance_resources", side_effect=forbidden):
             self.assertEqual(owner.authenticate_cost_evidence(None, None, self.binding, packet, historical=True, **self.selection), packet)
@@ -1613,10 +1549,10 @@ class CostEvidenceTests(unittest.TestCase):
         with self.assertRaises((ValueError, self.control.Failure)):
             owner.authenticate_cost_evidence(None, None, self.binding, changed, historical=True, **self.selection)
 
-    def test_live_rejects_replaced_database_changed_native_inputs_and_expired_window(self):
+    def test_live_rejects_replaced_database_changed_source_and_expired_window(self):
         packet = self.collect()
-        with patch.object(owner, "native_workload_context", return_value={**self.native["context"], "input_sha256": "c" * 64}):
-            with self.assertRaisesRegex(owner.ProofFailure, "inputs-changed"):
+        with patch.object(owner, "cost_capture_current_source", side_effect=owner.ProofFailure("cost-capture-source-changed")):
+            with self.assertRaisesRegex(owner.ProofFailure, "source-changed"):
                 owner.authenticate_cost_evidence(self.provider, self.store, self.binding, packet, **self.selection)
         def changed_database(service, operation, **kwargs):
             value = self.provider(service, operation, **kwargs)
@@ -1629,25 +1565,15 @@ class CostEvidenceTests(unittest.TestCase):
             def now(cls, tz=None): return datetime(2026, 11, 26, 13, 16, tzinfo=timezone.utc)
         with patch.object(owner, "datetime", Later), self.assertRaisesRegex(owner.ProofFailure, "stale"):
             owner.authenticate_cost_evidence(self.provider, self.store, self.binding, packet, **self.selection)
-        self.assertEqual(self.capture.call_count, 1); self.assertEqual(self.observe.call_count, 1)
+        self.assertEqual(self.observe.call_count, 1)
 
     def test_capture_mutex_is_distinct_and_does_not_remeasure_when_busy(self):
-        path, _ = owner.cost_evidence_paths(self.store, self.binding)
+        path = owner.cost_evidence_path(self.store, self.binding)
         with self.control.JOURNAL.locked(path, path.with_suffix(".lock"), b"scheduling-monthly-cost-capture/v1\n", owner.read_cost_evidence):
             with self.assertRaisesRegex(owner.ProofFailure, "busy-or-metadata-invalid"): self.collect()
             budget = self.control.cost_path(self.store, self.binding["target"])
             with self.control.JOURNAL.locked(budget, budget.with_suffix(".lock"), b"scheduling-cost-intent/v1\n", owner.read_cost_evidence): pass
-        self.capture.assert_not_called(); self.observe.assert_not_called()
-
-    def test_retained_native_mismatch_never_recaptures_or_replaces_original(self):
-        self.observe.side_effect = owner.ProofFailure("controlled-observation-unavailable")
-        with self.assertRaisesRegex(owner.ProofFailure, "controlled-observation-unavailable"): self.collect()
-        _path, native_path = owner.cost_evidence_paths(self.store, self.binding)
-        original = native_path.read_bytes()
-        self.intent["expires_at"] = "2026-11-26T14:00:00Z"
-        with self.assertRaisesRegex(owner.ProofFailure, "native-original-mismatch"): self.collect()
-        self.assertEqual(native_path.read_bytes(), original)
-        self.assertEqual(self.capture.call_count, 1); self.assertEqual(self.observe.call_count, 1)
+        self.observe.assert_not_called()
 
     def test_original_peer_phase_cannot_select_an_unbudgeted_image(self):
         packet = self.collect()
@@ -1660,21 +1586,20 @@ class CostEvidenceTests(unittest.TestCase):
     def test_recovery_census_required_before_measurement_and_stable_before_retention(self):
         self.recovery_read.side_effect = self.control.Failure("recovery-clone-cleanup-required")
         with self.assertRaisesRegex(self.control.Failure, "clone-cleanup-required"): self.collect()
-        self.capture.assert_not_called(); self.observe.assert_not_called()
+        self.observe.assert_not_called()
         changed = copy.deepcopy(self.recovery)
         changed["snapshots"]["entity-smoke"]["snapshot"] += "-changed"
         self.recovery_read.side_effect = [copy.deepcopy(self.recovery), changed]
         with self.assertRaisesRegex(owner.ProofFailure, "recovery-resources-changed"): self.collect()
-        self.assertFalse(owner.cost_evidence_paths(self.store, self.binding)[0].exists())
-        self.assertEqual(self.capture.call_count, 1)
+        self.assertFalse(owner.cost_evidence_path(self.store, self.binding).exists())
 
     def test_live_recovery_census_cannot_change_or_remove_the_original_snapshots(self):
         packet = self.collect()
         self.recovery["snapshots"]["entity-smoke"]["snapshot"] += "-replacement"
         with self.assertRaisesRegex(owner.ProofFailure, "recovery-resources-changed"):
             owner.authenticate_cost_evidence(self.provider, self.store, self.binding, packet, **self.selection)
-        self.assertEqual(owner.read_cost_evidence(owner.cost_evidence_paths(self.store, self.binding)[0]), packet)
-        self.assertEqual(self.capture.call_count, 1); self.assertEqual(self.observe.call_count, 1)
+        self.assertEqual(owner.read_cost_evidence(owner.cost_evidence_path(self.store, self.binding)), packet)
+        self.assertEqual(self.observe.call_count, 1)
 
     def test_historical_recovery_resources_reject_unpriced_foreign_or_incomplete_census(self):
         packet = self.collect()
@@ -1694,16 +1619,16 @@ class CostEvidenceTests(unittest.TestCase):
             with self.subTest(resources=changed["recovery_resources"]), self.assertRaises(ValueError):
                 owner.authenticate_cost_evidence(None, None, self.binding, changed, historical=True, **self.selection)
 
-    def test_invalid_window_is_rejected_before_native_or_provider_capture(self):
+    def test_invalid_window_is_rejected_before_provider_capture(self):
         with self.assertRaisesRegex(owner.ProofFailure, "observation-window-invalid"):
             self.collect(started_at="2026-11-26T12:05:00Z")
-        self.capture.assert_not_called(); self.observe.assert_not_called()
+        self.observe.assert_not_called()
         self.authenticate_phase.assert_not_called(); self.source.assert_not_called()
 
     def test_actual_log_group_must_match_selected_runtime(self):
         self.phases["entity-smoke"]["readback"]["resources"]["RuntimeLogs"]["PhysicalResourceId"] += "-different"
         with self.assertRaisesRegex(owner.ProofFailure, "runtime-mismatch"): self.collect()
-        self.capture.assert_not_called(); self.observe.assert_not_called()
+        self.observe.assert_not_called()
 
 
 if __name__ == "__main__":

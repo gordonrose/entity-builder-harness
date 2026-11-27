@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection.repository-contracts
-#   version: 34
+#   version: 36
 #   status: active
 #   created_on: "2026-10-29"
 #   updated_on: "2026-11-27"
@@ -29,7 +29,8 @@ class RepositoryContractTests(unittest.TestCase):
         contracts = 'infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/'
         cases = [('.agentic/04.deploy/schemas/change-impact.v1.schema.yml', 'persistence-composition'),
                  (contracts + 'core-scheduling-package-custody.delivery-access.yml', 'managed-handler-image-contracts'),
-                 (contracts + 'entity-smoke-scheduling-package-custody.delivery-access.yml', 'managed-handler-image-contracts')]
+                 (contracts + 'entity-smoke-scheduling-package-custody.delivery-access.yml', 'managed-handler-image-contracts'),
+                 ('scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal', 'acceptance-route-regression')]
         for path, identity in cases:
             with self.subTest(path=path):
                 inputs = checks[identity]['inputs']
@@ -1057,9 +1058,16 @@ console.log(JSON.stringify([...files].sort()));
             'infra/04.deploy/03.product/entrypoints/entity-smoke/diagnostics.ts',
             'infra/04.deploy/03.product/entrypoints/entity-smoke/verification.ts',
             'infra/04.deploy/03.product/entrypoints/entity-smoke/proof-facts.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/administration.ts',
+            'infra/04.deploy/03.product/entrypoints/entity-smoke/preflight.ts',
             'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration.ts',
             'infra/04.deploy/03.product/entrypoints/shared/persistence/configuration-implementation.ts',
             'infra/04.deploy/03.product/entrypoints/shared/persistence/operation-diagnostics.ts',
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/scheduling-administration.ts',
+            'infra/04.deploy/03.product/entrypoints/shared/persistence/role-credential.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts',
+            'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-scheduling.app.ts',
             'infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts',
@@ -1330,6 +1338,17 @@ console.log(JSON.stringify([...files].sort()));
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
         entrypoints = 'infra/04.deploy/03.product/entrypoints/'
         templates = 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/'
+        provider_dependencies = [
+            'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py',
+            'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py',
+            'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py',
+            'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py',
+            'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py',
+            'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py',
+            'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py',
+            'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/admission.py',
+            'scripts/04.deploy/operational-realization-gate/script.py',
+        ]
         cases = {
             '.agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml': 'core-dependency-boundary',
             **{entrypoints + scope + '-scheduling-' + purpose + '.tsconfig.json': 'core-dependency-boundary'
@@ -1337,6 +1356,7 @@ console.log(JSON.stringify([...files].sort()));
             **{entrypoints + 'contracts/' + name + '-diagnostics.v1.json': 'diagnostic-catalog-readers'
                for name in ('kanbien-core-server-acceptance', 'scheduling-target')},
             **{templates + name + '.yml': 'persistence-provider-regression' for name in ('scheduling', 'scheduling-network')},
+            **{path: 'persistence-provider-regression' for path in provider_dependencies},
             'apps/entity-smoke/features/test-entity/domain/services/purge-expired-test-entities.ts': 'postgresql-disposable-diagnostics',
             'platform/testing/src/index.ts': 'postgresql-disposable-diagnostics',
             entrypoints + 'entity-smoke/postgresql.ts': 'postgresql-disposable-diagnostics',
@@ -1359,14 +1379,30 @@ console.log(JSON.stringify([...files].sort()));
                 # An incidental/full-graph consumer cannot replace either edge.
                 removed = [path for path in inputs if not selection.below(source, path)]
                 self.assertFalse(any(selection.below(source, path) for path in removed))
+                if owner == 'persistence-provider-regression':
+                    with tempfile.TemporaryDirectory(prefix='scheduler-provider-input-') as directory:
+                        root = Path(directory); dependency = root / source
+                        dependency.parent.mkdir(parents=True); dependency.write_text('original')
+                        before = selection.fingerprint(root, inputs)
+                        dependency.write_text('changed')
+                        self.assertNotEqual(before, selection.fingerprint(root, inputs))
+                        before = selection.fingerprint(root, removed)
+                        dependency.write_text('changed-again')
+                        self.assertEqual(before, selection.fingerprint(root, removed))
         self.assertEqual(catalog['checks']['postgresql-disposable-diagnostics']['stage'], 'package')
         self.assertEqual(catalog['checks']['persistence-provider-regression']['stage'], 'local')
         program = (ROOT / 'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/build-inputs-test.mjs').read_text()
         self.assertIn('managed handler projects isolate each declared scheduling program', program)
         self.assertIn('JSON.parse(readFileSync(join(root, selected.project)', program)
         provider = (ROOT / catalog['checks']['persistence-provider-regression']['argv'][1]).read_text()
-        self.assertIn('scheduling_safety(scheduling); network_safety(network)', provider)
-        self.assertIn('does not qualify an image, AWS deployment', provider)
+        helper_path = 'scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/smoke-test.py'
+        self.assertIn(helper_path, provider)
+        self.assertIn('scheduling_safety.check_templates()', provider)
+        self.assertIn('Source safety only; the reusable scheduler owner retains these assertions.', provider)
+        helper = (ROOT / helper_path).read_text()
+        self.assertIn('def check_templates(', helper)
+        self.assertIn('M.ROOT / binding["template"]', helper)
+        self.assertIn('M.ROOT / binding["network_template"]', helper)
 
     def test_package_units_preserve_original_command_membership_and_audited_inputs(self):
         catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())['checks']

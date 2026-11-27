@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: deploy.standard.operational-realization-gate
-  version: 6
+  version: 7
   status: active
   created_on: "2026-09-27"
   updated_on: "2026-11-27"
@@ -212,6 +212,17 @@ retroactively upgraded. Changed-capability execution remains separately selected
 not an implicit effect of collection. Other routes keep their declared proof sets.
 Any further selective policy must migrate its declaration, validator, collector
 and tests together. These local controls do not establish live delivery timing.
+
+## Incremental end-to-end realization
+
+Apply the [shared lean sequence](../../shared/standards/require-change-completion.md#lean-end-to-end-first)
+to the smallest useful deployed path before adding behaviors or consumers.
+The complete execution graph below is the graph of that current increment,
+including its safety and recovery dependencies. It is not an instruction to
+implement the entire goal before obtaining its first deployed proof.
+Each increment follows every applicable gate and existing acceptance rule.
+A bounded proof cannot substitute for final release acceptance, and this
+sequencing rule grants no exception, live authority or evidence waiver.
 
 ## Mandatory Gate Sequence
 

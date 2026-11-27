@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.collect-acceptance.implementation
-#   version: 6
+#   version: 7
 #   status: draft
 #   created_on: "2026-11-09"
 #   updated_on: "2026-11-27"
@@ -200,7 +200,10 @@ def task_context(value, args, provider, checked):
     if args.workload not in checked:
         checked[args.workload] = T.BINDING.inspect(provider, args.workload, value["parameters"], value["resources"], value["binding_snapshot"])
     context = {**value, "checked": checked[args.workload]}
-    context["report"] = {"plan": {"preflight_label": A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation, delivery=value.get("delivery"), qualification_profile=getattr(args, "qualification_profile", None))}}
+    context["report"] = {"plan": {}}
+    # The negative credential observation has revocation admission, not a probe.
+    if not (T.CREDENTIAL.negative(args) and args.phase == "operation"):
+        context["report"]["plan"]["preflight_label"] = A.preflight_label(value["binding"], args.proof_stage, args.workload, args.operation, delivery=value.get("delivery"), qualification_profile=getattr(args, "qualification_profile", None))
     return context
 
 

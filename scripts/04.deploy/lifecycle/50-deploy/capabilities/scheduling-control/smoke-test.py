@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.scheduling-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-27"
@@ -250,7 +250,8 @@ def test_phase_engine():
                 {**dict(zip(("TickEnabled", "WorkerEnabled", "DenyDispatcherSend"), controls)), "OpaqueSecret": "****"}, source)
         def run(phase, action, builder=None):
             return M.phase_control(provider, store, binding, phase, action=action,
-                build_inputs=builder or (lambda: inputs(phase)), admit=lambda intent: admitted.append(intent["phase"]))
+                build_inputs=builder or (lambda: inputs(phase)), admit=lambda intent: admitted.append(intent["phase"]),
+                maintenance_selection={"qualified_path": "/controlled/core-package.json"})
         rejects(lambda: run("proof-enable", "prepare"), "phase-predecessor-required")
         rejects(lambda: run("scope-create-disabled", "execute"), "phase-intent-required")
         for phase in M.CONTROL_PHASES:
@@ -413,7 +414,8 @@ def test_cost_reservation_boundary():
                         recovery_phase="create-recovery-point"), "scheduling-runtime-proof-proof-budget-exceeded")
                 assert len(resources) == 1, "resource ceiling rejection precedes original reservation"
         with tempfile.TemporaryDirectory() as empty:
-            rejects(lambda: M.reserve_cost_original(None, M.Store(Path(empty)), binding, request=request, reserve=reserve, task_definition_arn=definition), "cost-intent-required")
+            assert M.reserve_cost_original(None, M.Store(Path(empty)), binding, request=request,
+                reserve=lambda: (record, True), task_definition_arn=definition) == (record, True)
             assert M.reserve_cost_original(None, M.Store(Path(empty)), binding, request=request,
                 reserve=lambda: (record, False), task_definition_arn=definition, required=False) == (record, False)
 
@@ -631,12 +633,27 @@ def test_initial_database_join():
         return SimpleNamespace(scheduling_database_readiness=read, T=SimpleNamespace(Provider=lambda: "fixed-owned-provider"))
     with tempfile.TemporaryDirectory() as scratch, patch.object(M, "phase_read", side_effect=lambda _store, _binding, phase: boundary if phase == "network-create" else intent), patch.object(M, "module", side_effect=owner):
         store = M.Store(Path(scratch))
-        assert set(M.initial_database_readiness(store, binding, intent, selections)) == set(selections)
-        assert len(calls) == 2 and calls[1][1][-1] == "fixed-owned-provider"
-        rejects(lambda: M.initial_database_readiness(store, binding, intent, {"core-server-persistence": selections["core-server-persistence"]}), "initial-database-selection-invalid")
+        rejects(lambda: M.initial_database_readiness(store, binding, intent, selections), "initial-database-phase-invalid")
+        intent["network_before"] = {"snapshot": "original"}
+        with patch.object(M, "cost_intent", return_value={"source_revision": intent["source_revision"]}), \
+                patch.object(M, "initial_phase_inputs", return_value=({}, {}, intent["source_revision"])), \
+                patch.object(M.ADMISSION, "network_facts", return_value={"snapshot": "original"}) as network, \
+                patch.object(M, "initial_database_readiness", side_effect=AssertionError("network creation read database readiness")):
+            intent.update(template={}, parameters={})
+            M.admit_initial_phase(None, store, binding, intent, None)
+            assert network.call_count == 1
+            intent["network_before"]["snapshot"] = "changed"
+            rejects(lambda: M.admit_initial_phase(None, store, binding, intent, None), "network-before-create-changed")
+        assert not calls
         intent["phase"] = "scope-create-disabled"
         intent["created_at"] = "2026-11-27T00:01:00Z"
         assert set(M.initial_database_readiness(store, binding, intent, {"core-server-persistence": selections["core-server-persistence"]})) == {"core-server-persistence"}
+        assert [call[0] for call in calls] == ["core-server-persistence"]
+        rejects(lambda: M.initial_database_readiness(store, binding, intent, selections), "initial-database-selection-invalid")
+        binding = {**binding, "scope": "entity-smoke"}
+        assert set(M.initial_database_readiness(store, binding, intent, {"entity-smoke": selections["entity-smoke"]})) == {"entity-smoke"}
+        assert calls[-1][1][-1] == "fixed-owned-provider"
+        binding = {**binding, "scope": "core-server-persistence"}
         assert calls[-1][2]["required_after"] != intent["created_at"], "unchanged grant proof is reused from original network boundary"
         with patch.object(M, "module", side_effect=RuntimeError("private provider failure")):
             rejects(lambda: M.initial_database_readiness(store, binding, intent, {"core-server-persistence": selections["core-server-persistence"]}), "initial-database-readiness-unconfirmed")
@@ -694,15 +711,14 @@ def test_bounded_work_join():
     owner = M.cost_owner()
     for scope in ("core-server-persistence", "entity-smoke"):
         binding = M.load_binding("kanbien-core-platform", scope)
-        phases, _ = fixtures.release_fixture(scope)
-        intent = phases["scope-create-disabled"]["intent"]
         package_key = "qualified_path" if scope == "core-server-persistence" else "receipt_path"
         qualified = str(M.ROOT / ".cache" / (scope + "-qualified.json"))
         package_selection = {package_key: qualified, **({"proof_label": "synthetic-proof", "expected_predecessor": None} if scope == "entity-smoke" else {})}
+        phases, _ = fixtures.release_fixture(scope, maintenance_selection=package_selection)
+        intent = phases["scope-create-disabled"]["intent"]
         native_binding = {"source_revision": intent["source_revision"], "image_digest": "sha256:" + "b" * 64,
             "dependency_incarnation_sha256": owner.proof_semantics().digest({"resource_id": intent["parameters"]["DatabaseResourceId"],
                 "database": intent["parameters"]["DatabaseName"], "schema": intent["template"]["Mappings"]["Scopes"][scope]["Schema"]})}
-        budget = {"source_revision": intent["source_revision"], "scopes": {scope: {"selection": package_selection, "maintenance": native_binding}}}
         selection = {**package_selection, "image_digest": native_binding["image_digest"]}
         if scope == "core-server-persistence": selection["receipt_path"] = "/data/current-native-state.json"
         observed, work = {"native-owner": "actual-boundary-fixture"}, {"selection": "not-an-approval"}
@@ -713,12 +729,14 @@ def test_bounded_work_join():
             assert kwargs["qualified_path"] == Path(qualified).relative_to(M.ROOT).as_posix() and kwargs["context"]["native_binding"] == native_binding
             assert kwargs["context"]["required_after"] == phases["network-create"]["terminal"]["Timestamp"].replace("+00:00", "Z")
             return {"owned-count": 1}
-        with tempfile.TemporaryDirectory() as scratch, patch.object(M, "cost_intent", return_value=budget), \
+        with tempfile.TemporaryDirectory() as scratch, patch.object(M, "cost_intent", side_effect=AssertionError("bounded work read upfront cost")), \
+             patch.object(M, "maintenance_cost_binding", return_value=native_binding) as maintenance, \
              patch.object(M, "cost_owner", return_value=owner), patch.object(M, "capture_phase", return_value=phases["network-create"]), \
              patch.object(M, "authenticate_phase_evidence", return_value={}), patch.object(M, "current_database_observation", return_value=observed) as native, \
              patch.object(owner, "owned_work_selection", side_effect=reduce):
             store = M.Store(Path(scratch))
             assert M.current_owned_work(None, store, binding, intent, selection, work) == {"owned-count": 1}
+            maintenance.assert_called_once_with(None, binding, package_selection)
             assert native.call_count == 1 and len(calls) == 1
             rejects(lambda: M.current_owned_work(None, store, binding, intent, {**selection, package_key: "/data/other-package"}, work), "proof-work-package-selection-mismatch")
             rejects(lambda: M.current_owned_work(None, store, binding, intent, {**selection, "image_digest": "sha256:" + "f" * 64}, work), "proof-work-package-selection-mismatch")
@@ -1195,6 +1213,26 @@ def test_publication_artifact():
             raise AssertionError("missing read accepted")
 
 
+def test_initial_inputs_without_upfront_cost():
+    binding = M.load_binding("kanbien-core-platform", "core-server-persistence")
+    packages = {purpose: {"source_revision": "a" * 40, "image_digest": "sha256:" + "b" * 64} for purpose in ("dispatch", "worker")}
+    paths = {purpose: "/controlled/" + purpose + ".json" for purpose in packages}
+    with patch.object(M, "cost_intent", side_effect=AssertionError("initial creation read upfront cost")), \
+            patch.object(M, "qualified_pair", return_value=packages) as qualify, \
+            patch.object(M, "network_parameters", return_value={"network": "preserved"}), \
+            patch.object(M, "scope_parameters", return_value={"TickEnabled": "false", "WorkerEnabled": "false"}) as scoped, \
+            patch.object(M, "rendered_template", side_effect=lambda _binding, component, _parameters: {"component": component}):
+        for phase in ("network-create", "scope-create-disabled"):
+            template, parameters, revision = M.initial_phase_inputs(None, None, binding, phase, paths)
+            assert revision == "a" * 40
+            assert template["component"] == ("network" if phase == "network-create" else "scope")
+        assert qualify.call_count == 2
+        scoped.assert_called_once_with(None, binding, packages, False, False)
+        rejects(lambda: M.initial_phase_inputs(None, None, binding, "network-create"), "package-receipts-required")
+        with patch.object(M, "qualified_pair", side_effect=M.Failure("package-custody-rejected")):
+            rejects(lambda: M.initial_phase_inputs(None, None, binding, "network-create", paths), "package-custody-rejected")
+
+
 def test_closed_admission():
     for phase in M.CONTROL_PHASES:
         for operation in ("prepare", "execute"):
@@ -1203,9 +1241,11 @@ def test_closed_admission():
             with tempfile.TemporaryDirectory() as scratch, patch.object(M.subprocess, "run", return_value=SimpleNamespace(stdout=scratch)), \
                     patch.object(M, "Provider") as provider, redirect_stdout(stream):
                 assert M.main(["--target", "kanbien-core-platform", "--scope", "core-server-persistence", "--operation", operation, "--phase", phase]) == 1
-                if cleanup: provider.return_value.assert_not_called()
+                if cleanup or phase == "network-create": provider.return_value.assert_not_called()
                 else: provider.assert_not_called()
             expected = "phase-predecessor-required" if cleanup and operation == "prepare" else "phase-intent-required" if cleanup else "trusted-admission-required"
+            if phase == "network-create":
+                expected = "package-receipts-required"
             assert json.loads(stream.getvalue())["code"] == expected
     with tempfile.TemporaryDirectory() as scratch:
         provider = FakeProvider({"Resources": {"Queue": {"Type": "AWS::SQS::Queue"}}}, {})
@@ -1416,7 +1456,7 @@ def test_network_preservation():
         intent = {"schema": "deploy/scheduling-phase-intent/v1", "target": binding["target"], "scope": "shared", "phase": "network-create",
             "stack": binding["network_stack"], "mode": "CREATE", "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "template": template, "parameters": parameters, "parameter_inputs": [], "before": None, "predecessor_sha256": None,
-            "source_revision": "a" * 40, "network_before": before}
+            "source_revision": "a" * 40, "network_before": before, "maintenance_selection": None}
         assert M.RESERVATIONS.write_exclusive(M.phase_path(store, binding, "network-create"), intent)
         request = M.phase_request(intent)
         store.reserve("prepare", request)
@@ -1870,6 +1910,10 @@ def test_expired_cleanup_reservation():
                 original, fresh = guarded.reserve("prepare", request)
                 assert fresh and guarded.reserve("prepare", request) == (original, False)
                 assert M.read_json(path) == expired, "shutdown must not reset the budget"
+                with patch.object(M, "cost_intent", return_value=None):
+                    assert M.cleanup_control_shape(store, binding, intent) is None
+                    stopped, fresh = guarded.reserve("execute", request)
+                    assert fresh and guarded.reserve("execute", request) == (stopped, False)
                 invalid = copy.deepcopy(intent)
                 invalid["parameters"]["WorkerEnabled"] = "true"
                 rejects(lambda: M.cleanup_control_shape(store, binding, invalid), "cleanup-control-intent-invalid")
@@ -1910,6 +1954,7 @@ def main():
     test_recovery_cleanup_original()
     test_capture_and_effect_routes()
     test_observed_wiring()
+    test_initial_inputs_without_upfront_cost()
     test_closed_admission()
     test_network_admission()
     test_network_preservation()

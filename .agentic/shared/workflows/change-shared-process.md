@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.workflows.change-shared-process
-version: 3
+version: 4
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-11-20"
+updated_on: "2026-11-27"
 layer: 06.shared
 domain: process
 disciplines:
@@ -25,6 +25,11 @@ used_by:
 # Change Shared Process Workflow
 
 Follow the [shared change-completion principles](../standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting. Apply its [final-response checklist](../standards/require-change-completion.md#execution-continuity-and-final-response-checklist) before handing control back to the user.
+
+Start implementation goals with the completion standard's
+[lean end-to-end sequence](../standards/require-change-completion.md#lean-end-to-end-first).
+For process changes, prove the actual affected caller/workflow before broadening
+adoption; carry its evidence in the existing task/session record.
 
 ## Use When
 

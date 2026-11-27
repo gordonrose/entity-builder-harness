@@ -5,7 +5,7 @@
 #   version: 15
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -1464,10 +1464,10 @@ class ControllerRegression(unittest.TestCase):
         module=load(RUN/'run-administration/script.py')
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32}
         for result_code in ('PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED'):
-            expected=json.dumps({'verdict':'accepted','code':result_code})
+            record={'verdict':'accepted','code':result_code};expected=json.dumps(record)
             provider=Provider(lambda parts:(True,{'events':[{'message':expected}]},'ok'))
             with patch.object(module.MIGRATION,'aws',provider.aws):
-                self.assertEqual(module.accepted_log(task,'observe-migration-state'),(result_code,'ok'))
+                self.assertEqual(module.accepted_log(task,'observe-migration-state'),(record,'ok'))
         rejected=json.dumps({'verdict':'rejected','code':'PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED'})
         provider=Provider(lambda parts:(True,{'events':[{'message':rejected}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
@@ -1781,7 +1781,13 @@ class ControllerRegression(unittest.TestCase):
             environment={item['name']:item['value'] for item in task['overrides']['containerOverrides'][0]['environment']}
             predicate=lambda candidate:controller.task_evidence().task_overrides_match(candidate,container_name,environment)
             self.assertTrue(predicate(task))
-            if kind=='migration':self.assertTrue(controller.task_operation_bound(task,environment['PERSISTENCE_MIGRATION_OPERATION']))
+            if kind=='migration':
+                # Keep the historical capture intact; the current migration route only supports apply.
+                current_task=copy.deepcopy(task)
+                for item in current_task['overrides']['containerOverrides'][0]['environment']:
+                    if item['name']=='PERSISTENCE_MIGRATION_OPERATION':item['value']='apply'
+                self.assertTrue(controller.task_operation_bound(current_task,'apply'))
+                self.assertEqual({item['name']:item['value'] for item in task['overrides']['containerOverrides'][0]['environment']},environment)
             if kind=='verifier':self.assertTrue(controller.task_operation_bound(task,environment['PERSISTENCE_VERIFIER_MODE']))
             without_default=copy.deepcopy(task);del without_default['overrides']['inferenceAcceleratorOverrides'];self.assertTrue(predicate(without_default))
             negatives=[]
@@ -1848,6 +1854,7 @@ class ControllerRegression(unittest.TestCase):
     def test_restore_rejects_earlier_snapshot_and_binds_exact_continuation(self):
         controller=load(RUN/'rehearse-isolated-database-restore/script.py')
         snapshot='kanbien-core-platform-persistence-recovery-20261025-b';restored_id=controller.restore_id(snapshot)
+        security_group='sg-0123456789abcdef0'
         source={'DBInstanceIdentifier':controller.DATABASE,'DbiResourceId':'db-SOURCE','InstanceCreateTime':'2026-10-25T09:00:00Z','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'DBInstanceClass':'db.t4g.micro'}
         point={'DBSnapshotIdentifier':snapshot,'DbiResourceId':'db-SOURCE','DBInstanceIdentifier':controller.DATABASE,'Status':'available','Encrypted':True,'SnapshotCreateTime':'2026-10-25T11:00:00Z'}
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'taskDefinitionArn':'arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17','lastStatus':'STOPPED','startedAt':'2026-10-25T11:59:58Z','stoppedAt':'2026-10-25T12:00:00Z','containers':[{'exitCode':0}]}
@@ -1862,16 +1869,21 @@ class ControllerRegression(unittest.TestCase):
                     mutations.append(parts)
                     tag_values=parts[parts.index('--tags')+1:]
                     tags=[{'Key':value.split(',Value=',1)[0][4:],'Value':value.split(',Value=',1)[1]} for value in tag_values]
-                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
+                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':security_group}]}
                     return True,{},'ok'
                 raise AssertionError(f'unexpected provider action {parts}')
             provider=Provider(response)
-            with patch.object(controller,'source',return_value=(source,'ok')),patch.object(controller,'controls',return_value=({'PersistenceRestoredDatabaseSecurityGroupId':'sg-restored'},'ok')):
+            with patch.object(controller,'source',return_value=(source,'ok')),patch.object(controller,'controls',return_value=({'PersistenceRestoredDatabaseSecurityGroupId':security_group},'ok')):
                 run=lambda observe=False:result(lambda:controller.restore(provider,snapshot,restored_id,observe,path))[1]
                 rejected=run();self.assertEqual(rejected['findings'][0]['code'],'persistence-restore-snapshot-precedes-retained-record');self.assertFalse(mutations)
                 point['SnapshotCreateTime']='2026-10-25T12:00:00+00:00'
-                self.assertEqual(run(True)['verdict'],'uncertain');self.assertFalse(mutations)
+                with patch.object(controller,'controls',return_value=({'PersistenceRestoredDatabaseSecurityGroupId':'sg-restored'},'ok')):
+                    self.assertEqual(run()['findings'][0]['code'],'persistence-restore-original-resource-not-confirmed');self.assertFalse(mutations)
+                observed=run(True);self.assertEqual(observed['verdict'],'uncertain',observed);self.assertFalse(mutations)
                 self.assertEqual(run()['verdict'],'pending');self.assertEqual(len(mutations),1)
+                originals=controller.scheduling_resource_census();self.assertEqual(len(originals),1)
+                self.assertEqual(originals[0]['request']['record_proof_sha256'],proof['integrity']['payload_sha256'].removeprefix('sha256:'))
+                self.assertEqual({item['Key']:item['Value'] for item in state['database']['TagList']}['RecordProofDigest'],proof['integrity']['payload_sha256'])
                 self.assertEqual(run()['verdict'],'pending');self.assertEqual(run(True)['verdict'],'pending');self.assertEqual(len(mutations),1)
                 state['database']['DBInstanceStatus']='available'
                 self.assertEqual(run(True)['verdict'],'restored');self.assertEqual(len(mutations),1)

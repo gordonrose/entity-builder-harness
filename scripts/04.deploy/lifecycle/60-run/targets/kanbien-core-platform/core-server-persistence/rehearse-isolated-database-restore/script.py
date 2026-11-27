@@ -172,7 +172,7 @@ def checked_clone_cleanup(original,restored,listed,definition):
  request=original["request"]
  expected={"Target":CLUSTER,"Purpose":"isolated-persistence-restore-rehearsal",
   "RecoverySnapshot":request["snapshot"],"SourceDatabaseResourceId":request["source_resource_id"],
-  "RetainedRecordId":RECORD_ID,"RecordProofDigest":request["record_proof_sha256"],"ResourceOperation":original["operation_id"]}
+  "RetainedRecordId":RECORD_ID,"RecordProofDigest":"sha256:"+request["record_proof_sha256"],"ResourceOperation":original["operation_id"]}
  if existing_restore_binding(restored,request["database"],expected)!="ok":raise ValueError()
  selected=[]
  for task in listed:
@@ -194,8 +194,10 @@ def checked_clone_cleanup(original,restored,listed,definition):
 
 
 def restore_resource_request(src,sid,rid,proof,ctl):
+ digest=proof["integrity"]["payload_sha256"]
+ if not isinstance(digest,str) or re.fullmatch(r"sha256:[a-f0-9]{64}",digest) is None:raise ValueError("restore-record-proof-digest-invalid")
  request={"database":rid,"snapshot":sid,"source_resource_id":src.get("DbiResourceId"),
-  "record_proof_sha256":proof["integrity"]["payload_sha256"],"instance_class":src.get("DBInstanceClass"),
+  "record_proof_sha256":digest.removeprefix("sha256:"),"instance_class":src.get("DBInstanceClass"),
   "subnet_group":src.get("DBSubnetGroup",{}).get("DBSubnetGroupName"),"security_group":ctl["PersistenceRestoredDatabaseSecurityGroupId"]}
  restore_resource_store().path_for("restore-database",request)
  return request

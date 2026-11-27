@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-route
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -612,7 +612,39 @@ def accepted_rollback_protocols():
         rejection(lambda: C.rollback_selection(args, {"predecessor": predecessor}, binding), C.InfrastructureFailure, "acceptance-state-proof-hash-mismatch")
 
 
+def operation_only_context_protocols():
+    """Real collector context/phase owners; no retained task or provider proof."""
+    aggregate = module("operation_only_context_fixture", DIRECTORY / "acceptance-evaluation/tests/acceptance-aggregate-test.py")
+    packet = aggregate.successor_fixture(K)
+    value = {"binding": packet["binding"], "delivery": packet["delivery"]}
+    checked = {"verifier": {"controlled": "checked-verifier"}, "administration": {"controlled": "checked-administrator"}}
+    selected = SimpleNamespace(proof_stage="credential-recovery", workload="verifier", operation="unready", phase="operation")
+    with patch.object(K.T.BINDING, "inspect", side_effect=AssertionError("unexpected provider inspection")), \
+         patch.object(K.A, "preflight_label", wraps=K.A.preflight_label) as labels:
+        for delivery in (packet["delivery"], None):
+            current = {**value, "delivery": delivery}
+            context = K.task_context(current, selected, None, checked)
+            assert context["report"]["plan"] == {} and context["checked"] is checked["verifier"]
+            assert K.T.STEPS.stage(selected) == "credential-recovery"
+            K.T.STEPS.select_preflight(K.T.dependencies(), context, selected, None)
+            labels.assert_not_called()
+        invalid = SimpleNamespace(**{**vars(selected), "phase": "preflight"})
+        rejection(lambda: K.task_context(value, invalid, None, checked), K.A.T.STEPS.StepFailure,
+            "task-unready-preflight-phase-prohibited")
+        rejection(lambda: K.T.STEPS.stage(invalid), K.T.STEPS.StepFailure,
+            "task-unready-preflight-phase-prohibited")
+        for stage, workload, operation in (("credential-recovery", "verifier", "read"),
+                ("baseline", "verifier", "unready"), ("credential-recovery", "administration", "revoke-runtime")):
+            neighbor = SimpleNamespace(proof_stage=stage, workload=workload, operation=operation, phase="operation")
+            labels.reset_mock()
+            context = K.task_context(value, neighbor, None, checked)
+            assert context["report"]["plan"]["preflight_label"] == K.C.delivery_preflight_label(packet["delivery"], stage, workload, operation)
+            assert labels.call_count == 1
+    print("ENTITY_SMOKE_OPERATION_ONLY_ACCEPTANCE_CONTEXT_PASSED")
+
+
 def run():
+    operation_only_context_protocols()
     recovery_applicability_protocols()
     accepted_rollback_protocols()
     candidate_construction_protocols()

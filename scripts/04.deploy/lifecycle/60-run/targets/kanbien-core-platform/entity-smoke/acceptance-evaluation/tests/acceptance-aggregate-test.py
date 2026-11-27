@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-aggregate
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -63,6 +63,7 @@ def fixture(K, source_revision=None):
             before = pair["preflight"]["packet"]
             pair["operation"]["admission"] = {"preflight": {"reservation": before["reservation"], "receipt": before["receipt"]}, "required_after": stamp(start[name])}
         tasks[name] = pair
+    tasks["migration-state"]["operation"]["packet"]["receipt"]["result"]["code"] = "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED"
     revoke = tasks["credential-revoke"]["operation"]["packet"]
     tasks["credential-unready"]["operation"]["admission"] = {"revocation": {"reservation": revoke["reservation"], "receipt": revoke["receipt"], "label": binding["proof_label"]}}
     resources = A.digest({"controlled": "restore-resources"})
@@ -345,6 +346,17 @@ def requalification_protocols(K):
          patch.object(A.C, "validate_deployment_receipt", return_value=value["deployment"]):
         assert K.validate_packet(value, evidence_class="simulated") is value
         assert task_owner.call_count == 25 and control_owner.call_count == 4
+        # Check the code at its actual owner; the full packet also binds copies
+        # of this result in later prerequisites and rejects altered copies first.
+        for code in (None, "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"):
+            invalid = copy.deepcopy(value)
+            result = invalid["tasks"]["migration-state"]["operation"]["packet"]["receipt"]["result"]
+            if code is None: result.pop("code")
+            else: result["code"] = code
+            try: K.CONTROL.validate_connections(A, invalid)
+            except A.EvidenceFailure as failure:
+                assert (failure.code, failure.item) == ("acceptance-migration-state-not-applied", "migration-state")
+            else: raise AssertionError("unconfirmed migration result accepted")
         cases = [
             (lambda v: v.pop("controller_basis"), "acceptance-collection-envelope-invalid"),
             (lambda v: v["controller_basis"].update(controller="sha256:" + "0" * 64), "acceptance-controller-basis-invalid"),
@@ -362,7 +374,7 @@ def requalification_protocols(K):
             except (K.CollectionFailure, K.CONTROL.ControlFailure, A.EvidenceFailure) as failure: assert failure.code == condition, (failure.code, condition)
             else: raise AssertionError("requalification connection accepted " + condition)
     print(json.dumps({"schema": "deploy/entity-smoke-requalification-aggregate-fixture/v1", "verdict": "passed",
-        "primitive_owners": "controlled-not-live-proof", "negative_connections": len(cases), "provider_observation": False}))
+        "primitive_owners": "controlled-not-live-proof", "negative_connections": len(cases) + 2, "provider_observation": False}))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 7
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -35,6 +35,7 @@ const externalDependencies = path.join(compiled, '.dependencies/node_modules');
 const validator = path.join(root, 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs');
 const entrypointDirectory = 'infra/04.deploy/03.product/entrypoints';
 const dockerfile = fs.readFileSync(path.join(root, 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile'), 'utf8');
+const dockerignore = fs.readFileSync(path.join(root, 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore'), 'utf8');
 function missingCopiedEntrypointImports(dockerfileSource) {
   // Check the actual literal source/destination copies, not module-name text.
   const copied = new Set([...dockerfileSource.matchAll(/^COPY (infra\/04\.deploy\/03\.product\/entrypoints\/\S+\.ts) \.\/\1$/gm)].map((match) => match[1]));
@@ -57,13 +58,24 @@ function missingCopiedEntrypointImports(dockerfileSource) {
   return [...missing].sort();
 }
 assert.deepEqual(missingCopiedEntrypointImports(dockerfile), [], 'actual relative entrypoint dependencies must be copied into the image build');
-const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'shared/persistence/operation-diagnostics', 'shared/persistence/configuration', 'shared/persistence/role-credential', 'kanbien-core-server-persistence-composition', 'shared/persistence/configuration-implementation'];
+const requiredEntrypointModules = ['kanbien-core-server-persistence-diagnostics', 'shared/persistence/operation-diagnostics', 'shared/persistence/configuration', 'shared/persistence/role-credential', 'kanbien-core-server-persistence-composition', 'shared/persistence/configuration-implementation', 'shared/persistence/scheduling-administration', 'kanbien-core-server-persistence-scheduling.app'];
 for (const module of requiredEntrypointModules) {
   const source = `${entrypointDirectory}/${module}.ts`;
   const copy = `COPY ${source} ./${source}`;
   const omitted = dockerfile.split('\n').filter((line) => line !== copy).join('\n');
   assert.deepEqual(missingCopiedEntrypointImports(omitted), [source], 'omitting a required entrypoint dependency must fail copy-closure proof');
 }
+const sharedSchedulingSource = `${entrypointDirectory}/shared/persistence/scheduling-administration.ts`;
+function assertSharedSchedulingContext(source) {
+  const admitted = new Set(source.split(/\r?\n/));
+  const parts = sharedSchedulingSource.split('/');
+  for (let length = 1; length < parts.length; length++) {
+    assert(admitted.has('!' + parts.slice(0, length).join('/') + '/'), 'the shared scheduling source requires admitted parent directories');
+  }
+  assert(admitted.has('!' + sharedSchedulingSource), 'the copied shared scheduling source must be admitted to the default-deny context');
+}
+assertSharedSchedulingContext(dockerignore);
+assert.throws(() => assertSharedSchedulingContext(dockerignore.split('\n').filter(line => line !== '!' + sharedSchedulingSource).join('\n')));
 let rejectedPayloads = 0;
 function rejects(mutate, undo, nodePath = externalDependencies, expectedCode) {
   mutate();

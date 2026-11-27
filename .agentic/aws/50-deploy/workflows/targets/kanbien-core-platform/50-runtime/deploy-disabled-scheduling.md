@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform.disabled-scheduling
-version: 1
+version: 3
 status: active
 created_on: "2026-11-27"
 updated_on: "2026-11-27"
@@ -28,7 +28,17 @@ Require the declared source, package and semantic checks at their exact input
 identities. Authenticate both managed images through the protected publication
 owner and retain their current source/configuration binding. Bind the existing
 scope's additive migration, effective dispatch/worker permissions and empty
-unrelated work inventory through the actual task receipt readers.
+unrelated work inventory through the actual task receipt readers before creating
+that scope's disabled functions. Shared network creation uses network
+compatibility; it does not depend on application database
+readiness. Each scope retains its own database readiness gate.
+
+Pass the selected scope's `--dispatch-receipt` and `--worker-receipt` to
+initial prepare/execute commands. For scope creation, the existing
+`--database-selections` input also supplies its maintenance package selection.
+That selection is retained in the existing immutable phase intent and inherited
+by its control changes. Qualified package/source/database identity is required;
+another scope's deployment or a cost record is not.
 
 Inventory the whole current VPC, not only the selected subnets. Map compute
 interfaces to actual workloads and current identities, including attached policy
@@ -50,10 +60,13 @@ application acceptance. Reuse a still-fresh observation while its database
 identity and relevant work inventory remain unchanged; a control-only toggle
 does not itself require another database task.
 
-Retain the initial observation fingerprints and exact finite proof-spend plan.
-The plan must account for endpoint lifetime, function invocations, maintenance
-tasks, logs, storage and notification traffic within the remaining US$10
-allowance. It is separate from the measured US$25 monthly activation decision.
+Retain the initial observation fingerprints and a finite execution window.
+The user explicitly moved detailed cost checks after the first bounded live
+proof. Do not require `prepare-cost` before that proof or describe the US$10
+target as an enforced pre-run cap. Keep invocation, concurrency, retry and
+duration limits. After proof, use the existing cost collector and actual original
+operation records; include all work and report any target miss. The measured
+US$25 monthly gate still applies before leaving either scheduler enabled.
 
 ## Create disabled resources
 
