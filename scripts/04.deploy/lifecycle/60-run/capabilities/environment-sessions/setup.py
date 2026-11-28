@@ -30,6 +30,8 @@ import io
 import json
 from pathlib import Path
 import re
+import subprocess
+import time
 import zipfile
 
 
@@ -93,6 +95,15 @@ class Startup:
         choices["private-network/v1"] = OWNER.FOUNDATION.private_network_choice_syntax(
             choices["private-network/v1"], self.configuration["region"])
         self.control = dict(self.plan["control"])
+        self.realization = module("session_setup_realization", self.root /
+            "scripts/04.deploy/operational-realization-gate/evidence.py")
+        self.realization_contract = self.preparation.read_document(self.root,
+            "infra/04.deploy/03.product/image/environment-session-controller/setup-realization-contract.v2.yml")
+        try:
+            require(self.realization.GATE.validate_contract(self.realization_contract) ==
+                "environment-session-setup-control", "realization-contract-unconfirmed")
+        except self.realization.GATE.ContractFailure:
+            raise SetupFailure("realization-contract-unconfirmed") from None
         self.provider = OWNER.SESSION_CLI.SessionProvider(profile=self.configuration["profile"],
             region=self.configuration["region"], environment=self.environment)
         self.operator = NATIVE.operator_arn(self.provider, self.configuration["account"])
@@ -130,8 +141,86 @@ class Startup:
         checked = custody.acquire_custody(publication=publication, run_id=selection["run_id"],
             expected_source_revision=selection["source_revision"], aws_provider=self.provider)
         self.worker_image = b.uri + "@" + checked["receipt"]["image_digest"]
+        names = publisher.run(["git", "ls-files", "-z", "--", *paths]).split("\0")
+        self.source_files = tuple(self.root / name for name in names if name)
+        self.source_artifact = self._source_artifact()
+        self.custody = checked
         self.qualified = None
         self.ready = None
+
+    def _source_artifact(self):
+        require(bool(self.source_files) and all(path.is_file() and not path.is_symlink()
+            and path.is_relative_to(self.root) for path in self.source_files), "source-unconfirmed")
+        try:
+            return "sha256:" + hashlib.sha256(OWNER.RESERVATIONS.canonical({
+                str(path.relative_to(self.root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in self.source_files})).hexdigest()
+        except OSError:
+            raise SetupFailure("source-unavailable") from None
+
+    def _setup_gate(self, request, reservation, *, reviewed=None):
+        """Only observed setup facts; never certify a future cleanup worker."""
+        require(self._source_artifact() == self.source_artifact
+            and NATIVE.operator_arn(self.provider, self.configuration["account"]) == self.operator,
+            "setup-authority-unconfirmed")
+        if self.custody is None:
+            require(type(self) is PublicationStartup and self.source_qualification == self.source_artifact,
+                "artifact-unconfirmed")
+        else:
+            receipt = self.custody["receipt"]
+            require(receipt.get("verdict") == "qualified"
+                and receipt.get("checks", {}).get("local_image_smoke") == "passed", "artifact-unconfirmed")
+        try:
+            book = self.realization.GateBook(self.realization_contract,
+                {"infrastructure-controller-source": self.source_artifact},
+                self.store.root / "realization" / hashlib.sha256(OWNER.RESERVATIONS.canonical(request)).hexdigest(),
+                writer=OWNER.RESERVATIONS.write_exclusive,
+                clock=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                component_check_id="session-setup-components")
+            expected = {"infrastructure-controller-source", "infrastructure-operator", "infrastructure-inputs",
+                "control-state-connection", "intent-connection", "resource-control-state", "attempt-store",
+                "infrastructure-safe-reports", "infrastructure-reconciliation", "infrastructure-controller"}
+            require(set(book.known) == expected, "realization-components-unsupported")
+            require(self.store.read(reservation["phase"], request) == reservation, "reservation-unconfirmed")
+            for component in sorted(expected):
+                book.component(component)
+            book.bind_plan("sha256:" + hashlib.sha256(OWNER.RESERVATIONS.canonical({
+                "request": request, "operation_id": reservation["operation_id"],
+                "source": self.source_artifact, "operator": self.operator})).hexdigest())
+            for gate in ("source", "artifact", "semantic-integration", "live-read"):
+                book.gate(gate)
+            book.validate("live-read")
+            if reviewed is not None:
+                changes = reviewed["Changes"]
+                book.gate("change-set")
+                book.validate("change-set", len(changes), operation_class="create")
+                checked = self.provider("cloudformation", "validate-template", TemplateBody=reviewed["_template"])
+                template = OWNER.CF.template(reviewed["_template"])
+                capabilities = ["CAPABILITY_NAMED_IAM"] if any(
+                    row["Type"].startswith("AWS::IAM::") for row in template["Resources"].values()) else []
+                parameters = checked.get("Parameters", [])
+                require(checked.get("Capabilities", []) == capabilities
+                    and not checked.get("DeclaredTransforms")
+                    and isinstance(parameters, list) and len(parameters) == len(request["parameters"])
+                    and all(isinstance(row, dict) for row in parameters)
+                    and {row.get("ParameterKey") for row in parameters}
+                        == set(request["parameters"]), "execution-preflight-unconfirmed")
+                actions = ["cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"]
+                simulated = self.provider("iam", "simulate-principal-policy", PolicySourceArn=self.operator,
+                    ActionNames=actions, ResourceArns=[reviewed["StackId"]])
+                rows = simulated.get("EvaluationResults", [])
+                require(simulated.get("IsTruncated") is False and len(rows) == len(actions)
+                    and {row.get("EvalActionName") for row in rows} == set(actions)
+                    and all(row.get("EvalDecision") == "allowed" and not row.get("MissingContextValues")
+                        and row.get("EvalResourceName") == reviewed["StackId"] for row in rows),
+                    "execution-preflight-unconfirmed")
+                book.gate("execution-preflight")
+                book.validate("execution-preflight", len(changes), operation_class="create")
+            return book
+        except OWNER.RESERVATIONS.ReservationFailure:
+            raise SetupFailure("realization-evidence-unavailable") from None
+        except (self.realization.GATE.ContractFailure, self.realization.EvidenceFailure):
+            raise SetupFailure("realization-unconfirmed") from None
 
     def _missing(self, operation, **arguments):
         try:
@@ -140,6 +229,51 @@ class Startup:
             if failure.code == "aws-resource-missing":
                 return None
             raise
+
+    def _completed_gate(self, request, reservation, count):
+        """Link terminal readback to the original admission, never recertify it."""
+        cache = self.store.root / "realization" / hashlib.sha256(OWNER.RESERVATIONS.canonical(request)).hexdigest()
+        plan = "sha256:" + hashlib.sha256(OWNER.RESERVATIONS.canonical({"request": request,
+            "operation_id": reservation["operation_id"], "source": self.source_artifact, "operator": self.operator})).hexdigest()
+        try:
+            complete = cache / "completed.json"
+            OWNER.RESERVATIONS.no_symlinks(complete)
+            if complete.exists():
+                value = json.loads(complete.read_text())
+                require(value.get("plan_sha256") == plan and value.get("operation_id") == reservation["operation_id"],
+                    "execution-custody-unconfirmed")
+                require(isinstance(value.get("evidence"), str) and re.fullmatch(
+                    r"controlled-execution-[a-f0-9]{32}\.json", value["evidence"]), "execution-custody-unconfirmed")
+                retained = cache / value["evidence"]
+                OWNER.RESERVATIONS.no_symlinks(retained)
+                require(hashlib.sha256(retained.read_bytes()).hexdigest() == value.get("evidence_sha256"),
+                    "execution-custody-unconfirmed")
+                return
+            candidates = sorted(cache.glob("execution-preflight-*.json"))
+            require(bool(candidates), "execution-admission-unconfirmed")
+            OWNER.RESERVATIONS.no_symlinks(candidates[-1])
+            admission = json.loads(candidates[-1].read_text())
+            require(admission.get("plan_sha256") == plan and
+                admission["facts"]["artifact_bindings"][0]["immutable_reference"] == self.source_artifact,
+                "execution-admission-unconfirmed")
+            book = self.realization.GateBook(self.realization_contract,
+                {"infrastructure-controller-source": self.source_artifact}, cache,
+                writer=OWNER.RESERVATIONS.write_exclusive,
+                clock=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                component_check_id="session-setup-components")
+            self.realization.GATE.validate_facts(admission["facts"], book.contract, book.identity, book.known, "execution-preflight")
+            self.realization.GATE.validate_change_summary(admission["change_summary"], book.contract, book.identity, admission["facts"])
+            book.facts, book.gates = admission["facts"], list(self.realization.GATE.GATE_ORDER[:6])
+            book.components = {row["component_id"]: row["timestamp"] for row in book.facts["component_evidence"]}
+            book.bind_plan(plan)
+            book.gate("controlled-execution")
+            evidence = book.validate("controlled-execution", count, operation_class="create")
+            require(OWNER.RESERVATIONS.write_exclusive(complete, {"plan_sha256": plan,
+                "operation_id": reservation["operation_id"], "evidence": evidence.name,
+                "evidence_sha256": hashlib.sha256(evidence.read_bytes()).hexdigest()}), "execution-custody-unconfirmed")
+        except (OSError, ValueError, KeyError, TypeError, IndexError,
+                OWNER.RESERVATIONS.ReservationFailure, self.realization.GATE.ContractFailure, self.realization.EvidenceFailure):
+            raise SetupFailure("execution-evidence-unconfirmed") from None
 
     def _stack(self, stage, name, reference, parameters):
         """Only exact source-derived CREATE; never update or delete a stack."""
@@ -154,7 +288,8 @@ class Startup:
         template = OWNER.RESERVATIONS.canonical(source).decode()
         rows = [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())]
         request = {"stage": stage, "stack": name, "template_sha256": hashlib.sha256(template.encode()).hexdigest(),
-                   "parameters": parameters}
+                   "parameters": parameters, "source_artifact": self.source_artifact,
+                   "realization_sha256": hashlib.sha256(OWNER.RESERVATIONS.canonical(self.realization_contract)).hexdigest()}
         change = name + "-create"
         def observe_stack(reservation):
             response = self._missing("describe-stacks", StackName=name)
@@ -178,6 +313,7 @@ class Startup:
                 require(any(row.get("ResourceStatus") == "CREATE_COMPLETE" and
                     row.get("ResourceType") == "AWS::CloudFormation::Stack" for row in
                     OWNER.CHANGE_SETS.execution_events(events, reservation["operation_id"], arn)), "execution-unconfirmed")
+                self._completed_gate(request, reservation, len(source["Resources"]))
             return stack
         executed = self.store.read("execute", request)
         current = observe_stack(executed)
@@ -193,6 +329,9 @@ class Startup:
                 and result.get("StackName") == name and result.get("Description") == reservation["operation_id"]
                 and OWNER.CHANGE_SETS.parameter_values(result.get("Parameters")) == parameters
                 and result.get("Capabilities") == ["CAPABILITY_NAMED_IAM"], "change-set-unconfirmed")
+            require(isinstance(result.get("StackId"), str) and result["StackId"].startswith(
+                "arn:aws:cloudformation:" + self.configuration["region"] + ":" + self.configuration["account"]
+                    + ":stack/" + name + "/"), "change-set-unconfirmed")
             changes = result.get("Changes")
             require(isinstance(changes, list) and len(changes) == len(source["Resources"])
                 and {row.get("ResourceChange", {}).get("LogicalResourceId") for row in changes} == set(source["Resources"])
@@ -212,6 +351,7 @@ class Startup:
                 reserved = self.store.read("prepare", request)
                 require(reserved is not None and arguments == {**expected,
                     "ClientToken": reserved["operation_id"], "Description": reserved["operation_id"]}, "operation-prohibited")
+                self._setup_gate(request, reserved)
                 # No secrets in the template/parameters; canonical operator was
                 # proved above. Reuse the existing one-shot CLI invocation.
                 parts = ["cloudformation", operation]
@@ -227,18 +367,21 @@ class Startup:
             require(operation == "execute-change-set" and arguments == {"StackName": name,
                 "ChangeSetName": change, "DisableRollback": True,
                 "ClientRequestToken": self.store.read("execute", request)["operation_id"]}, "operation-prohibited")
+            reviewed = observe_preparation(self.store.read("prepare", request))
+            require(reviewed is not None and reviewed.get("ExecutionStatus") == "AVAILABLE", "change-set-unconfirmed")
+            self._setup_gate(request, self.store.read("execute", request), reviewed={**reviewed, "_template": template})
             return self.provider(service, operation, **arguments)
         prepared = OWNER.CHANGE_SETS.prepare(setup_send, self.store, phase="prepare", request=request,
             arguments={"StackName": name, "ChangeSetName": change, "ChangeSetType": "CREATE", "TemplateBody": template,
                 "Parameters": rows, "Capabilities": ["CAPABILITY_NAMED_IAM"]},
             precondition=lambda _: require(self._missing("describe-stacks", StackName=name) is None, "stack-already-exists"),
-            observe=observe_preparation)
+            observe=observe_preparation, passthrough=(SetupFailure,))
         if prepared is None:
             return None
         return OWNER.CHANGE_SETS.execute(setup_send, self.store, phase="execute", request=request,
             arguments={"StackName": name, "ChangeSetName": change, "DisableRollback": True},
             precondition=lambda _: require(observe_preparation(self.store.read("prepare", request)).get("ExecutionStatus") == "AVAILABLE", "change-set-unconfirmed"),
-            observe=observe_stack)
+            observe=observe_stack, passthrough=(SetupFailure,))
 
     def advance(self):
         if self.ready is not None:
@@ -411,3 +554,78 @@ class Startup:
             precondition=lambda _: require(records.observe_cleanup_completion() is not None, "cleanup-not-completed"),
             observe=lambda _: None)
         return False
+
+
+class PublicationStartup(Startup):
+    """Source-qualified registry bootstrap; never admits an application worker."""
+    def __init__(self, *, root, environment):
+        self.root, self.environment = Path(root), dict(environment)
+        require(not self.environment.get("CODEBUILD_BUILD_ARN"), "target-invalid")
+        self.preparation = module("session_publication_preparation", self.root /
+            "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py")
+        self.configuration = self.preparation.load(self.root, "kanbien-core-platform", "entity-smoke")
+        self.realization = module("session_publication_realization", self.root /
+            "scripts/04.deploy/operational-realization-gate/evidence.py")
+        self.realization_contract = self.preparation.read_document(self.root,
+            "infra/04.deploy/03.product/image/environment-session-controller/setup-realization-contract.v2.yml")
+        require(self.realization.GATE.validate_contract(self.realization_contract) ==
+            "environment-session-setup-control", "realization-contract-unconfirmed")
+        self.control = {"stack": "kanbien-environment-session-controller-publication", "template":
+            "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-controller-publication.yml"}
+        # Both pair slots deliberately name this one fixed stack; inherited
+        # application/records entry points cannot select a different resource.
+        self.control.update(records_stack=self.control["stack"], records_template=self.control["template"])
+        self.store = SetupStore(self.root / ".cache/environment-session-setup/publication")
+        self.clock = lambda: int(datetime.now(timezone.utc).timestamp())
+        self.binding = {"expires_at": self.clock() + 900}
+        publisher = module("session_registry_publication", self.root /
+            "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py").PUBLISHER
+        contract = self.preparation.read_document(self.root,
+            "infra/04.deploy/03.product/image/environment-session-controller/image-contract.yml")
+        paths = contract["source_paths"]
+        publisher.run(["git", "diff", "--quiet", "HEAD", "--", *paths])
+        require(not publisher.run(["git", "ls-files", "--others", "--exclude-standard", "--", *paths]), "source-uncommitted")
+        names = publisher.run(["git", "ls-files", "-z", "--", *paths]).split("\0")
+        self.source_files = tuple(self.root / name for name in names if name)
+        self.source_artifact = self._source_artifact()
+        # The ordinary private runner owns proof and trusted unchanged reuse.
+        # No supplied receipt, fake image smoke or bootstrap publication cycle.
+        try:
+            result = subprocess.run(["bash", "scripts/repo/check-selection/script.sh", "--checks",
+                "environment-session-controller", "environment-session-controller-package",
+                "--execute-local", "--json"], cwd=self.root, env=self.environment,
+                capture_output=True, timeout=180, check=False)
+        except (OSError, subprocess.SubprocessError):
+            raise SetupFailure("source-qualification-unconfirmed") from None
+        require(result.returncode == 0 and self._source_artifact() == self.source_artifact,
+            "source-qualification-unconfirmed")
+        self.source_qualification, self.custody = self.source_artifact, None
+        self.provider = OWNER.SESSION_CLI.SessionProvider(profile=self.configuration["profile"],
+            region=self.configuration["region"], environment=self.environment)
+        self.operator = NATIVE.operator_arn(self.provider, self.configuration["account"])
+
+    def advance(self):
+        return self._stack("control", self.control["stack"], self.control["template"],
+            {"ExistingGitHubOidcProviderArn": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com"})
+
+
+if __name__ == "__main__":
+    import argparse
+    import os
+    parser = argparse.ArgumentParser(description="Create only the fixed controller registry and publishing role.")
+    parser.add_argument("operation", choices=("publication",))
+    args = parser.parse_args()
+    try:
+        startup = PublicationStartup(root=ROOT, environment=dict(os.environ))
+        deadline = time.monotonic() + 600
+        while startup.advance() is None:
+            if time.monotonic() >= deadline:
+                print(json.dumps({"status": "pending", "reason": "environment-session-publication-pending"}))
+                raise SystemExit(2)
+            time.sleep(5)
+        print(json.dumps({"status": "completed", "stage": "publication-infrastructure"}))
+    except Exception as failure:
+        code = getattr(failure, "code", "environment-session-publication-unconfirmed")
+        safe = code if re.fullmatch(r"[a-z][a-z0-9-]{1,100}", str(code)) else "environment-session-publication-unconfirmed"
+        print(json.dumps({"status": "blocked", "reason": safe}))
+        raise SystemExit(1)

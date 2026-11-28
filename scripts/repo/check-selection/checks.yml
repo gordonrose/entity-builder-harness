@@ -1255,6 +1255,9 @@ checks:
       isolation: disposable-fixture
       rationale: Prove controller ordering, source-bound setup, native control, interrupted task admission, stop-once cleanup and successor CAS without AWS or the broad session regression.
     inputs: &environment_controller_inputs
+    - scripts/04.deploy/operational-realization-gate/evidence.py
+    - scripts/04.deploy/operational-realization-gate/script.py
+    - infra/04.deploy/03.product/image/environment-session-controller/setup-realization-contract.v2.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-sessions.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-records.yml
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
@@ -2415,6 +2418,7 @@ checks:
     - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-isolated-restore.yml
     - scripts/04.deploy/operational-realization-gate/script.py
+    - scripts/04.deploy/operational-realization-gate/evidence.py
     - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
     - infra/04.deploy/03.product/image/entity-smoke/Dockerfile
     - infra/04.deploy/03.product/image/entity-smoke/Dockerfile.dockerignore

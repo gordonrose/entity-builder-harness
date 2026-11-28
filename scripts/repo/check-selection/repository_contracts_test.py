@@ -339,8 +339,13 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIs(rules[0]['inputs'], check['inputs'])
         for reference in (fixture, fixture.replace('integration-test.py', 'setup.py'),
                           fixture.replace('integration-test.py', 'aws.py'),
+                          'scripts/04.deploy/operational-realization-gate/evidence.py',
+                          'scripts/04.deploy/operational-realization-gate/script.py',
+                          'infra/04.deploy/03.product/image/environment-session-controller/setup-realization-contract.v2.yml',
                           'scripts/04.deploy/shared/provider-adapters/aws/session_records.py'):
             self.assertTrue(any(reference == path or reference.startswith(path + '/') for path in check['inputs']))
+        self.assertIn('scripts/04.deploy/operational-realization-gate/evidence.py',
+                      catalog['checks']['entity-smoke-infrastructure-route']['inputs'])
         expected = ["ControllerTests","CommandTests","StartupTests","NativeControlTests","NativeRoleBoundaryTests","CleanupObservationTests","ConnectedRecordsTests.test_sealed_unadmitted_intent_closes_without_inventing_a_task_or_sending_stop","ConnectedRecordsTests.test_hung_task_stop_is_owned_sealed_and_never_replayed_after_uncertainty","ConnectedRecordsTests.test_completed_predecessor_requires_native_admission_and_is_replaced_only_by_cas","ConnectedRecordsTests.test_native_successor_rejects_live_or_unknown_previous_authority","ConnectedRecordsTests.test_network_role_binding_uses_original_output_and_never_replays_retained_intent"]
         with tempfile.TemporaryDirectory(prefix='controller-dispatch-') as directory:
             root = Path(directory)

@@ -2185,6 +2185,28 @@ class SessionHandoffTests(unittest.TestCase):
             self.assertEqual(invoked.call_count, 1)
         self.assertEqual(self.read()["calls"], calls)
 
+    def test_setup_preflight_reads_keep_closed_serialization_and_reject_overrides(self):
+        owner = OWNER.SESSION_CLI
+        for service, operation, arguments in (
+            ("cloudformation", "validate-template", {"TemplateBody": "{}"}),
+            ("iam", "simulate-principal-policy", {"PolicySourceArn": "arn:aws:iam::337159794548:role/setup",
+                "ActionNames": ["cloudformation:ExecuteChangeSet"], "ResourceArns": [self.stack]})):
+            def inspected(command, **options):
+                path = Path(command[command.index("--cli-input-json") + 1].removeprefix("file://"))
+                self.assertEqual(command[1:3], [service, operation])
+                self.assertEqual(json.loads(path.read_bytes()), arguments)
+                self.assertEqual(options["environment"]["AWS_MAX_ATTEMPTS"], "1")
+                return {}
+            with patch.object(owner.CLI, "invoke_json", side_effect=inspected) as invoked:
+                self.assertEqual(self.transport(service, operation, **arguments), {})
+                for invalid in ({}, {**arguments, "endpoint_url": "private-canary"},
+                        {**arguments, next(iter(arguments)): 1}):
+                    with self.assertRaises(owner.SessionProviderFailure) as blocked:
+                        self.transport(service, operation, **invalid)
+                    self.assertEqual(blocked.exception.code, "session-provider-arguments-invalid")
+                    self.assertNotIn("private-canary", str(blocked.exception))
+                self.assertEqual(invoked.call_count, 1)
+
     def test_concrete_transport_response_policy_finite_causes_and_complete_ecr_handoff(self):
         owner = OWNER.SESSION_CLI
         for operation in ("execute-change-set", "delete-stack", "describe-stacks"):

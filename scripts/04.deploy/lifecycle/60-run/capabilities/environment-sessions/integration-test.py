@@ -329,30 +329,51 @@ class StartupTests(unittest.TestCase):
     def setUpClass(cls):
         cls.setup = load("tested_session_setup", HERE / "setup.py")
 
-    def fixture(self, *, lose_create=False):
+    def fixture(self, *, lose_create=False, publication=False):
         helper = self.setup
-        startup = helper.Startup.__new__(helper.Startup)
+        selected = helper.PublicationStartup if publication else helper.Startup
+        startup = selected.__new__(selected)
         startup.root = HERE.parents[5]
         startup.environment = {}
         startup.configuration = {"account": "337159794548", "region": "eu-west-1", "profile": "kanbien-dev"}
         startup.binding = {"expires_at": 7200}
         startup.operator = "arn:aws:iam::337159794548:user/test-setup"
         startup.clock = lambda: 1000
+        startup.realization = helper.module("fixture_setup_evidence",
+            startup.root / "scripts/04.deploy/operational-realization-gate/evidence.py")
+        startup.realization_contract = helper.OWNER.CF.template((startup.root /
+            "infra/04.deploy/03.product/image/environment-session-controller/setup-realization-contract.v2.yml").read_text())
+        startup.source_files = (HERE / "setup.py", Path(startup.realization.__file__))
+        startup.source_artifact = startup._source_artifact()
+        startup.custody = {"receipt": {"verdict": "qualified", "checks": {"local_image_smoke": "passed"}}}
         base = "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/"
         startup.control = {"records_stack": "kanbien-environment-session-records",
             "records_template": base + "environment-session-records.yml",
             "stack": "s-" + "a" * 19 + "-session-control", "template": base + "environment-sessions.yml"}
+        if publication:
+            startup.control = {"stack": "kanbien-environment-session-controller-publication",
+                "template": base + "environment-session-controller-publication.yml"}
+            startup.control.update(records_stack=startup.control["stack"], records_template=startup.control["template"])
+            startup.source_qualification, startup.custody = startup.source_artifact, None
         directory = tempfile.TemporaryDirectory(prefix="session-startup-test-")
         self.addCleanup(directory.cleanup)
         startup.store = helper.SetupStore(Path(directory.name))
         source = helper.OWNER.CF.template((startup.root / startup.control["records_template"]).read_text())
         state = {"phase": "absent", "sends": [], "token": None}
         arn = "arn:aws:cloudformation:eu-west-1:337159794548:stack/" + startup.control["records_stack"] + "/original"
-        rows = [{"ParameterKey": "SetupOperatorArn", "ParameterValue": startup.operator}]
+        values = ({"ExistingGitHubOidcProviderArn": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com"}
+            if publication else {"SetupOperatorArn": startup.operator})
+        rows = [{"ParameterKey": key, "ParameterValue": value} for key, value in values.items()]
         def provider(service, operation, **arguments):
             if (service, operation) == ("sts", "get-caller-identity"):
                 return {"Account": "337159794548", "Arn": startup.operator, "UserId": "operator"}
+            if (service, operation) == ("iam", "simulate-principal-policy"):
+                return {"IsTruncated": False, "EvaluationResults": [{"EvalActionName": action,
+                    "EvalResourceName": arn, "EvalDecision": "allowed", "MissingContextValues": []}
+                    for action in arguments["ActionNames"]]}
             self.assertEqual(service, "cloudformation")
+            if operation == "validate-template":
+                return {"Parameters": deepcopy(rows), "Capabilities": ["CAPABILITY_NAMED_IAM"] if publication else []}
             if operation == "describe-stacks":
                 if state["phase"] == "absent":
                     raise helper.OWNER.SESSION_CLI.SessionProviderFailure("aws-resource-missing")
@@ -361,7 +382,7 @@ class StartupTests(unittest.TestCase):
                     "Parameters": rows}]}
             if operation == "describe-change-set":
                 return {"Status": "CREATE_COMPLETE", "ChangeSetName": startup.control["records_stack"] + "-create",
-                    "ExecutionStatus": "AVAILABLE", "StackName": startup.control["records_stack"],
+                    "ExecutionStatus": "AVAILABLE", "StackName": startup.control["records_stack"], "StackId": arn,
                     "Description": state["prepare_token"], "Parameters": rows, "Capabilities": ["CAPABILITY_NAMED_IAM"],
                     "Changes": [{"Type": "Resource", "ResourceChange": {"Action": "Add",
                         "LogicalResourceId": key, "ResourceType": row["Type"]}} for key, row in source["Resources"].items()]}
@@ -448,6 +469,71 @@ class StartupTests(unittest.TestCase):
                 with self.assertRaises(self.setup.SetupFailure):
                     startup._stack("records", "production", args[2], args[3])
                 self.assertEqual(state["sends"], ["prepare", "execute"])
+
+    def test_realization_preflight_rejects_before_execute_and_retains_original_intent(self):
+        for fault in ("template", "permissions", "source", "components", "storage"):
+            with self.subTest(fault=fault):
+                startup, state, cli = self.fixture()
+                original = startup.provider
+                def provider(service, operation, **arguments):
+                    if fault == "template" and operation == "validate-template":
+                        return {"Parameters": [{"ParameterKey": "private-canary"}], "Capabilities": []}
+                    if fault == "permissions" and operation == "simulate-principal-policy":
+                        return {"IsTruncated": False, "EvaluationResults": []}
+                    return original(service, operation, **arguments)
+                startup.provider = provider
+                if fault == "source":
+                    startup.source_artifact = "sha256:" + "0" * 64
+                if fault == "components":
+                    startup.realization_contract["identities"].append({"id": "unobserved-extra", "permissions": ["unobserved"]})
+                args = ("records", startup.control["records_stack"], startup.control["records_template"],
+                    {"SetupOperatorArn": startup.operator})
+                write = self.setup.OWNER.RESERVATIONS.write_exclusive
+                def retain(path, value):
+                    if fault == "storage" and "realization" in path.parts:
+                        raise self.setup.OWNER.RESERVATIONS.ReservationFailure("retention-not-confirmed")
+                    return write(path, value)
+                with patch.object(self.setup.OWNER.SESSION_CLI.CLI, "invoke_json", side_effect=cli), \
+                        patch.object(self.setup.OWNER.RESERVATIONS, "write_exclusive", side_effect=retain):
+                    with self.assertRaises(self.setup.SetupFailure) as blocked:
+                        startup._stack(*args)
+                self.assertNotIn("execute", state["sends"])
+                self.assertTrue(list(startup.store.root.glob("*-prepare.json")))
+                expected = {"source": "setup-authority-unconfirmed", "components": "realization-components-unsupported",
+                    "storage": "realization-evidence-unavailable"}
+                self.assertEqual(blocked.exception.code, "environment-session-setup-" +
+                    expected.get(fault, "execution-preflight-unconfirmed"))
+                self.assertNotIn("private-canary", str(blocked.exception))
+
+    def test_publication_bootstrap_is_source_qualified_without_waiving_worker_custody(self):
+        startup, state, cli = self.fixture(publication=True)
+        with patch.object(self.setup.OWNER.SESSION_CLI.CLI, "invoke_json", side_effect=cli):
+            self.assertEqual(startup.advance()["StackStatus"], "CREATE_COMPLETE")
+            self.assertEqual(startup.advance()["StackStatus"], "CREATE_COMPLETE")
+        self.assertEqual(state["sends"], ["prepare", "execute"])
+        completed = list(startup.store.root.glob("realization/*/completed.json"))
+        self.assertEqual(len(completed), 1)
+        receipt = json.loads(completed[0].read_text())
+        evidence = completed[0].parent / receipt["evidence"]
+        value = json.loads(evidence.read_text())
+        self.assertEqual([row["gate"] for row in value["facts"]["gate_evidence"]],
+            list(startup.realization.GATE.GATE_ORDER[:7]))
+        evidence.unlink()
+        with self.assertRaises(self.setup.SetupFailure) as blocked:
+            startup.advance()
+        self.assertEqual(blocked.exception.code, "environment-session-setup-execution-evidence-unconfirmed")
+        self.assertEqual(state["sends"], ["prepare", "execute"])
+        self.assertEqual(set(self.setup.OWNER.CF.template((startup.root / startup.control["template"]).read_text())["Resources"]),
+            {"ControllerRepository", "ControllerPublisherRole"})
+        startup, state, cli = self.fixture()
+        startup.custody = None
+        startup.source_qualification = startup.source_artifact
+        with patch.object(self.setup.OWNER.SESSION_CLI.CLI, "invoke_json", side_effect=cli):
+            with self.assertRaises(self.setup.SetupFailure) as blocked:
+                startup._stack("records", startup.control["records_stack"], startup.control["records_template"],
+                    {"SetupOperatorArn": startup.operator})
+        self.assertEqual(blocked.exception.code, "environment-session-setup-artifact-unconfirmed")
+        self.assertEqual(state["sends"], [])
 
 
     def test_retirement_requires_completion_and_stops_original_execution_before_one_exact_delete(self):

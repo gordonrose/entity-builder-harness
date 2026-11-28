@@ -5,7 +5,7 @@
 #   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -46,7 +46,8 @@ DEPLOY = module("entity_smoke_public_deployment", DIRECTORY / "controls-and-read
 RESOURCE = DEPLOY.RESOURCE
 ALIGN = module("entity_smoke_public_alignment", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/entity-smoke/script.py")
 CLI = module("entity_smoke_public_cli", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cli.py")
-GATE = module("entity_smoke_public_gate", ROOT / "scripts/04.deploy/operational-realization-gate/script.py")
+EVIDENCE_BOOK = module("entity_smoke_public_evidence", ROOT / "scripts/04.deploy/operational-realization-gate/evidence.py")
+GATE = EVIDENCE_BOOK.GATE
 CONTRACT = ROOT / ALIGN.TARGET / "20-scopes/entity-smoke/00-declaration/infrastructure-realization-contract.v2.yml"
 GRAPH = module("entity_smoke_public_graph", DIRECTORY / "task-execution/implementation/task-graph.py")
 TRANSITION = module("entity_smoke_source_transition", DIRECTORY / "recovery-and-replacement/source-transition/source-transition.py")
@@ -206,6 +207,9 @@ def source_paths(revision=None):
                     ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py",
                     ROOT / "scripts/04.deploy/operational-realization-gate/script.py",
                     Path(ALIGN.__file__)])
+    evidence_path = Path(EVIDENCE_BOOK.__file__)
+    if revision is None or ALIGN.command(["git", "ls-tree", "--name-only", revision, "--", str(evidence_path.relative_to(ROOT))]).strip():
+        paths.append(evidence_path)
     paths.extend([Path(ALIGN.INPUT_OWNER.__file__), Path(ALIGN.INPUT_OWNER.PATHS.__file__),
                   *(ROOT / reference for reference in ALIGN.INPUTS["references"])])
     return paths
@@ -278,63 +282,21 @@ def operator_preflight(provider, *, mutation=True):
     return identity
 
 
-class GateBook:
+class GateBook(EVIDENCE_BOOK.GateBook):
     def __init__(self, artifact, cache, *, contract=None, artifact_bindings=None, delivery=None):
-        self.contract = yaml.safe_load(CONTRACT.read_text()) if contract is None else contract
+        selected = yaml.safe_load(CONTRACT.read_text()) if contract is None else contract
         if delivery is not None:
             RESOURCE.validate_delivery(delivery)
             require(contract is None, "infrastructure-delivery-graph-selection-invalid")
-            self.contract["change_shape"].update(
+            selected["change_shape"].update(
                 allowed_operation_classes=["update", "replace"], forbidden_operation_classes=["create", "delete", "broaden-permission"],
                 immutable_definition_refresh={name: True for name in ("owned_task_definitions_only", "unchanged_permissions_and_storage",
                     "qualified_image_required", "original_preparation_retained", "accepted_predecessor_required", "compatible_rollback_required")})
-        self.identity = GATE.validate_contract(self.contract)
-        self.component_check_id = "feature-infrastructure-components" if contract is None else self.identity + "-components"
-        self.known = GATE.ids(self.contract)[1]
-        self.cache, self.components, self.gates = cache, {}, []
-        self.plan_digest = None
-        bindings = {"infrastructure-controller-source": artifact} if artifact_bindings is None else artifact_bindings
-        require(set(bindings) == {item["id"] for item in self.contract["artifacts"]}, "infrastructure-artifact-binding-incomplete")
-        self.facts = {"schema": GATE.FACTS_SCHEMA, "contract_id": self.identity, "gate_evidence": [], "component_evidence": [],
-                      "artifact_bindings": [{"component_id": name, "immutable_reference": selected,
-                                             "check_id": self.contract["gates"][1]["evidence"][0], "timestamp": now(), "verdict": "passed"} for name, selected in sorted(bindings.items())]}
-
-    def component(self, identifier):
-        require(identifier in self.known and identifier not in self.components, "infrastructure-component-observation-invalid")
-        self.components[identifier] = now()
-
-    def gate(self, identifier):
-        require(identifier == GATE.GATE_ORDER[len(self.gates)], "infrastructure-gate-order-invalid")
-        self.gates.append(identifier)
-        self.facts["gate_evidence"].append({"gate": identifier, "check_id": self.contract["gates"][len(self.gates) - 1]["evidence"][0], "timestamp": now(), "verdict": "passed", "input_sha256": GATE.evidence_bindings(self.contract, self.facts)["gates"][identifier]})
-
-    def bind_plan(self, selected):
-        require(isinstance(selected, str) and re.fullmatch(r"sha256:[a-f0-9]{64}", selected) is not None and self.plan_digest in (None, selected), "infrastructure-evidence-plan-mismatch")
-        self.plan_digest = selected
-
-    def validate(self, through, change_count=None, activate=False, *, operation_class=None, operation_counts=None):
-        require(set(self.components) == set(self.known), "infrastructure-component-proof-incomplete")
-        require(self.plan_digest is not None, "infrastructure-evidence-plan-missing")
-        bindings = GATE.evidence_bindings(self.contract, self.facts)
-        self.facts["component_evidence"] = [{"component_id": name, "component_kind": self.known[name], "check_id": self.component_check_id, "timestamp": self.components[name], "verdict": "passed", "input_sha256": bindings["components"][name]} for name in sorted(self.components)]
-        GATE.validate_facts(self.facts, self.contract, self.identity, self.known, through)
-        summary = None
-        if change_count is not None:
-            selected_operation = ("update" if activate else "create") if operation_class is None else operation_class
-            require(selected_operation in {"create", "update", "delete"}, "infrastructure-change-operation-invalid")
-            counts = {name: change_count if name == selected_operation else 0 for name in ("create", "update", "delete", "replace", "broaden-permission")}
-            if operation_counts is not None:
-                require(isinstance(operation_counts, dict) and set(operation_counts) == set(counts)
-                        and all(type(value) is int and value >= 0 for value in operation_counts.values())
-                        and sum(operation_counts.values()) == change_count, "infrastructure-change-counts-invalid")
-                counts = operation_counts
-            summary = {"schema": GATE.CHANGE_SCHEMA, "contract_id": self.identity, "check_id": self.contract["gates"][4]["evidence"][0], "timestamp": now(),
-                       "input_sha256": bindings["gates"]["change-set"], "operation_counts": counts}
-            GATE.validate_change_summary(summary, self.contract, self.identity, self.facts)
-        path = self.cache / (through + "-" + uuid.uuid4().hex + ".json")
-        require(RESOURCE.write_exclusive(path, {"plan_sha256": self.plan_digest, "facts": self.facts, "change_summary": summary}), "infrastructure-gate-evidence-retention-failed")
-        return path
-
+        identity = GATE.validate_contract(selected)
+        super().__init__(selected, {"infrastructure-controller-source": artifact} if artifact_bindings is None else artifact_bindings,
+            cache, writer=RESOURCE.write_exclusive, clock=lambda: now(),
+            component_check_id="feature-infrastructure-components" if contract is None else identity + "-components",
+            failure=lambda reason: InfrastructureFailure("infrastructure-" + reason))
 
 def binding_for(receipt, alignment):
     return {"source_revision": receipt["source_revision"], "image_digest": receipt["image_digest"],

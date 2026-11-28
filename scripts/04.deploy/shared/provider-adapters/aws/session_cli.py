@@ -77,6 +77,8 @@ _ARGUMENTS = {
     ("cloudformation", "delete-stack"): {"StackName": str, "ClientRequestToken": str, "RoleARN": str},
     ("cloudformation", "describe-change-set"): {"StackName": str, "ChangeSetName": str},
     ("cloudformation", "describe-stack-events"): {"StackName": str},
+    ("cloudformation", "validate-template"): {"TemplateBody": str},
+    ("iam", "simulate-principal-policy"): {"PolicySourceArn": str, "ActionNames": list, "ResourceArns": list},
     ("cloudformation", "describe-stacks"): {"StackName": str},
     ("cloudformation", "get-template"): {"StackName": str, "TemplateStage": str},
     ("cloudformation", "list-stack-resources"): {"StackName": str},
