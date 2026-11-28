@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T07:43:35Z
-latest_commit_sha: cc52c356
-chat_duration: 486183s (05:15:03:03)
+latest_commit_at_utc: 2026-11-28T08:26:58Z
+latest_commit_sha: 167fbc5b
+chat_duration: 488786s (05:15:46:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -781,6 +781,17 @@ Summary: Current bounded route fix: realistic scheduler CF responses and one sha
 
 Durable evidence: Acceptance failure diagnosed to missing qualification.py in existing verifier disposable payload; add that single dependency, actual isolated CLI now accepts one simulated task. Optional legacy suite missing-engine case references a moved old path; comparing unchanged6dac source, do not expand to a legacy cleanup. Source helper/controller/native receipt hashes1282017a/7c7e25ef/1891927a remain frozen. Preserve original runs and no AWS activation; current correction30minute advisory is at risk and will be reported honestly. Continue only required connected proof and publication.
 
+
+### 2026-11-28T08:26:58Z - Commit recorded
+
+Commit: `167fbc5b`
+
+Message: fix(scheduling): admit real change sets and native proof outputs
+
+Summary: Eleven existing files, no new files/framework/check/permission/AGENTS edits. Scheduler keeps CREATE/UPDATE on submission, reviews actual no-field AWS responses with original description and unchanged resource/template/parameter guards. Existing generic qualification owner provides one NUL-safe runtime-source observation reused by package, active-cost and maintenance admission; only new regular nonsymlink native JSON outputs are non-source data, never authenticated proof. Twelve managed tests, actual scheduler/cost/native caller cases and safe observation rejection pass. Existing verifier fixture adds one actual imported dependency; isolated real CLI passed. Final registered20261128T082502Z passed4/zero findings, two executed two reused,322.273531s commands plus41.501622s overhead; staged20261128T082641Z passed. Initial5-check failure retained081202Z; optional deferred package baseline case independently fails on clean6dac with CORE_IMAGE_CONTAINER_BOUNDARY_FAILED, not attributed to this correction and not fixed by widening scope. Redundant diagnostic rerun cancelled only, no data removed.30minute advisory missed after connected verification; retain same bounded scope and proceed cached promotion/publication. PostgreSQL infrastructure template unchanged from67d4d652. No scheduler AWS operation reserved/enabled; full automatic proof still missing.
+
+ADR impact: Existing ADR0044 sufficient; route-correctness and evidence classification only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -844,6 +855,13 @@ Durable evidence: Acceptance failure diagnosed to missing qualification.py in ex
   Summary: Five existing paths only: one owner separator, eight actual-factory digit/letter/purpose cases, existing diagnostic review and progress records. Regression failed on original compiled payload. Initial run20261128T073318Z executed both checks successfully but correctly rejected changed review input before completion; not accepted as evidence. Frozen final20261128T074137Z passed2/zero findings, command270.864920s and planning/runtime/fingerprint overhead90.431731s; staged gate20261128T074320Z passed. Correction plus repeated preparation exceeded15minute advisory; no scope expansion and no claim that limit was met. Core custody46119731585 is qualified on6dac but requires republishing for new source. Cancelled failed matrix46119736031 retained. Existing UUID/lease validation, schema, jobs, diagnostics and resource policies preserved; no new scripts/checks/permissions/AGENTS edits. Full cached promotion, actual hosted qualification and first automatic AWS proof remain next.
   ADR impact: Existing ADR0044 sufficient; internal naming correction, no architecture change.
 
+
+- Commit: `167fbc5b`
+  Time UTC: 2026-11-28T08:26:58Z
+  Message: fix(scheduling): admit real change sets and native proof outputs
+  Summary: Eleven existing files, no new files/framework/check/permission/AGENTS edits. Scheduler keeps CREATE/UPDATE on submission, reviews actual no-field AWS responses with original description and unchanged resource/template/parameter guards. Existing generic qualification owner provides one NUL-safe runtime-source observation reused by package, active-cost and maintenance admission; only new regular nonsymlink native JSON outputs are non-source data, never authenticated proof. Twelve managed tests, actual scheduler/cost/native caller cases and safe observation rejection pass. Existing verifier fixture adds one actual imported dependency; isolated real CLI passed. Final registered20261128T082502Z passed4/zero findings, two executed two reused,322.273531s commands plus41.501622s overhead; staged20261128T082641Z passed. Initial5-check failure retained081202Z; optional deferred package baseline case independently fails on clean6dac with CORE_IMAGE_CONTAINER_BOUNDARY_FAILED, not attributed to this correction and not fixed by widening scope. Redundant diagnostic rerun cancelled only, no data removed.30minute advisory missed after connected verification; retain same bounded scope and proceed cached promotion/publication. PostgreSQL infrastructure template unchanged from67d4d652. No scheduler AWS operation reserved/enabled; full automatic proof still missing.
+  ADR impact: Existing ADR0044 sufficient; route-correctness and evidence classification only.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -857,9 +875,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T07:43:35Z
-Latest commit SHA: cc52c356
-Chat duration: 486183s (05:15:03:03)
+Latest commit at UTC: 2026-11-28T08:26:58Z
+Latest commit SHA: 167fbc5b
+Chat duration: 488786s (05:15:46:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
