@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.qualify-managed-handler-image
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -39,7 +39,7 @@ CASES = {
 }
 CONTRACT = ROOT / "infra/04.deploy/03.product/image/scheduling-lambda/image-contract.yml"
 class QualificationFailure(Exception):
-    def __init__(self, code): self.code = code; super().__init__(code)
+    def __init__(self, code, context=None): self.code, self.context = code, context; super().__init__(code)
 
 def require(condition, code):
     if not condition: raise QualificationFailure(code)
@@ -49,7 +49,21 @@ def command(argv, timeout=30):
         result = subprocess.run(argv, cwd=ROOT, capture_output=True, text=True, timeout=timeout, check=False)
     except (OSError, UnicodeError, subprocess.SubprocessError):
         raise QualificationFailure("managed-image-command-unavailable") from None
-    require(result.returncode == 0, "managed-image-command-failed")
+    if result.returncode != 0:
+        context = None
+        if argv[:3] == ["docker", "start", "--attach"] and len(result.stderr) <= 4096:
+            try:
+                value = json.loads(result.stderr)
+                require(isinstance(value, dict) and set(value) == {"schema", "verdict", "code", "program_id", "mode", "case"}
+                        and value["schema"] == "deploy/managed-runtime-invocation/v1" and value["verdict"] == "failed"
+                        and value["code"] == "managed-runtime-invocation-failed" and isinstance(value["program_id"], str)
+                        and PROGRAM.fullmatch(value["program_id"]) and value["mode"] in ("invalid", "valid"), "managed-image-command-failed")
+                expected = CASES["invalid" if value["mode"] == "invalid" else ("dispatch" if value["program_id"].endswith("-dispatch") else "worker")]
+                require(value["case"] in ["initialization", "completion", *expected], "managed-image-command-failed")
+                context = {key: value[key] for key in ("program_id", "mode", "case")}
+            except (ValueError, TypeError, QualificationFailure):
+                pass
+        raise QualificationFailure("managed-image-command-failed", context)
     return result.stdout
 
 def read_contract(path=CONTRACT):
@@ -117,6 +131,10 @@ def qualify(image, program, run=command):
             try: result = json.loads(output)
             except (TypeError, ValueError): raise QualificationFailure("managed-image-invocation-proof-invalid") from None
             results[mode] = validate_result(result, program, mode)
+        except QualificationFailure as error:
+            require(error.context is None or error.context["program_id"] == program and error.context["mode"] == mode,
+                    "managed-image-invocation-proof-invalid")
+            raise
         finally:
             if container is None:
                 # A lost create response is reconciled only by this unique owned label.
@@ -145,7 +163,8 @@ def main():
         print(json.dumps(result, sort_keys=True))
         return 0
     except QualificationFailure as error:
-        print(json.dumps({"schema": "deploy/managed-runtime-qualification/v1", "verdict": "failed", "code": error.code}))
+        print(json.dumps({"schema": "deploy/managed-runtime-qualification/v1", "verdict": "failed", "code": error.code,
+                          **({"runtime_case": error.context["case"], "runtime_mode": error.context["mode"]} if error.context else {})}))
         return 1
     except (OSError, ValueError, TypeError, KeyError):
         print('{"verdict":"failed","code":"managed-image-qualification-unavailable"}')

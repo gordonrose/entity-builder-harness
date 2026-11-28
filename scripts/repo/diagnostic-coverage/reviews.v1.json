@@ -7332,7 +7332,7 @@
     {
       "owner": "operational-target-live-alignment-bindings",
       "status": "partial",
-      "reason": "Retain existing fixed target/read-only provider binding interfaces. Generic/AWS alignment fixtures prove their delegated normalized facts but do not yet establish complete actual target-wrapper/native/reconciliation coverage. Preserve fixed target/read-only provider bindings and existing generic/AWS delegated fixture evidence. Actual wrapper tests now cover inspect argv and JSON/digest read failures, retained adapter status, returned evidence validation and ECR operation-specific anchored denial/missing classification without trusting arbitrary prose or inventing absence. Reviewed legacy and exact modern aws: [ERROR]: prefix recognition in both denial and missing paths; existing wrapper fixtures cover both formats, denial precedence, wrong operation, unknown/prose-only/spoofed prefixes, bounded call counts and synthetic-canary exclusion. No provider permission or workload change; hosted effective access remains separate proof.",
+      "reason": "Retain existing fixed target/read-only provider binding interfaces. Generic/AWS fixtures do not establish complete actual target/native/reconciliation coverage. Actual wrapper tests cover argv and JSON/digest failures, retained status and normalized facts, and operation-specific anchored ECR denial/missing classification. Nov28 review adds the existing publisher role's DescribeRepositories read probe after the original three probes. Both shared-core-role publication declarations now justify that actual call; no IAM or workload change is made here. Existing actual-wrapper fixtures cover legacy/modern AWS prefixes, denial precedence, wrong operation, missing repository rejection (not fictional absent-image success), unknown/prose/spoofed failures, bounded calls and canary suppression. The four-read probe remains permission observation, not immutable/scanning metadata proof; Publisher.identity independently checks those settings before publication. Live effective access remains separate evidence.",
       "remaining_debt": [
         "Parent-owned final frozen proof remains pending; B14 owns authorized live identity, access and runtime alignment. No mocked command establishes remote absence or successful live access."
       ],
@@ -7360,7 +7360,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh",
-          "sha256": "e47b854d740922a50da45aba5b1ca2bba8f175b8ea4c1de294f9ca3d6615af60"
+          "sha256": "8e2d2ed70ce0ebb14638132c01061ff392aa263590f5d83e281d8f5d85529a1a"
         }
       ]
     },
@@ -7966,7 +7966,7 @@
     {
       "owner": "managed-handler-image-delivery",
       "status": "partial",
-      "reason": "One managed image builder reuses existing declaration compilation, payload/dependency preparation and immutable ECR Publisher. Qualification invokes the official runtime client through a private loopback fixture with fixed controlled event cases; receipt facts bind source, program/image and declared runtime projection. Failure projection is finite and suppresses native provider/process text. Publication selects the existing two protected-main roles and retains scanning, SBOM, provenance, custody and reservation checks. Controlled qualification/publication tests reject changed configuration, stale/malformed proof and incorrect selection; source review distinguishes these tests from actual image execution. Preflight qualification review Nov27: the fixed official-runtime fixture now exercises malformed request, insufficient deadline and unavailable database with original ClientContext/request/version metadata. No packaged handler replacement or external network is allowed. Qualification checks the exact expected case/response list and owned-container cleanup; the source fixture proves control flow, not that finished images have executed.",
+      "reason": "One managed builder reuses existing declared compilation, payload/dependency preparation and immutable ECR Publisher. Qualification invokes the official client through private loopback cases, binding source/program/image/runtime projection; no handler replacement or external network is allowed. Nov28 review preserves fixed case context from failed Docker-start stderr only when the complete closed JSON shape, program, mode and case match; otherwise original finite command failure remains without raw output. The real qualification caller rejects wrong program/mode and still cleans its owned container. Main emits only fixed runtime_case/runtime_mode additions, retains failure and cannot write a success receipt. Existing command/caller tests reject unknown/extra/canary/misattributed values and prove exact safe context propagation and cleanup. Existing case assertions and configuration/identity proof remain unchanged. Static delivery proof now exercises all four shared-role contracts and their actual workflows, with exact cache inputs, retaining missing-action rejection. Targeted pinned-release rpm update addresses observed scan failures without changing base digest, nonroot isolation or severity policy. Actual patched image/runtime/scan evidence remains required; controlled fixtures are not Docker proof. Publication keeps original roles, scanning, SBOM, provenance, custody and reservations.",
       "remaining_debt": [
         "Final image execution through the official runtime client, publication and AWS acceptance remain unproved. Controlled Docker-command fixtures are not real container proof. Not every subprocess/filesystem cleanup failure is fault-injected."
       ],
@@ -7983,7 +7983,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py",
-          "sha256": "7f282be39427c9eae3c61b377a168330fc01c782a6d4afe08b5efe83f4b79f68"
+          "sha256": "ec09bf525748489a29a428ce37d8864226d8819fbe55a495c07be8126bee1819"
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py",
@@ -7991,7 +7991,7 @@
         },
         {
           "path": "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/runtime-api-fixture.mjs",
-          "sha256": "aea2b00a688d3e1553844840033de60e58925d8f8a328a488bd29b80f67f0610"
+          "sha256": "88d188a3fd6ef59cd893e4fd147d369cd623375df15dd4608671796394ea9a24"
         }
       ]
     },

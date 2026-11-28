@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.managed-handler-image-qualification
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -91,6 +91,34 @@ class QualificationTests(unittest.TestCase):
             value = copy.deepcopy(base); change(value)
             with self.assertRaises(owner.QualificationFailure): owner.inspect_image("valid:image", PROGRAMS[0], lambda *_: json.dumps([value]))
 
+    def test_failed_runtime_command_preserves_only_closed_case_context(self):
+        report = {"schema": "deploy/managed-runtime-invocation/v1", "verdict": "failed", "code": "managed-runtime-invocation-failed",
+                  "program_id": PROGRAMS[1], "mode": "valid", "case": "malformed-record-retained"}
+        variants = [(report, True), ({**report, "case": "completion"}, True), ({**report, "case": "initialization"}, True), ({**report, "case": "private-canary"}, False),
+                    ({**report, "program_id": "private-canary"}, False), ({**report, "extra": "private-canary"}, False),
+                    ({**report, "mode": "private-canary"}, False), ({**report, "case": "warm-deadline"}, False)]
+        for value, accepted in variants:
+            with self.subTest(value=value), patch.object(owner.subprocess, "run", return_value=SimpleNamespace(returncode=23, stdout="private-canary", stderr=json.dumps(value))):
+                with self.assertRaises(owner.QualificationFailure) as raised:
+                    owner.command(["docker", "start", "--attach", "c" * 64])
+                self.assertEqual(raised.exception.code, "managed-image-command-failed")
+                self.assertEqual(raised.exception.context, {key: value[key] for key in ("program_id", "mode", "case")} if accepted else None)
+        run = DockerFixture(PROGRAMS[0])
+        def wrong(argv, timeout=30):
+            if argv[1] == "start":
+                raise owner.QualificationFailure("managed-image-command-failed", {key: report[key] for key in ("program_id", "mode", "case")})
+            return run(argv, timeout)
+        with self.assertRaisesRegex(owner.QualificationFailure, "^managed-image-invocation-proof-invalid$"):
+            owner.qualify("valid:image", PROGRAMS[0], wrong)
+        self.assertEqual(run.calls[-1], ["docker", "rm", "--force", "c" * 64])
+        with tempfile.TemporaryDirectory() as directory, patch.object(owner, "qualify", side_effect=owner.QualificationFailure("managed-image-command-failed", {key: report[key] for key in ("program_id", "mode", "case")})):
+            output = io.StringIO(); path = Path(directory) / "report.json"
+            with patch("sys.argv", ["qualification.py", "--image", "valid:image", "--program", PROGRAMS[1], "--report", str(path)]), contextlib.redirect_stdout(output):
+                self.assertEqual(owner.main(), 1)
+            self.assertEqual(json.loads(output.getvalue()), {"schema": "deploy/managed-runtime-qualification/v1", "verdict": "failed",
+                "code": "managed-image-command-failed", "runtime_case": "malformed-record-retained", "runtime_mode": "valid"})
+            self.assertFalse(path.exists())
+
     def test_partial_or_wrong_runtime_proof_cannot_pass(self):
         for value in ({}, {"verdict": "passed"}, {"schema": "deploy/managed-runtime-invocation/v1", "cases": ["configuration-rejection"], "verdict": "passed"}):
             with self.assertRaises(owner.QualificationFailure): owner.validate_result(value, PROGRAMS[0], "valid")
@@ -113,6 +141,7 @@ class QualificationTests(unittest.TestCase):
     def test_contract_dockerfile_and_runtime_fixture_are_connected(self):
         contract = owner.read_contract(); docker = (owner.CONTRACT.parent / "Dockerfile").read_text()
         self.assertIn("ARG RUNTIME_NODE_IMAGE=" + contract["runtime_base"]["reference"], docker)
+        self.assertIn("RUN dnf upgrade -y --releasever=2023.12.20261112 rpm rpm-libs && dnf clean all", docker)
         self.assertIn('CMD ["handler.handler"]', docker); self.assertIn("USER 10001:10001", docker)
         fixture = owner.FIXTURE.read_text(); self.assertIn('spawn("/lambda-entrypoint.sh", ["handler.handler"]', fixture)
         self.assertNotIn("import(\"/var/task/handler", fixture)
@@ -161,8 +190,12 @@ class QualificationTests(unittest.TestCase):
         target = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform"
         selected = {row["pipeline"]: row for row in rows}
         self.assertEqual(set(selected), {"core-scheduling-package-custody", "entity-smoke-scheduling-package-custody"})
+        for name in ("core-server", "core-server-persistence"):
+            selected[name + "-package-custody"] = {"role": "github-kanbien-core-platform-delivery", "policy_template": "foundation.yml",
+                "policy_role": "DeliveryRole", "workflow": "publish-kanbien-core-platform-" + name + ".yml"}
         for pipeline, row in selected.items():
             with self.subTest(pipeline=pipeline), tempfile.TemporaryDirectory(prefix="managed-access-") as temporary:
+                workflow = ROOT / ".github/workflows" / row.get("workflow", "publish-kanbien-core-platform-scheduling.yml")
                 contract = target / "40-package-custody/github-actions" / (pipeline + ".delivery-access.yml")
                 declaration = yaml.safe_load(contract.read_text())
                 template = target / "30-provider-realization/aws/cloudformation" / row["policy_template"]

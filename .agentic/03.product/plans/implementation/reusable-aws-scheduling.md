@@ -4,7 +4,7 @@ id: product.plan.reusable-aws-scheduling
 version: 2
 status: draft
 created_on: "2026-11-26"
-updated_on: "2026-11-27"
+updated_on: "2026-11-28"
 layer: 03.product
 domain: platform.scheduling
 disciplines: [architecture, backend, security, sre]
@@ -20,37 +20,34 @@ used_by:
 ## Current task and authority
 
 The user authorized continuing toward the first harmless live baseline and
-explicitly directed detailed cost checks to follow that bounded proof, rather
-than block it. Current increment: decouple scope/image identity from upfront
-cost admission in the existing controller. No AGENTS or runtime feature edits.
-The original full live goal remains incomplete; a bounded baseline is not final
-acceptance or permission to leave either scheduler enabled.
+directed detailed cost checks to follow that bounded proof. Scope/image identity
+is now independent of upfront cost admission; final measured acceptance remains.
+The approved AGENTS marker and stale Entity test-fixture correction are complete.
+Complete affected local integration passed, and the verified source was normally
+fast-forwarded to remote main at `96f7434c34d711d7426c3a3c3d76b1421981b79a`.
 
-Reuse the existing immutable phase records for the selected maintenance package;
-do not introduce a proof registry, budget runner or alternate deployment route.
-Files: scheduling-control/script.py and its existing smoke/proof fixtures, the
-owning provider rule/workflow, diagnostic review and this plan/session log.
-The two existing scheduling realization declarations also move
-spend-envelope-hash from required to optional inputs; final measured acceptance
-is unchanged. Whole-task preparation is currently blocked by the prose scanner
-flagging an unchanged AGENTS education bullet. The user was asked separately
-about one explanatory marker; no unapproved AGENTS edit or gate bypass occurred.
-Predicates: authentic current scope/source/images and database incarnation remain
-required; missing pre-run cost evidence does not reject bounded preparation,
-task reservation or cleanup; unrelated work, changed identities, unknown original
-effects and unqualified packages still reject through existing owners. Preserve
-their finite failure codes and CLI projection; no new diagnostic vocabulary.
-Prove the no-cost-record core path and its rejected unsafe alternatives with the
-existing scheduling-provider-controls and scheduling-runtime-proof-contracts.
-Focused verification budget: ten minutes after source review/freeze; reuse other
-unchanged evidence. No new script files, check IDs or recurring reviews planned.
+Current increment: correct the observed package failures and qualify/publish the
+core maintenance and managed-handler images through existing protected workflows, then use the existing native
+owners to establish the first automatic harmless baseline. The approved narrow
+foundation repository-read permission update completed through its original
+operation after a bounded controller/API-response correction; no attempt or
+intent was replaced. No scheduler resources or database changes have yet been
+deployed. The full goal remains incomplete; local checks and package publication
+are not live acceptance or permission to leave either scheduler enabled.
+
+Reuse immutable phase records, native task owners and package custody; add no
+alternate engine, proof registry or budget runner. Unrelated work, changed
+identities, uncertain effects and unqualified packages remain rejected. Current
+run identities and exact evidence are in the existing session log. Preserve
+the checked source while its packages qualify; session/plan notes do not change
+runtime inputs. Calendar/timezone/DST work remains excluded.
 
 Use the active Nov22 scheduler worktree recorded in
 [the session log](../../../../commitLogs/2026/nov/22/2026-11-22-16-40-platform-scheduling-and-entity-smoke-retention-cleanup/README.md),
 rather than the unrelated Nov21 tool working directory.
 Implementation commit: `6c4e0fa89b51e01d23d775bcc21fdf7b1dd6143b`.
-HEAD at cleanup start: `1d045e5f26ecca19aa7c64df12a2755e9e4890fa`.
-The 23 existing modified task paths must be preserved.
+HEAD at cleanup start was `1d045e5f26ecca19aa7c64df12a2755e9e4890fa`;
+the earlier task paths are preserved in committed history.
 
 Earlier plan/history remains in that commit and the session log. A complete
 pre-condensation working copy, including uncommitted verification records and
@@ -130,8 +127,9 @@ owner-level redesign before more removal. No safety requirement is waived here.
 | --- | --- |
 | Dispatcher, worker, Entity transaction/purge | Implemented; focused local tests passed |
 | Real PostgreSQL chain, isolation and conditional deletion | Cleanup standalone native rerun passed with engine/directory cleanup; first concurrent run timed out |
-| Six finished images and publication | Unqualified/unpublished |
-| Complete affected local integration | Not established; corrected source remains unpromoted |
+| Six finished images and publication | First core maintenance failed access-contract validation; worker failed runtime qualification; dispatcher published but scan rejected HIGH findings. No qualified custody receipt. Remaining Entity jobs cancelled before start; Entity maintenance still pending |
+| Complete affected local integration | 100 passed / 37 later-stage or hygiene obligations deferred; exact checked source promoted to remote main |
+| Publisher repository-read permission | Original foundation update completed and verified; publisher-identity access still requires its actual workflow probe |
 | AWS scheduler/network and shared database changes | None performed by this work |
 | Automatic runtime, both canonical acceptances, received alarm and affordable measured operation | Missing |
 
@@ -212,6 +210,33 @@ Before effects revalidate declared account `337159794548`, profile `kanbien-dev`
 region `eu-west-1`.
 
 ## Progress log
+
+- First hosted package attempt exposed missing old core access declarations,
+  a worker failure whose case context was discarded, and four HIGH rpm/rpm-libs
+  findings in the official runtime. Source corrections reuse the existing probe,
+  declarations, qualifier/fixture/tests and Dockerfile. AWS advisory
+  [ALAS2023-2026-3430](https://alas.aws.amazon.com/AL2023/ALAS2023-2026-3430.html)
+  supplies the targeted fixed release; the base pin and severity gate remain.
+  Direct local tests pass; actual patched image/runtime proof remains missing.
+  Both first workflow runs are terminal; preserve the failed dispatcher image
+  and original run identities. Do not rerun their operations or treat publication
+  without clean scan/custody as qualified evidence.
+
+- 2026-11-28: The approved five-path foundation correction passed seven direct
+  controlled-provider groups and both registered checks (35.526s, one reused).
+  Existing workflow now admits checked controller-only descendants while keeping
+  original intent/hash/reservations untouched. No scripts/checks/permissions or
+  AGENTS edits added by that correction. Full local integration passed100/37
+  deferred at source96f7434c, and the clean isolated promotion copy reused all100
+  checks. A fresh final gate also passed100/37 deferred before normal main push.
+  Foundation plan2597aba9 resumed its original change set and completed with
+  unchanged resource/policy identities except the approved repository read.
+  Protected publication runs46115891798 (core maintenance) and46115895513
+  (managed images) select this exact source. Normal environment approvals were
+  submitted under existing publication authority using the configured reviewer;
+  no protection settings were changed. Actual image qualification, publication,
+  runtime and canonical acceptance must still be collected; neither dispatching
+  these workflows nor this progress record establishes those outcomes.
 
 - 2026-11-27 20:50UTC: Cost-ordering correction is locally verified. Scope/image
   identity is retained in original phase records, initial creation authenticates

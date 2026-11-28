@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.image.scheduling-lambda
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -37,6 +37,8 @@ RUN npm ci --ignore-scripts \
  && node scripts/04.deploy/lifecycle/40-package/prepare-runtime-payload/managed-handler.mjs --program "$PROGRAM_ID" --destination /payload/node_modules \
  && NODE_PATH=/payload/node_modules node -e 'const p=require("/payload/artifacts/runtime-payload.json");const r=require("node:module").createRequire("/payload/artifacts/handler.js");for(const n of p.required_imports)r(n);if(typeof r("./handler.js").handler!=="function")process.exit(1)'
 FROM ${RUNTIME_NODE_IMAGE}
+# ALAS2023-2026-3430: the pinned official runtime still contains affected rpm packages.
+RUN dnf upgrade -y --releasever=2023.12.20261112 rpm rpm-libs && dnf clean all
 ARG PROGRAM_ID
 ARG SOURCE_COMMIT_SHA=unknown
 LABEL org.opencontainers.image.title="managed-node-handler" org.kanbien.program=${PROGRAM_ID}

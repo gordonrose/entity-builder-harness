@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.adapter.aws.ecr-read-access
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -52,6 +52,7 @@ probe_not_denied() {
     GET_AUTHORIZATION_TOKEN) provider_operation=GetAuthorizationToken; missing_codes="" ;;
     DESCRIBE_IMAGES) provider_operation=DescribeImages; missing_codes=ImageNotFoundException ;;
     DESCRIBE_SCAN_FINDINGS) provider_operation=DescribeImageScanFindings; missing_codes='ImageNotFoundException|ScanNotFoundException' ;;
+    DESCRIBE_REPOSITORIES) provider_operation=DescribeRepositories; missing_codes="" ;;
     *) fail DELIVERY_ACCESS_ARGUMENTS_INVALID ;;
   esac
   output="$(mktemp)"
@@ -76,4 +77,5 @@ probe_not_denied() {
 probe_not_denied GET_AUTHORIZATION_TOKEN aws ecr get-authorization-token --output text
 probe_not_denied DESCRIBE_IMAGES aws ecr describe-images --repository-name "$REPOSITORY" --image-ids imageDigest="$PROBE_DIGEST" --output json
 probe_not_denied DESCRIBE_SCAN_FINDINGS aws ecr describe-image-scan-findings --repository-name "$REPOSITORY" --image-id imageDigest="$PROBE_DIGEST" --max-results 1 --output json
+probe_not_denied DESCRIBE_REPOSITORIES aws ecr describe-repositories --repository-names "$REPOSITORY" --output json
 printf '%s\n' '{"schema":"deploy/provider-live-access/v1","provider":"aws","resource_class":"container-registry-repository","verdict":"passed"}'

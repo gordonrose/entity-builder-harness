@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 47
+#   version: 48
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -2231,6 +2231,10 @@ checks:
     - infra/04.deploy/03.product/image/scheduling-lambda
     - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-scheduling-package-custody.delivery-access.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/entity-smoke-scheduling-package-custody.delivery-access.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-persistence-package-custody.delivery-access.yml
+    - .github/workflows/publish-kanbien-core-platform-core-server.yml
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke-publication.yml
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py

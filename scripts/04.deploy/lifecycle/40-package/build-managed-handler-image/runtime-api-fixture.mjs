@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.fixture.managed-handler-runtime-api
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-27"
-//   updated_on: "2026-11-27"
+//   updated_on: "2026-11-28"
 //   layer: 04.deploy
 //   domain: deployment.package-candidates
 //   disciplines: [architecture, security, sre]
@@ -130,7 +130,8 @@ try {
     mode, cases: cases.map(value => value.name), responses: finished, runtime_interface: "official-aws-lambda-client" }));
 } catch {
   failure = true;
-  console.error(JSON.stringify({ schema: "deploy/managed-runtime-invocation/v1", verdict: "failed", code: "managed-runtime-invocation-failed" }));
+  console.error(JSON.stringify({ schema: "deploy/managed-runtime-invocation/v1", verdict: "failed", code: "managed-runtime-invocation-failed",
+    program_id: program, mode, case: finished === cases.length ? "completion" : finished < next ? cases[finished].name : "initialization" }));
 } finally {
   clearTimeout(timer);
   if (child) {

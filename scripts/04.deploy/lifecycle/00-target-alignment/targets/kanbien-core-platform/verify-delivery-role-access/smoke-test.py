@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.alignment-wrapper-diagnostics
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-31"
-#   updated_on: "2026-11-06"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -77,11 +77,14 @@ raise SystemExit(status)
         def error(code, operation):
             return f'An error occurred ({code}) when calling the {operation} operation: {CANARY}'
         cases = [
-            ({}, 0, None, 3),
-            ({'get-authorization-token': [0, CANARY]}, 0, None, 3),
-            ({'describe-images': [9, error('ImageNotFoundException', 'DescribeImages')]}, 0, None, 3),
-            ({'describe-image-scan-findings': [9, error('ScanNotFoundException', 'DescribeImageScanFindings')]}, 0, None, 3),
-            ({'describe-image-scan-findings': [9, error('ImageNotFoundException', 'DescribeImageScanFindings')]}, 0, None, 3),
+            ({}, 0, None, 4),
+            ({'get-authorization-token': [0, CANARY]}, 0, None, 4),
+            ({'describe-images': [9, error('ImageNotFoundException', 'DescribeImages')]}, 0, None, 4),
+            ({'describe-image-scan-findings': [9, error('ScanNotFoundException', 'DescribeImageScanFindings')]}, 0, None, 4),
+            ({'describe-image-scan-findings': [9, error('ImageNotFoundException', 'DescribeImageScanFindings')]}, 0, None, 4),
+            ({'describe-repositories': [9, error('AccessDeniedException', 'DescribeRepositories')]}, 1, 'DESCRIBE_REPOSITORIES_DENIED', 4),
+            ({'describe-repositories': [9, error('RepositoryNotFoundException', 'DescribeRepositories')]}, 1, 'DESCRIBE_REPOSITORIES_PROBE_INCONCLUSIVE', 4),
+            ({'describe-repositories': [9, error('ImageNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_REPOSITORIES_PROBE_INCONCLUSIVE', 4),
             ({'get-authorization-token': [9, error('ImageNotFoundException', 'GetAuthorizationToken')]}, 1, 'GET_AUTHORIZATION_TOKEN_PROBE_INCONCLUSIVE', 1),
             ({'describe-images': [9, error('ScanNotFoundException', 'DescribeImages')]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
             ({'describe-images': [9, 'ImageNotFound ' + CANARY]}, 1, 'DESCRIBE_IMAGES_PROBE_INCONCLUSIVE', 2),
@@ -112,7 +115,8 @@ raise SystemExit(status)
                 self.assertTrue(all(call[:1] == ['ecr'] for call in self.calls()))
                 for call in self.calls()[1:]:
                     self.assertIn('kanbien-core-platform/core-server', call)
-                    self.assertIn('sha256:' + '0' * 64, ' '.join(call))
+                    if call[1] != 'describe-repositories':
+                        self.assertIn('sha256:' + '0' * 64, ' '.join(call))
                 if code:
                     self.assertIn('DIAGNOSTIC_CODE=DELIVERY_ACCESS_' + code, result.stderr)
                 else:
