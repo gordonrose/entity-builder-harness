@@ -209,7 +209,8 @@ class Startup:
                 simulated = self.provider("iam", "simulate-principal-policy", PolicySourceArn=self.operator,
                     ActionNames=actions, ResourceArns=[reviewed["StackId"]])
                 rows = simulated.get("EvaluationResults", [])
-                require(simulated.get("IsTruncated") is False and len(rows) == len(actions)
+                require(simulated.get("IsTruncated", False) is False and not simulated.get("Marker")
+                    and len(rows) == len(actions)
                     and {row.get("EvalActionName") for row in rows} == set(actions)
                     and all(row.get("EvalDecision") == "allowed" and not row.get("MissingContextValues")
                         and row.get("EvalResourceName") == reviewed["StackId"] for row in rows),
@@ -290,6 +291,14 @@ class Startup:
         request = {"stage": stage, "stack": name, "template_sha256": hashlib.sha256(template.encode()).hexdigest(),
                    "parameters": parameters, "source_artifact": self.source_artifact,
                    "realization_sha256": hashlib.sha256(OWNER.RESERVATIONS.canonical(self.realization_contract)).hexdigest()}
+        original_preparation = getattr(self, "original_preparation", None)
+        if original_preparation is not None:
+            previous = original_preparation["request"]
+            require({key: value for key, value in previous.items() if key != "source_artifact"} ==
+                {key: value for key, value in request.items() if key != "source_artifact"}, "predecessor-inputs-changed")
+            request["predecessor_operation_id"] = self.predecessor_operation_id
+        def preparation_reservation():
+            return original_preparation or self.store.read("prepare", request)
         change = name + "-create"
         def observe_stack(reservation):
             response = self._missing("describe-stacks", StackName=name)
@@ -367,20 +376,31 @@ class Startup:
             require(operation == "execute-change-set" and arguments == {"StackName": name,
                 "ChangeSetName": change, "DisableRollback": True,
                 "ClientRequestToken": self.store.read("execute", request)["operation_id"]}, "operation-prohibited")
-            reviewed = observe_preparation(self.store.read("prepare", request))
+            reviewed = observe_preparation(preparation_reservation())
             require(reviewed is not None and reviewed.get("ExecutionStatus") == "AVAILABLE", "change-set-unconfirmed")
-            self._setup_gate(request, self.store.read("execute", request), reviewed={**reviewed, "_template": template})
+            reserved = self.store.read("execute", request)
+            try:
+                self._setup_gate(request, reserved, reviewed={**reviewed, "_template": template})
+            except SetupFailure as failure:
+                OWNER.RESERVATIONS.write_exclusive(self.store.root / "control-execution-not-submitted.json", {
+                    "schema": "deploy/environment-session-setup-non-submission/v1", "effect": "not-submitted",
+                    "operation_id": reserved["operation_id"], "request_sha256": reserved["request_sha256"],
+                    "source_artifact": request["source_artifact"], "reason": failure.code,
+                    "observed_at": datetime.now(timezone.utc).isoformat(),
+                    "origin": "setup-pre-provider-guard"})
+                raise
             return self.provider(service, operation, **arguments)
-        prepared = OWNER.CHANGE_SETS.prepare(setup_send, self.store, phase="prepare", request=request,
+        prepared = (observe_preparation(original_preparation) if original_preparation is not None else
+            OWNER.CHANGE_SETS.prepare(setup_send, self.store, phase="prepare", request=request,
             arguments={"StackName": name, "ChangeSetName": change, "ChangeSetType": "CREATE", "TemplateBody": template,
                 "Parameters": rows, "Capabilities": ["CAPABILITY_NAMED_IAM"]},
             precondition=lambda _: require(self._missing("describe-stacks", StackName=name) is None, "stack-already-exists"),
-            observe=observe_preparation, passthrough=(SetupFailure,))
+            observe=observe_preparation, passthrough=(SetupFailure,)))
         if prepared is None:
             return None
         return OWNER.CHANGE_SETS.execute(setup_send, self.store, phase="execute", request=request,
             arguments={"StackName": name, "ChangeSetName": change, "DisableRollback": True},
-            precondition=lambda _: require(observe_preparation(self.store.read("prepare", request)).get("ExecutionStatus") == "AVAILABLE", "change-set-unconfirmed"),
+            precondition=lambda _: require(observe_preparation(preparation_reservation()).get("ExecutionStatus") == "AVAILABLE", "change-set-unconfirmed"),
             observe=observe_stack, passthrough=(SetupFailure,))
 
     def advance(self):
@@ -575,7 +595,7 @@ class PublicationStartup(Startup):
         # Both pair slots deliberately name this one fixed stack; inherited
         # application/records entry points cannot select a different resource.
         self.control.update(records_stack=self.control["stack"], records_template=self.control["template"])
-        self.store = SetupStore(self.root / ".cache/environment-session-setup/publication")
+        previous_store = SetupStore(self.root / ".cache/environment-session-setup/publication")
         self.clock = lambda: int(datetime.now(timezone.utc).timestamp())
         self.binding = {"expires_at": self.clock() + 900}
         publisher = module("session_registry_publication", self.root /
@@ -588,6 +608,11 @@ class PublicationStartup(Startup):
         names = publisher.run(["git", "ls-files", "-z", "--", *paths]).split("\0")
         self.source_files = tuple(self.root / name for name in names if name)
         self.source_artifact = self._source_artifact()
+        self.store = SetupStore(previous_store.root / self.source_artifact.removeprefix("sha256:"))
+        original = previous_store.root / "control-prepare.json"
+        OWNER.RESERVATIONS.no_symlinks(original)
+        if original.exists():
+            self._read_predecessor(previous_store)
         # The ordinary private runner owns proof and trusted unchanged reuse.
         # No supplied receipt, fake image smoke or bootstrap publication cycle.
         try:
@@ -603,6 +628,28 @@ class PublicationStartup(Startup):
         self.provider = OWNER.SESSION_CLI.SessionProvider(profile=self.configuration["profile"],
             region=self.configuration["region"], environment=self.environment)
         self.operator = NATIVE.operator_arn(self.provider, self.configuration["account"])
+
+    def _read_predecessor(self, previous_store):
+        try:
+            previous = json.loads((previous_store.root / "control-prepare.json").read_text())["request"]
+            prepared = previous_store.read("prepare", previous)
+            execution = previous_store.read("execute", previous)
+            require(prepared is not None and execution is not None, "predecessor-execution-unconfirmed")
+            path = previous_store.root / "control-execution-not-submitted.json"
+            OWNER.RESERVATIONS.no_symlinks(path)
+            witness = json.loads(path.read_text())
+            require(witness.get("schema") == "deploy/environment-session-setup-non-submission/v1"
+                and witness.get("effect") == "not-submitted"
+                and witness.get("operation_id") == execution["operation_id"]
+                and witness.get("request_sha256") == execution["request_sha256"]
+                and witness.get("source_artifact") == previous["source_artifact"]
+                and witness.get("origin") in ("setup-pre-provider-guard", "operator-witnessed-command-result")
+                and re.fullmatch(r"environment-session-setup-[a-z-]+", str(witness.get("reason"))),
+                "predecessor-non-submission-unconfirmed")
+            OWNER.RECORDS.checked_time(witness.get("observed_at"))
+            self.original_preparation, self.predecessor_operation_id = prepared, execution["operation_id"]
+        except (OSError, ValueError, KeyError, TypeError, OWNER.RESERVATIONS.ReservationFailure):
+            raise SetupFailure("predecessor-custody-unconfirmed") from None
 
     def advance(self):
         return self._stack("control", self.control["stack"], self.control["template"],

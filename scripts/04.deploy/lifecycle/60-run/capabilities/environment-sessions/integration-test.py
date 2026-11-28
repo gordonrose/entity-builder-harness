@@ -368,7 +368,7 @@ class StartupTests(unittest.TestCase):
             if (service, operation) == ("sts", "get-caller-identity"):
                 return {"Account": "337159794548", "Arn": startup.operator, "UserId": "operator"}
             if (service, operation) == ("iam", "simulate-principal-policy"):
-                return {"IsTruncated": False, "EvaluationResults": [{"EvalActionName": action,
+                return {"EvaluationResults": [{"EvalActionName": action,
                     "EvalResourceName": arn, "EvalDecision": "allowed", "MissingContextValues": []}
                     for action in arguments["ActionNames"]]}
             self.assertEqual(service, "cloudformation")
@@ -471,7 +471,7 @@ class StartupTests(unittest.TestCase):
                 self.assertEqual(state["sends"], ["prepare", "execute"])
 
     def test_realization_preflight_rejects_before_execute_and_retains_original_intent(self):
-        for fault in ("template", "permissions", "source", "components", "storage"):
+        for fault in ("template", "permissions", "pagination", "source", "components", "storage"):
             with self.subTest(fault=fault):
                 startup, state, cli = self.fixture()
                 original = startup.provider
@@ -480,6 +480,8 @@ class StartupTests(unittest.TestCase):
                         return {"Parameters": [{"ParameterKey": "private-canary"}], "Capabilities": []}
                     if fault == "permissions" and operation == "simulate-principal-policy":
                         return {"IsTruncated": False, "EvaluationResults": []}
+                    if fault == "pagination" and operation == "simulate-principal-policy":
+                        return {**original(service, operation, **arguments), "IsTruncated": True, "Marker": "private-canary"}
                     return original(service, operation, **arguments)
                 startup.provider = provider
                 if fault == "source":
@@ -535,6 +537,62 @@ class StartupTests(unittest.TestCase):
         self.assertEqual(blocked.exception.code, "environment-session-setup-artifact-unconfirmed")
         self.assertEqual(state["sends"], [])
 
+
+    def test_bootstrap_preflight_repair_reuses_review_and_reserves_a_separate_execution(self):
+        startup, state, cli = self.fixture(publication=True)
+        provider = startup.provider
+        def denied(service, operation, **arguments):
+            if operation == "simulate-principal-policy":
+                return {"EvaluationResults": []}
+            return provider(service, operation, **arguments)
+        startup.provider = denied
+        with patch.object(self.setup.OWNER.SESSION_CLI.CLI, "invoke_json", side_effect=cli):
+            with self.assertRaises(self.setup.SetupFailure):
+                startup.advance()
+            old = startup.store
+            previous = json.loads((old.root / "control-prepare.json").read_text())["request"]
+            original_execution = old.read("execute", previous)
+            startup._read_predecessor(old)
+            witness = old.root / "control-execution-not-submitted.json"
+            value = json.loads(witness.read_text())
+            self.assertEqual(value["origin"], "setup-pre-provider-guard")
+            self.assertEqual(value["operation_id"], original_execution["operation_id"])
+            witness.unlink()
+            with self.assertRaises(self.setup.SetupFailure):
+                startup._read_predecessor(old)
+            self.assertEqual(state["sends"], ["prepare"])
+            self.setup.OWNER.RESERVATIONS.write_exclusive(witness, value)
+            startup._read_predecessor(old)
+            startup.store = self.setup.SetupStore(old.root / "qualified-repair")
+            startup.provider = provider
+            self.assertEqual(startup.advance()["StackStatus"], "CREATE_COMPLETE")
+            self.assertEqual(startup.advance()["StackStatus"], "CREATE_COMPLETE")
+        self.assertEqual(state["sends"], ["prepare", "execute"])
+        self.assertNotEqual(state["token"], original_execution["operation_id"])
+        self.assertEqual(old.read("execute", previous), original_execution)
+        current = json.loads((startup.store.root / "control-execute.json").read_text())
+        self.assertEqual(current["request"]["predecessor_operation_id"], original_execution["operation_id"])
+        startup.original_preparation["request"]["parameters"] = {"foreign": "private-canary"}
+        with self.assertRaises(self.setup.SetupFailure) as blocked:
+            startup.advance()
+        self.assertEqual(blocked.exception.code, "environment-session-setup-predecessor-inputs-changed")
+        self.assertEqual(state["sends"], ["prepare", "execute"])
+        startup, state, cli = self.fixture(publication=True)
+        provider = startup.provider
+        def uncertain(service, operation, **arguments):
+            if operation == "execute-change-set":
+                state["sends"].append("execute")
+                raise self.setup.OWNER.SESSION_CLI.SessionProviderFailure("aws-command-timeout")
+            return provider(service, operation, **arguments)
+        startup.provider = uncertain
+        with patch.object(self.setup.OWNER.SESSION_CLI.CLI, "invoke_json", side_effect=cli):
+            with self.assertRaises(self.setup.OWNER.CHANGE_SETS.ChangeSetFailure) as unknown:
+                startup.advance()
+        self.assertEqual(unknown.exception.code, "execute-change-set-submission-uncertain")
+        with self.assertRaises(self.setup.SetupFailure):
+            startup._read_predecessor(startup.store)
+        self.assertFalse((startup.store.root / "control-execution-not-submitted.json").exists())
+        self.assertEqual(state["sends"], ["prepare", "execute"])
 
     def test_retirement_requires_completion_and_stops_original_execution_before_one_exact_delete(self):
         helper = self.setup

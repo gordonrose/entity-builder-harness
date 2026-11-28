@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T12:17:58Z
-latest_commit_sha: 574d7259
-chat_duration: 137313s (01:14:08:33)
+latest_commit_at_utc: 2026-11-28T12:51:00Z
+latest_commit_sha: 0bfdd175
+chat_duration: 139295s (01:14:41:35)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -102,6 +102,12 @@ reducing aws bill
 ## Activity Log
 
 ### 2026-11-28 - Continue existing governed setup implementation
+
+- Narrow repair admission initially identified one real defect: AVAILABLE plus a reservation alone must not authorize a new send after uncertainty. Corrected at the owner: known SetupFailure before provider I/O exclusively records original-operation/request/source-bound non-submission; repair requires it, while uncertain transport never creates that witness and remains observation-only. Existing7 startup cases pass0.318s, explicit uncertain-original extension0.143s. Reviewer closed finding pass-with-notes,4s inspection plus report, no new workflow/check. Final source IDs setupb1f63900a977ba575cff8be38a563d8e905d6c6192bdf0bbd31ade3b504cad49, fixture2684fb644db4e573141342e5067f6e791366694bdc0d89f8fba316874eec67f8.
+- Retained the real original session73014 pre-I/O result NOW at12:59:05Z as operator-witnessed-command-result, explicitly not backdated/source-emitted or inferred from AVAILABLE. Bound original operation session-setup-7aee1ad5f64546df93a1ac146bead6eb, request57daa3ed9dcf95b4d8244740f1d32576ac877f6b67e52b5096d8e4a5f57cc236, source0bfdd175f95d0bf497de2634007dfdf09258ae4b, actual exit1/finite guard failure and source control flow. Read-only git-archive reconstruction of938 original files exactly matched captured source artifact a8d3ff49a7a98a627fa3d64ef1ef45ab17e39d876668307a3a0989890b3cac66. Private immutable witness is .cache/environment-session-setup/publication/control-execution-not-submitted.json; original reservations untouched. Reviewer found no applicable prohibition on truthful witnessed evidence retention. No second provider submission yet.
+
+- First actual registry bootstrap at checkpoint0bfdd175 retained one source-bound CloudFormation review with exactly2 additions, but did not execute it: setup preflight correctly stopped on its own overly strict optional pagination comparison. Fresh native reads show validate-template matches, both exact simulated actions allowed, exact resource matches, no missing context, and the auto-paginated response omits IsTruncated. Native review remains CREATE_COMPLETE/AVAILABLE. No registry/IAM resources, application mutation, retirement or savings yet. Current correction accepts only omitted/false pagination with no Marker plus full exact action/resource rows; true pagination remains blocked. A separately reserved source-qualified execution binds the previous operation and reuses only that exact unchanged original review; original files remain untouched, no CreateChangeSet replay. Seven startup cases pass0.335s including distinct execution token, no second prepare, retained predecessor and changed-input rejection. Existing governed repair authority applies; no journal reset or new exception.
+- Isolated official GitHub CLI2.106.0 is checksum-verified at /var/tmp/kanbien-gh.7qEhmN/gh_2.106.0_linux_amd64/bin/gh and actual help confirms all required attestation policy flags. Withdrew the unnecessary tooling permission question under existing task dependency authority; no user answer inferred, global CLI/settings unchanged. ECR authentication remains a later isolated credential step, not skipped signature verification.
 
 - Final bounded bootstrap/completion increment: fixed registry/publisher setup in the existing setup.py reuses the same create-only graph, source checks, original reservation, compiler and one-send protocol. Its exact source-only type requires clean committed source and actual existing private runner controller/package proof before provider construction; normal session startup still requires qualified signed image custody. No second mutation engine, new folder/check/schedule or generic RoleARN waiver. Exact-token terminal stack readback now retains original-admission controlled-execution evidence and a hash-bound immutable completion manifest; lost evidence blocks without another submission. Six StartupTests pass0.251s. Actual new transport read serialization/override/privacy case passes0.502s. Required narrow admission follow-ups passed-with-notes with no corrections: bootstrap inspection6s, terminal custody10s, plus reports; unchanged broader review reused. Final pre-preparation identities setup083a00474b3888815f0cc073148a99e7eef8d5572d4c438cdadd52c7afc8b3fd, fixture416f4c7e685b5545e0fb31def34e83b09e57848fa6975b4d1aca1c1bf3f5e583. No provider mutation yet. Runtime cleanup/retirement graphs and live/image acceptance remain unfinished.
 - Prepared earlier source passed the two registered focused owners in33.366s wall: infrastructure11.536833s and controller14.721592s, no findings. Bootstrap/completion additions invalidate controller proof only; final prepared source will run/reuse existing affected owners once, not repeat the previous full package aggregate. Context carry-forward: preserve original task worktree/goal and operation records; source/checkpoint/publication are not savings. Next authorized step after checkpoint is fixed registry/publisher setup and protected hosted publication, not another architecture pass.
@@ -1973,6 +1979,17 @@ Summary: Controller push-only registration stays non-publishing; corrected decla
 
 ADR impact: ADR 0044 unchanged; production-preserving deployment and temporary cleanup architecture retained.
 
+
+### 2026-11-28T12:51:00Z - Commit recorded
+
+Commit: `0bfdd175`
+
+Message: feat(deploy): gate controller setup and bootstrap image registry
+
+Summary: Prepared source passes controller14.348168s/package1.218938s with unchanged infrastructure proof reused; staged gate and eleven exact-byte checks pass. Fixed source-qualified registry bootstrap, shared evidence helper and original completion custody are implemented. AWS identity confirmed; no provider mutation or savings yet. Runtime cleanup/retirement realization and live/image qualification remain pending.
+
+ADR impact: ADR 0044 unchanged; production settings and application images remain preserved.
+
 ## Sub-Agent Activity
 
 - `/root/production_profile_review` reviewed the supplied revised design (no independent source/provider access). Incorporated its production-parity, upgrade-fixture, protected-cleanup and post-expiry retry safeguards; retained explicit residual-cost limits. Parent owns final source/document review.
@@ -2002,6 +2019,13 @@ ADR impact: ADR 0044 unchanged; production-preserving deployment and temporary c
   Summary: Controller push-only registration stays non-publishing; corrected declared evidence-template lineage, CI fixture parser, image guide and ignore protections. Focused package consumers and inventory pass; full aggregate, hosted artifact/live/retirement proof remain pending.
   ADR impact: ADR 0044 unchanged; production-preserving deployment and temporary cleanup architecture retained.
 
+
+- Commit: `0bfdd175`
+  Time UTC: 2026-11-28T12:51:00Z
+  Message: feat(deploy): gate controller setup and bootstrap image registry
+  Summary: Prepared source passes controller14.348168s/package1.218938s with unchanged infrastructure proof reused; staged gate and eleven exact-byte checks pass. Fixed source-qualified registry bootstrap, shared evidence helper and original completion custody are implemented. AWS identity confirmed; no provider mutation or savings yet. Runtime cleanup/retirement realization and live/image qualification remain pending.
+  ADR impact: ADR 0044 unchanged; production settings and application images remain preserved.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2015,9 +2039,9 @@ Reason: Extend profile-driven deployment with isolated temporary instances, reta
 ## Session Metrics
 
 Raised at UTC: 2026-11-26T22:09:25Z
-Latest commit at UTC: 2026-11-28T12:17:58Z
-Latest commit SHA: 574d7259
-Chat duration: 137313s (01:14:08:33)
+Latest commit at UTC: 2026-11-28T12:51:00Z
+Latest commit SHA: 0bfdd175
+Chat duration: 139295s (01:14:41:35)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
