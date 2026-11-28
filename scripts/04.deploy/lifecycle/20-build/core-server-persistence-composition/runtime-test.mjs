@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-composition-runtime
-//   version: 2
+//   version: 3
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-11-27"
+//   updated_on: "2026-11-28"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -228,6 +228,26 @@ async function proveSchedulingComposition() {
   const app = resources => proof.createKanbienCoreServerSchedulingApp({ ...resources, persistence: { async createAcceptanceRecord() { return "created"; } } });
   const binding = { ...scope, purpose: "worker", appDiagnosticCatalogs: [kanbienCoreAcceptanceDiagnosticCatalog], createApp: app };
   const fullTime = { getRemainingTimeInMillis: () => 60_000 };
+  // Lease-owner segments must start with letters; valid Core UUIDs need not.
+  // Exercise the actual composition boundary, not just its string constructor.
+  for (const leading of ["0", "9", "a", "f"]) for (const purpose of ["worker", "dispatch"]) {
+    let poolEnds = 0, clientEnds = 0, calls = 0;
+    const username = purpose === "worker" ? scope.workerUsername : scope.dispatchUsername;
+    const handler = createSchedulingTargetHandler({ ...binding, purpose }, {
+      env: { ...env, PERSISTENCE_SCHEDULING_DATABASE_USERNAME: username,
+        PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: env.PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE.replace(scope.workerUsername, username) },
+      clock, uuidGenerator: { generate: () => shared.uuid(`${leading}b583987-27e9-42df-a592-0356205f6fc8`) },
+      logger: { write: record => { logs.push(record); } }, readCertificate: () => certificate,
+      createPool: () => ({ async query() { calls++; throw raw; }, async connect() { calls++; throw raw; }, async end() { poolEnds++; } }),
+      createClient: () => ({ async send() { calls++; throw raw; }, destroy() { clientEnds++; } }),
+    });
+    deepEqual(await handler(purpose === "worker" ? { Records: [] } : {}, { getRemainingTimeInMillis: () => 30_000 }),
+      purpose === "worker" ? { batchItemFailures: [] }
+        : { delivery: null, relayAttempts: 0, published: 0, stopReason: "requested-stop" }, `${purpose}, UUID leading ${leading}`);
+    equal(calls, 0, "empty worker/short-budget dispatch initialization must not access dependencies");
+    equal(poolEnds, 1, "created pools close once for every valid UUID prefix");
+    equal(clientEnds, 1, "created clients close once for every valid UUID prefix");
+  }
   for (const mutation of invalid) {
     let resources = 0;
     const handler = createSchedulingTargetHandler(binding, { env: { ...env, ...mutation }, clock, uuidGenerator: ids,

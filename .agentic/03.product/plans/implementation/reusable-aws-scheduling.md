@@ -24,10 +24,15 @@ directed detailed cost checks to follow that bounded proof. Scope/image identity
 is now independent of upfront cost admission; final measured acceptance remains.
 The approved AGENTS marker and stale Entity test-fixture correction are complete.
 Complete affected local integration passed, and the verified source was normally
-fast-forwarded to remote main at `96f7434c34d711d7426c3a3c3d76b1421981b79a`.
+fast-forwarded to remote main, most recently at `6dac033220752155b080dd037b91fe008d592fdc`.
 
-Current increment: correct the observed package failures and qualify/publish the
-core maintenance and managed-handler images through existing protected workflows, then use the existing native
+Core maintenance publication `46119731585` passed on that source. Managed-handler
+run `46119736031` built successfully but failed actual initialization. Local actual
+factory diagnosis found that a digit-leading UUID forms an invalid lease-owner
+segment. Current increment: join that UUID to the letter-leading purpose with a
+hyphen, test both purposes with digit/letter prefixes in the existing fixture,
+then requalify the managed-handler images through existing protected workflows.
+Use the existing native
 owners to establish the first automatic harmless baseline. The approved narrow
 foundation repository-read permission update completed through its original
 operation after a bounded controller/API-response correction; no attempt or

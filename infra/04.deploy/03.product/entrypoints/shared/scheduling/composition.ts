@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.shared-scheduling-composition
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-11-27"
-//   updated_on: "2026-11-27"
+//   updated_on: "2026-11-28"
 //   layer: 04.deploy
 //   domain: deployment.scheduling
 //   disciplines: [architecture, security, sre]
@@ -81,7 +81,7 @@ export async function createSchedulingComposition(options: SchedulingComposition
   const diagnostics = { diagnosticDefinitions: options.diagnosticDefinitions ?? [],
     onDiagnostic: (record: Parameters<typeof reportPlatformDiagnostic>[1]) => reportPlatformDiagnostic(reporter, record, context) };
   const deps = { ...createPlatformRuntimeContextDeps({ clock, logger }), diagnostics: reporter };
-  const owner = schedulingRequired(platformPersistenceLeaseOwner(`scheduling.${purpose}.${schedulingRequired(options.uuidGenerator.generate())}`));
+  const owner = schedulingRequired(platformPersistenceLeaseOwner(`scheduling.${purpose}-${schedulingRequired(options.uuidGenerator.generate())}`));
   const observer = {
     record(observation: import("@kanbien/platform-persistence").PlatformPersistenceObservation) {
       if (observation.diagnosticRecord !== undefined) diagnostics.onDiagnostic(observation.diagnosticRecord);
