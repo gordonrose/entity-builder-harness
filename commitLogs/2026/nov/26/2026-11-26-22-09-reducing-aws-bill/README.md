@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-27T07:11:50Z
-latest_commit_sha: 2d3eea6cdb19106b6ebaadb32c908e0bb67f3ffa
-chat_duration: 32545s (00:09:02:25)
+latest_commit_at_utc: 2026-11-28T11:53:21Z
+latest_commit_sha: 3963fb6f
+chat_duration: 135836s (01:13:43:56)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -100,6 +100,25 @@ reducing aws bill
   mutation or savings has occurred.
 
 ## Activity Log
+
+### 2026-11-28 - Hosted workflow registration correction
+
+- Final registered inventory regression passed61.155828s, runner67.837s wall, no findings. Retain unchanged passing controller/baseline/collector package results from the preceding prepared batch; the entity publisher also passed. The corrected missing-engine caller passed79.935s and both CI-mutation cases passed7.652s. The earlier full package aggregate is NOT represented as passing: its identified failure is corrected/proved at the actual caller; the combined aggregate and broader session integration remain pending. No actual container build, image publication or live acceptance is established.
+- Final normal preparation passed with nine selected obligations/no findings (selector7.05706s). Parent inspected date-only preparation changes and the complete final diffs, confirmed zero changed diagnostic-review hash mismatches, source-backed README reading/link review and zero container-boundary findings. Final reviewed SHA256 identities: controller workflow43ada75bc3d0991831f66509ce6bdde57061f666f8827b4b969677f36c961bd8; shared guard66cc7f35e11d81640ce77b95fba97db9e9aca03cfe480873d72e071c5c523973; controller verifier5fdfa39033acdd2e290837689b1dd7ec945c35b347694235c10346059eda20ab; controller fixture492d3e5e2ec0634ed78f4c92970e68aa61e1d98c5900137c987dc47d2dcc0f3b; inventory readeraa3e1444e70048a4ab2418c4f11e87e265cd4a2f74911939314fd6ccfb149c3e; inventory fixture287e222e79ad09bc02fe4cc0e129155c869447b08b50c185bcf33c0ace33a377. Compare staged bytes before commit; do not repeat unchanged admission review.
+- This bounded correction adds/removes/moves zero script-source files and adds no checks, scheduled work, mandatory reviews or cloud permissions. One image README and an existing ignore-file extension complete the packaging boundary. Source/fixtures reuse current owners; no application/runtime defaults or existing resources change. User approval for the missing setup realization contract and isolated checksum-verified modern GitHub CLI is still pending. AWS creation stays closed at that gap; no gate bypass, broad RoleARN waiver or substitute receipt is allowed. Continue from this checkpoint after those decisions, not by replaying the old checks or publishing an unqualified image.
+
+- Final source-bound checks: controller package, baseline package and collector package passed (1.281852s/.141332s/1.123476s); inventory aggregate failed44.116736s. Its fail-fast child isolated an old fixture's `yaml.safe_load` converting GitHub's `on` key into boolean `True`, incompatible with the already adopted strict shared workflow loader. Before editing: make the two existing CI-mutation tests read actual workflow bytes through that same existing `workflow_guard.workflow_document`; keep all mutations and runtime rejection unchanged. This corrects fixture input construction, not an exception for boolean keys or weakened gate. Test only those two affected methods before one final registered inventory run. The previously failing missing-engine caller independently passed in79.935s after the inventory/image corrections; no actual image build is claimed.
+
+- Direct inventory correction proof: three existing safe-path cases passed; new positive/removed-reference fixture initially expected registered-but-unbound instead of unregistered after deleting its sole declaration. Corrected only that expected existing code; its case passed in .480s, preserving no arbitrary notes/route adoption. The failed caller then confirmed zero inventory gaps but exposed two actual image-boundary omissions before Docker: missing controller image README and incomplete ignore families. Before editing those data/docs: add the short source-backed image guide and missing exclusions to the existing Dockerfile-specific ignore file; keep the boundary validator unchanged. Existing actual boundary check and the failed missing-engine caller are the proof; no new checker/test. README skill applies its bounded image-folder guide (four direct source/data files, no public API exports), not a module/export documentation sweep. Actual image compatibility and live setup remain unproved.
+
+- Registered affected batch: controller package passed 1.331898s; entity publication passed 3.556339s; shared package aggregate failed 124.962399s, runner wall 144.625s (over the two-minute focused budget). Its runner discards unsupported child failure text. Reconciled by invoking only the existing qualification child with fail-fast/verbose: 16 cases reached the first failure in 30.391s. Exact cause is `delivery-consumer-unbound` for the new shared records template; the missing-engine case never reached Docker and correctly failed its expected exit77. Do not weaken that assertion or rerun unchanged aggregates blindly.
+- Before correction: extend `delivery_inventory.profile_templates` and its existing `delivery-smoke-test.py` fixture. It currently traces foundation selections but not the existing target `provider.session_control.template` / `records_template` fields. Reuse its bounded relative-YAML/no-escape/no-missing-file predicates for exactly those two declared fields, not arbitrary strings or an extra registration list. Test positive reachability plus removed-field/unrelated-template exclusion. Same read-only owner/consumer/effects/lane; this is an omitted dependency bug fix, not a new admission/scheduler. Existing finite delivery-profile-template-* diagnostics retain field-only safe locations and canary exclusion. Budget two minutes targeted fixture and failed child, then reuse stable proof for the aggregate. No new source files, review requirement, provider operations or permissions.
+
+- Bounded Senior Prompt Engineer follow-up inspected only changed registration timing and direct policy/helper callers (script-admission v4, run-agent-review v2), 16 seconds measured inspection plus reporting. One medium required finding: default helper lookup admitted an explicit null `if` key. Corrected before preparation by retaining presence rejection for default callers and adding its exact negative fixture. Parent confirmed closure from those lines; unchanged review findings reused. Final decision pass-with-notes; no other required findings/delegation. The first seven package cases passed in 1.272s before the null regression was added; final registered proof follows preparation. No actual GitHub registration/package/live claim yet. Diagnostic ledger refreshes only the two changed reviewed source hashes; no new owner, adoption claim or diagnostic vocabulary. Review identities are rebound after metadata preparation and compared against staged content.
+
+- User approval for both controller packaging folders and reuse of image publishing is recorded; source checkpoint `3963fb6f` was pushed normally to only the exact authorized task branch. No main change or force update. Read-only GitHub lookup confirms the new workflow is not registered (404); GitHub requires default-branch presence or prior workflow registration before manual dispatch. The local Docker engine remains unavailable.
+- Before editing: extend only the existing controller workflow, its verifier/fixture and shared `workflow_guard.job_steps` helper. An exact task-branch push event will register the workflow with its sole job skipped; the publication job must have exactly the manual-dispatch condition. The shared helper will accept an explicitly supplied expected condition while unchanged callers continue to reject all conditional jobs. No new files, capability, provider operations, permissions, recurring checks or reviews are added. Existing package tests own the named risk: a push, altered condition or wider trigger reaching qualification/publication; manual publication retains all original gates. Budget two minutes focused proof; source changes invalidate only their existing declared consumers. This is a correction to the approved hosted route, not a new package format or main merge.
+- Diagnostic boundary remains the existing finite `session-package-contract-unconfirmed` report; invalid routing must fail locally without provider work or sensitive values. No runtime diagnostic vocabulary changes. Package/live acceptance and existing-resource retirement remain pending. Read-only preflight found the publication stack and role absent, the existing GitHub OIDC provider present; exact ECR absence is not yet confirmed (the specific-repository lookup returned an unclassified service failure). No AWS mutation occurred.
 
 ### 2026-11-28 - Admission closure and stable-source handoff
 
@@ -1913,6 +1932,17 @@ Summary: Local source checkpoint across 55 task paths. Final bookkeeping prepara
 
 ADR impact: ADR 0044 records shared production-capable temporary instances and independent expiry design; live qualification remains pending.
 
+
+### 2026-11-28T11:53:21Z - Commit recorded
+
+Commit: `3963fb6f`
+
+Message: feat(deploy): connect disposable session controller and image custody
+
+Summary: Checkpoint connected start/test/cleanup, isolated controller image custody and original-session recovery; focused registered checks pass, package/live/retirement proof pending.
+
+ADR impact: Existing ADR 0044 retained; implementation follows production-preserving temporary deployment machinery.
+
 ## Sub-Agent Activity
 
 - `/root/production_profile_review` reviewed the supplied revised design (no independent source/provider access). Incorporated its production-parity, upgrade-fixture, protected-cleanup and post-expiry retry safeguards; retained explicit residual-cost limits. Parent owns final source/document review.
@@ -1928,6 +1958,13 @@ ADR impact: ADR 0044 records shared production-capable temporary instances and i
   Summary: Local source checkpoint across 55 task paths. Final bookkeeping preparation passed in 50.444s; staged commit gate passed in 57.425s with exact index-byte confirmation, PostgreSQL policy passing and wider integration deferred under existing boundaries. Registered session, preparation and foundation proof and full nonexecuting impact preview are recorded above. No AWS mutation, publication, resource retirement or savings. Continue existing-session cleanup revalidation and execution-input binding; all five milestones are not complete.
   ADR impact: ADR 0044 records shared production-capable temporary instances and independent expiry design; live qualification remains pending.
 
+
+- Commit: `3963fb6f`
+  Time UTC: 2026-11-28T11:53:21Z
+  Message: feat(deploy): connect disposable session controller and image custody
+  Summary: Checkpoint connected start/test/cleanup, isolated controller image custody and original-session recovery; focused registered checks pass, package/live/retirement proof pending.
+  ADR impact: Existing ADR 0044 retained; implementation follows production-preserving temporary deployment machinery.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1941,9 +1978,9 @@ Reason: Extend profile-driven deployment with isolated temporary instances, reta
 ## Session Metrics
 
 Raised at UTC: 2026-11-26T22:09:25Z
-Latest commit at UTC: 2026-11-27T07:11:50Z
-Latest commit SHA: 2d3eea6cdb19106b6ebaadb32c908e0bb67f3ffa
-Chat duration: 32545s (00:09:02:25)
+Latest commit at UTC: 2026-11-28T11:53:21Z
+Latest commit SHA: 3963fb6f
+Chat duration: 135836s (01:13:43:56)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -84,21 +84,24 @@ def check(text=None):
     documents = module("session_package_documents", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
     guard = module("session_package_workflow_guard", ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py")
     publisher = module("session_package_publication", ROOT / BASE / "publication.py").PUBLISHER
-    publisher.source_selection()
+    source_selection = publisher.source_selection()
     text = (ROOT / WORKFLOW).read_text() if text is None else text
     workflow = guard.workflow_document(text)
     require(set(workflow) <= {"name", "on", True, "permissions", "concurrency", "env", "jobs"}
-        and workflow.get("on", workflow.get(True)) == {"workflow_dispatch": {}}
+        and workflow.get("on", workflow.get(True)) == {"workflow_dispatch": {}, "push": {
+            "branches": [source_selection["acquisition"].removeprefix("refs/heads/")]}}
         and workflow["permissions"] == {"contents": "read", "id-token": "write", "attestations": "write", "artifact-metadata": "write"}
         and workflow["concurrency"] == {"group": "kanbien-core-platform-environment-session-controller-publication", "cancel-in-progress": False}
         and workflow["env"] == {"AWS_REGION": "eu-west-1", "AWS_ROLE_ARN": "arn:aws:iam::337159794548:role/" + publisher.binding.role,
             "ECR_REPOSITORY": publisher.binding.repository, "ECR_URI": publisher.binding.uri}
         and set(workflow["jobs"]) == {"qualify-and-publish"}, "workflow-routing-invalid")
     job = workflow["jobs"]["qualify-and-publish"]
-    require(set(job) == {"runs-on", "timeout-minutes", "environment", "steps"}
+    condition = "github.event_name == 'workflow_dispatch'"
+    require(set(job) == {"if", "runs-on", "timeout-minutes", "environment", "steps"}
+        and job["if"] == condition
         and job["runs-on"] == "ubuntu-latest" and job["environment"] == "kanbien-core-platform"
         and job["timeout-minutes"] == 35, "workflow-job-invalid")
-    steps = guard.job_steps(text, "qualify-and-publish")
+    steps = guard.job_steps(text, "qualify-and-publish", condition=condition)
     order = ["@actions/checkout@v4", "Install script dependencies", "Enforce approved source",
         "Enforce controller package contract", "Qualify declarations and actual candidate payload",
         "@aws-actions/configure-aws-credentials@v4", "Prove fixed delivery read access",

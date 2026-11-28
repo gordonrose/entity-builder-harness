@@ -44,12 +44,13 @@ WorkflowLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _
 def workflow_document(text):
     return yaml.load(text, Loader=WorkflowLoader)
 
-def job_steps(text, job_name):
+def job_steps(text, job_name, *, condition=None):
     workflow = workflow_document(text)
     job = workflow["jobs"][job_name]
     for owner in (workflow, job):
         if owner.get("defaults", {}) != {} or "continue-on-error" in owner: raise ValueError("execution-defaults-overridden")
-    if "if" in job: raise ValueError("qualification-job-conditional")
+    if (condition is None and "if" in job) or job.get("if") != condition:
+        raise ValueError("qualification-job-conditional")
     steps = job["steps"]
     if not isinstance(steps, list) or not all(isinstance(item, dict) for item in steps): raise ValueError("steps-invalid")
     return steps

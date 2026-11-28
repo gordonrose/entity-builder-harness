@@ -80,6 +80,34 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(self.guard.workflow_document("on: {workflow_dispatch: {}}\nenabled: false"),
                          {"on": {"workflow_dispatch": {}}, "enabled": False})
 
+    def test_push_only_registers_and_manual_dispatch_keeps_all_gates(self):
+        import yaml
+        workflow = self.guard.workflow_document(self.text)
+        self.assertEqual(workflow["on"], {"workflow_dispatch": {}, "push": {
+            "branches": ["chat/2026-11-26-22-09-reducing-aws-bill"]}})
+        self.assertEqual(workflow["jobs"]["qualify-and-publish"]["if"],
+                         "github.event_name == 'workflow_dispatch'")
+        for condition in (None, True, "github.event_name == 'push'", "always()"):
+            changed = deepcopy(workflow)
+            if condition is None:
+                changed["jobs"]["qualify-and-publish"].pop("if")
+            else:
+                changed["jobs"]["qualify-and-publish"]["if"] = condition
+            with self.subTest(condition=condition), self.assertRaises(ValueError):
+                CONTROL.check(yaml.safe_dump(changed, sort_keys=False))
+        changed = deepcopy(workflow)
+        changed["on"]["push"]["branches"] = ["**"]
+        with self.assertRaises(ValueError):
+            CONTROL.check(yaml.safe_dump(changed, sort_keys=False))
+        with self.assertRaises(ValueError):
+            self.guard.job_steps(self.text, "qualify-and-publish")
+        changed = deepcopy(workflow)
+        changed["jobs"]["qualify-and-publish"]["if"] = None
+        with self.assertRaises(ValueError):
+            self.guard.job_steps(yaml.safe_dump(changed), "qualify-and-publish")
+        self.assertTrue(self.guard.job_steps(self.text, "qualify-and-publish",
+            condition="github.event_name == 'workflow_dispatch'"))
+
     def test_publisher_cannot_gain_workload_or_foreign_registry_permissions(self):
         source = self.documents.template((CONTROL.ROOT / CONTROL.TARGET / "30-provider-realization/aws/cloudformation/environment-session-controller-publication.yml").read_text())
         statements = source["Resources"]["ControllerPublisherRole"]["Properties"]["Policies"][0]["PolicyDocument"]["Statement"]

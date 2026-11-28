@@ -5,7 +5,7 @@
 #   version: 7
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -31,6 +31,9 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location('selector_fixture', ROOT / 'scripts/repo/check-selection/test_support.py')
 fixture = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixture)
+spec = importlib.util.spec_from_file_location('inventory_workflow_fixture',
+    ROOT / 'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py')
+workflow_guard = importlib.util.module_from_spec(spec); spec.loader.exec_module(workflow_guard)
 
 class DeliveryInventoryCLI(unittest.TestCase):
     def setUp(self):
@@ -128,6 +131,51 @@ class DeliveryInventoryCLI(unittest.TestCase):
         reference = (sibling / '30-provider-realization/isolated.yml').relative_to(self.root).as_posix()
         self.assertIn(('delivery-consumer-unbound', reference), {(item['code'], item['path']) for item in report['findings']})
         self.assertNotIn(reference, report['routes'][0]['trace_inputs'])
+
+    def test_reached_session_control_binds_only_both_declared_templates(self):
+        target = self.fixture.target.parent
+        profile = target / '00-target/target-profile.yml'
+        names = ['30-provider-realization/foundation.yml',
+                 '30-provider-realization/control.yml', '30-provider-realization/records.yml']
+        for name in names:
+            fixture.write(target / name, {'Resources': {}})
+        value = {'schema': 'deploy/target-profile/v1', 'provider': {
+            'foundation': {'template': names[0]},
+            'session_control': {'template': names[1], 'records_template': names[2]}}}
+        fixture.write(profile, value)
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        paths = {(target / name).relative_to(self.root).as_posix() for name in names}
+        self.assertTrue(paths <= set(report['routes'][0]['trace_inputs']))
+        value['provider'].pop('session_control')
+        value['notes'] = names[2]
+        fixture.write(profile, value)
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        for name in names[1:]:
+            reference = (target / name).relative_to(self.root).as_posix()
+            self.assertIn(('delivery-entrypoint-unregistered', reference),
+                          {(item['code'], item['path']) for item in report['findings']})
+            self.assertNotIn(reference, report['routes'][0]['trace_inputs'])
+
+    def test_session_control_template_reuses_safe_path_failures(self):
+        target = self.fixture.target.parent
+        profile = target / '00-target/target-profile.yml'
+        foundation = '30-provider-realization/foundation.yml'
+        fixture.write(target / foundation, {'Resources': {}})
+        for control, field, code in [
+                (None, 'provider.session_control', 'delivery-profile-template-invalid'),
+                ({'template': foundation, 'records_template': '../private-canary.yml'},
+                 'provider.session_control.records_template', 'delivery-profile-template-invalid'),
+                ({'template': foundation, 'records_template': '30-provider-realization/missing.yml'},
+                 'provider.session_control.records_template', 'delivery-profile-template-missing')]:
+            fixture.write(profile, {'schema': 'deploy/target-profile/v1', 'provider': {
+                'foundation': {'template': foundation}, 'session_control': control}})
+            status, report = self.invoke()
+            self.assertEqual(status, 1)
+            self.assertIn({'code': code, 'path': profile.relative_to(self.root).as_posix(),
+                           'field': field}, report['findings'])
+            self.assertNotIn('private-canary', json.dumps(report['findings']))
 
     def test_reached_profile_template_rejects_invalid_missing_and_symlink_paths(self):
         target = self.fixture.target.parent
@@ -613,7 +661,7 @@ class DeliveryInventoryCLI(unittest.TestCase):
     def test_ci_qualification_cannot_be_omitted_reordered_suppressed_or_substituted(self):
         path = '.github/workflows/delivery-coverage.yml'
         target = self.root / path; target.parent.mkdir(parents=True)
-        source = yaml.safe_load((ROOT / path).read_text())
+        source = workflow_guard.workflow_document((ROOT / path).read_text())
         self.fixture.catalog['repository_inputs'] = [{'inputs': [path], 'checks': ['local']}]
         self.fixture.save()
         fixture.write(target, source)
@@ -637,8 +685,8 @@ class DeliveryInventoryCLI(unittest.TestCase):
     def test_ci_trigger_restrictions_cannot_disable_automatic_delivery_checks(self):
         path = '.github/workflows/delivery-coverage.yml'
         target = self.root / path; target.parent.mkdir(parents=True)
-        source = yaml.safe_load((ROOT / path).read_text())
-        event_key = 'on' if 'on' in source else True
+        source = workflow_guard.workflow_document((ROOT / path).read_text())
+        event_key = 'on'
         self.fixture.catalog['repository_inputs'] = [{'inputs': [path], 'checks': ['local']}]
         self.fixture.save()
         for trigger in (None, {}):

@@ -16,7 +16,11 @@
 #   - id: infra.image.environment-session-controller.contract
 #     path: infra/04.deploy/03.product/image/environment-session-controller/image-contract.yml
 name: Publish Kanbien Core Platform Environment Session Controller
-on: { workflow_dispatch: {} }
+on:
+  workflow_dispatch: {}
+  # Register this new workflow without merging to main; push never publishes.
+  push:
+    branches: [chat/2026-11-26-22-09-reducing-aws-bill]
 permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
 concurrency: { group: kanbien-core-platform-environment-session-controller-publication, cancel-in-progress: false }
 env:
@@ -26,6 +30,7 @@ env:
   ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/environment-session-controller
 jobs:
   qualify-and-publish:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: kanbien-core-platform

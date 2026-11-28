@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -303,7 +303,7 @@ def route_proof_members(checks, roots, bodies):
 
 
 def profile_templates(root, source, value):
-    """Follow declared foundation selections, never arbitrary profile strings."""
+    """Follow declared infrastructure selections, never arbitrary profile strings."""
     references, findings = set(), []
     provider = value.get('provider', {})
     if not isinstance(provider, dict) or 'foundation' not in provider:
@@ -321,6 +321,13 @@ def profile_templates(root, source, value):
     else:
         selected.extend(('provider.foundation.instance_prerequisites.template', row.get('template') if isinstance(row, dict) else None)
                         for row in prerequisites.values())
+    if 'session_control' in provider:
+        control = provider['session_control']
+        if not isinstance(control, dict):
+            invalid('provider.session_control')
+        else:
+            selected.extend(('provider.session_control.' + field, control.get(field))
+                            for field in ('template', 'records_template'))
     for field, reference in selected:
         if (not isinstance(reference, str) or not reference
                 or not re.fullmatch(r'[A-Za-z0-9_./-]+', reference)
