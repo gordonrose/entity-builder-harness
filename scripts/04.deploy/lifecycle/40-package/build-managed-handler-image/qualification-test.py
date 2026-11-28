@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.managed-handler-image-qualification
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-27"
 #   updated_on: "2026-11-28"
@@ -21,6 +21,7 @@ import copy
 import importlib.util
 import io
 import json
+import os
 import subprocess
 from pathlib import Path
 import tempfile
@@ -63,6 +64,28 @@ class DockerFixture:
         raise AssertionError("unexpected command")
 
 class QualificationTests(unittest.TestCase):
+    def test_actual_managed_builder_forwards_lambda_compatible_manifest_options(self):
+        with tempfile.TemporaryDirectory(prefix="managed-build-argv-") as directory:
+            root = Path(directory); binary = root / "bin"; binary.mkdir()
+            node = binary / "node"; node.write_text("#!/bin/sh\nexit 0\n"); node.chmod(0o755)
+            docker = binary / "docker"
+            docker.write_text("#!/usr/bin/env python3\nimport json,os,sys\nwith open(os.environ['MANAGED_BUILD_ARGUMENTS'], 'x') as out: json.dump(sys.argv[1:],out)\n")
+            docker.chmod(0o755)
+            for program in PROGRAMS:
+                captured = root / (program + ".json")
+                # Mock only the external commands. The actual Bash wrapper,
+                # common build operation and safe failure wrapper remain real.
+                subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/script.sh"),
+                    "--program", program, "--tag", "scheduler-fixture:proof"], cwd=ROOT,
+                    env={**os.environ, "PATH": str(binary) + os.pathsep + os.environ["PATH"], "MANAGED_BUILD_ARGUMENTS": str(captured)},
+                    check=True, capture_output=True, text=True, timeout=20)
+                argv = json.loads(captured.read_text())
+                self.assertEqual(argv[0], "build")
+                self.assertEqual(argv.count("--provenance=false"), 1)
+                self.assertEqual(argv[argv.index("--platform") + 1], "linux/amd64")
+                self.assertEqual(argv[argv.index("--file") + 1], "infra/04.deploy/03.product/image/scheduling-lambda/Dockerfile")
+                self.assertIn("PROGRAM_ID=" + program, argv)
+
     def test_real_git_distinguishes_new_receipts_from_runtime_or_tracked_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

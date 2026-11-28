@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 50
+#   version: 51
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-28"
@@ -2226,6 +2226,8 @@ checks:
     feedback: {development: true, expected_seconds: 5, isolation: disposable-fixture, rationale: Reject incorrect image/source/runtime declarations and failed runtime protocol proof with controlled command responses only.}
     inputs: &managed_handler_image_inputs
     - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image
+    - scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
     - scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
     - scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
@@ -2244,7 +2246,7 @@ checks:
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
     - .github/workflows/publish-kanbien-core-platform-scheduling.yml
     runtime:
-      tools: [python3, git]
+      tools: [python3, git, bash]
       environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
   foundation-access-update-contracts:

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.build-managed-handler-image
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines: [architecture, security, sre]
@@ -40,4 +40,4 @@ source scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.s
 SOURCE_REVISION="$(git rev-parse HEAD)"
 candidate_image_build MANAGED_IMAGE_BUILD_FAILED 'Managed image build failed.' 'Inspect the retained package failure before retrying.' \
   infra/04.deploy/03.product/image/scheduling-lambda/Dockerfile "$TAG" "$SOURCE_REVISION" "$SOURCE_REVISION" "$ROOT" \
-  --platform linux/amd64 --build-arg "PROGRAM_ID=$PROGRAM_ID"
+  --platform linux/amd64 --provenance=false --build-arg "PROGRAM_ID=$PROGRAM_ID"

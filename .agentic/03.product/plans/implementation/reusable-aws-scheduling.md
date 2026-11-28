@@ -24,21 +24,21 @@ directed detailed cost checks to follow that bounded proof. Scope/image identity
 is now independent of upfront cost admission; final measured acceptance remains.
 The approved AGENTS marker and stale Entity test-fixture correction are complete.
 Complete affected local integration passed, and the verified source was normally
-fast-forwarded to remote main, most recently at `6dac033220752155b080dd037b91fe008d592fdc`.
+fast-forwarded to remote main, most recently at `5fd130b328c3a5b116472055a77d1bbbbbf4fc5b`.
 
-Core maintenance publication `46119731585` passed on that source. Managed-handler
-run `46119736031` built successfully but failed actual initialization. Local actual
-factory diagnosis found that a digit-leading UUID forms an invalid lease-owner
-segment. Current increment: join that UUID to the letter-leading purpose with a
-hyphen, test both purposes with digit/letter prefixes in the existing fixture,
-then requalify the managed-handler images through existing protected workflows.
-The lease-owner correction is committed and locally verified. Before publication,
-the same lean route review found the scheduler's duplicate nonexistent AWS
-response-field check and a source guard that rejects its own new native proof
-JSON outputs. Correct these existing owners, preserving tracked-source checks and
-independent evidence authentication, before reserving any scheduler operation.
-Use the existing native
-owners to establish the first automatic harmless baseline. The approved narrow
+The lease-owner, real AWS response and generated-proof classification corrections
+are committed and verified. Both protected publications passed on that source:
+maintenance `46128392054` and four managed images `46128394666`. Actual runtime
+container qualification and scans passed, but read-only ECR inspection found the
+Lambda package is an OCI index with extra BuildKit attestation metadata, not the
+direct image required by [AWS's Lambda image guide](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-image.html).
+Current increment: add `--provenance=false` to the existing managed builder and
+prove its actual shell-to-Docker arguments for all four programs in the existing
+test. Keep separate signed GitHub provenance/SBOM records and every security gate.
+Rebuild through protected publication, verify the actual manifest, then use the
+existing native owners for the first automatic harmless baseline. Do not deploy
+the incompatible index, rewrite receipts or replace original operations.
+The approved narrow
 foundation repository-read permission update completed through its original
 operation after a bounded controller/API-response correction; no attempt or
 intent was replaced. No scheduler resources or database changes have yet been
