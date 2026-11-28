@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T09:32:27Z
-latest_commit_sha: 2be6defb
-chat_duration: 492715s (05:16:51:55)
+latest_commit_at_utc: 2026-11-28T10:31:35Z
+latest_commit_sha: 1adeba0117992879980714196fbda179739bad87
+chat_duration: 496263s (05:17:51:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -856,6 +856,17 @@ Summary: Add bounded approved operator submission/observation using existing CLI
 
 ADR impact: No ADR: operational prerequisite, scheduler architecture unchanged.
 
+
+### 2026-11-28T10:31:35Z - Commit recorded
+
+Commit: `1adeba0117992879980714196fbda179739bad87`
+
+Message: docs(aws): govern single quota requests
+
+Summary: Approved bounded quota route and actual one-time Lambda request; support case pending, no runtime deployment or data effects.
+
+ADR impact: No ADR: operational prerequisite only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -945,6 +956,13 @@ ADR impact: No ADR: operational prerequisite, scheduler architecture unchanged.
   Summary: Add bounded approved operator submission/observation using existing CLI and exclusive writer; record actual Lambda quota request and pending support case. No source scripts, checks or recurring reviews added/removed/moved; no scheduler enabled or data changed.
   ADR impact: No ADR: operational prerequisite, scheduler architecture unchanged.
 
+
+- Commit: `1adeba0117992879980714196fbda179739bad87`
+  Time UTC: 2026-11-28T10:31:35Z
+  Message: docs(aws): govern single quota requests
+  Summary: Approved bounded quota route and actual one-time Lambda request; support case pending, no runtime deployment or data effects.
+  ADR impact: No ADR: operational prerequisite only.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -958,9 +976,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T09:32:27Z
-Latest commit SHA: 2be6defb
-Chat duration: 492715s (05:16:51:55)
+Latest commit at UTC: 2026-11-28T10:31:35Z
+Latest commit SHA: 1adeba0117992879980714196fbda179739bad87
+Chat duration: 496263s (05:17:51:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
