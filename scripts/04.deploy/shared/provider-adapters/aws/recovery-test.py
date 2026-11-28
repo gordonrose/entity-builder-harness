@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.provisioning-recovery
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -82,6 +82,8 @@ class RecoveryCli(unittest.TestCase):
     ('iam','get-role-policy','NoSuchEntity','private-canary','aws-resource-missing'),
     ('iam','get-role','NoSuchEntity','private-canary','aws-resource-missing'),
     ('iam','get-role','NoSuchEntityException','private-canary','aws-resource-missing'),
+    ('stepfunctions','describe-execution','ExecutionDoesNotExist','private-canary','aws-resource-missing'),
+    ('stepfunctions','stop-execution','ExecutionDoesNotExist','private-canary','aws-command-failed'),
     ('ec2','describe-security-groups','InvalidGroup.NotFound','private-canary','aws-resource-missing'),
     ('ec2','delete-security-group','InvalidGroup.NotFound','private-canary','aws-command-failed'),
     ('iam','delete-role','NoSuchEntity','private-canary','aws-command-failed'),
@@ -119,6 +121,35 @@ class RecoveryCli(unittest.TestCase):
   for decoration in (' (reached max retries: -1)',' (reached max retries: private-canary)',' (reached max retries: 0) extra'):
    error=f'An error occurred (ValidationError) when calling the DescribeStacks operation{decoration}: Stack with id own-fixture does not exist'
    self.assertEqual(response.classify_error('cloudformation','describe-stacks',error),'aws-command-failed')
+ def test_native_cleanup_absence_is_operation_specific(self):
+  response=load(ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py')
+  selections=[
+   ('ec2','describe-vpcs','delete-vpc',('InvalidVpcID.NotFound',)),
+   ('ec2','describe-subnets','delete-subnet',('InvalidSubnetID.NotFound','InvalidSubnetId.NotFound')),
+   ('ec2','describe-route-tables','delete-route-table',('InvalidRouteTableID.NotFound',)),
+   ('ec2','describe-vpc-endpoints','delete-vpc-endpoints',('InvalidVpcEndpoint.NotFound','InvalidVpcEndpointId.NotFound')),
+   ('rds','describe-db-subnet-groups','delete-db-subnet-group',('DBSubnetGroupNotFoundFault',)),
+   ('secretsmanager','describe-secret','delete-secret',('ResourceNotFoundException',)),
+   ('servicediscovery','get-namespace','delete-namespace',('NamespaceNotFound',)),
+   ('servicediscovery','get-service','delete-service',('ServiceNotFound',)),
+   ('route53','get-hosted-zone','delete-hosted-zone',('NoSuchHostedZone',)),
+  ]
+  for decoration in ('',' (reached max retries: 0)',' (reached max retries: 3)'):
+   for service,operation,mutation,codes in selections:
+    for code in codes:
+     error=f'An error occurred ({code}) when calling the Fixture operation{decoration}: private-canary'
+     for selected_service,selected_operation,expected in [(service,operation,'aws-resource-missing'),(service,mutation,'aws-command-failed'),('ecs',operation,'aws-command-failed')]:
+      with self.subTest(decoration=decoration,service=selected_service,operation=selected_operation,code=code):
+       observed=response.classify_error(selected_service,selected_operation,error)
+       self.assertEqual(observed,expected);self.assertNotIn('canary',observed)
+    for code,expected in [('AccessDeniedException','aws-access-denied'),('UnauthorizedOperation','aws-access-denied'),('ExpiredToken','aws-credentials-expired'),('Unknown.NotFound','aws-command-failed'),('NotFoundException','aws-command-failed')]:
+     with self.subTest(decoration=decoration,service=service,operation=operation,code=code):
+      error=f'An error occurred ({code}) when calling the Fixture operation{decoration}: private-canary not found'
+      self.assertEqual(response.classify_error(service,operation,error),expected)
+    self.assertEqual(response.classify_error(service,operation,'not found private-canary'),'aws-command-failed')
+   for operation in ('describe-services','describe-clusters','describe-task-definition'):
+    error=f'An error occurred (ClientException) when calling the Fixture operation{decoration}: private-canary not found'
+    self.assertEqual(response.classify_error('ecs',operation,error),'aws-command-failed')
  def test_log_absence_is_operation_specific(self):
   response=load(ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py')
   missing='An error occurred (ResourceNotFoundException) when calling the Fixture operation: private-canary'

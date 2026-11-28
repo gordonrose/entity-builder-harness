@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -76,6 +76,59 @@ def hashes():
     # it must not assume a fixed historical receipt count.
     return {str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
+def initial_task_tests():
+    route=load(Path('scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'),'initial_task_route_tests')
+    original=yaml.safe_load((ROOT/ROUTE).read_text())
+    binding_path=ROOT/SCOPE/'10-workload-binding/workload-binding.yml'
+    binding=yaml.safe_load(binding_path.read_text())
+    rows=route.initial_tasks(original,binding)
+    assert [row['proof']['operation'] for row in rows]==['bootstrap-identities','confirm-runtime-iam-access','apply','grant-runtime-application-access','prove-effective-privilege','create']
+    assert [row['phase'] for row in rows]==['before-activation']*5+['after-activation']
+    assert rows[2]['task_definition']=='CoreServerPersistenceMigrationTaskDefinition'
+    assert rows[-1]['task_definition']=='CoreServerPersistenceVerifierTaskDefinition'
+    proof_names=set(original['proofs'])
+    required=yaml.safe_load((ROOT/original['accepted_record']['schema_path']).read_text())['required_proofs']
+    assert proof_names==set(required) and len(proof_names)==15
+    rows[1]['proof']['operation']='changed'
+    assert route.initial_tasks(original,binding)[1]['proof']['operation']=='confirm-runtime-iam-access'
+    mutations=[lambda value:value.pop('initial_setup'),
+        lambda value:value.__setitem__('initial_setup',[]),
+        lambda value:value.__setitem__('initial_setup',{}),
+        lambda value:value['initial_setup'].append(copy.deepcopy(value['initial_setup'][0])),
+        lambda value:value['initial_setup'][0].__setitem__('extra','INITIAL_SELECTION_CANARY'),
+        lambda value:value['initial_setup'][0].__setitem__('command','missing'),
+        lambda value:value['initial_setup'][0].__setitem__('id','INITIAL_SELECTION_CANARY!'),
+        lambda value:value['initial_setup'][0].__setitem__('workload','private-release-verifier-task'),
+        lambda value:value['initial_setup'][1].__setitem__('proof','effective-privilege'),
+        lambda value:value['initial_setup'][0]['proof'].__setitem__('result_code',{}),
+        lambda value:value['initial_setup'][0].__setitem__('phase','after-activation')]
+    for mutate in mutations:
+        changed=copy.deepcopy(original);mutate(changed)
+        try: route.initial_tasks(changed,binding)
+        except ValueError as error: assert str(error)=='acceptance-route-initial-selection-invalid'
+        else: raise AssertionError('invalid initial selection accepted')
+    for mutate in (lambda value:value['workloads'].clear(),
+                   lambda value:value['workloads'].append(copy.deepcopy(value['workloads'][3])),
+                   lambda value:value['workloads'][3].__setitem__('runtime_class','service'),
+                   lambda value:value['runtime_requirements'].clear()):
+        changed=copy.deepcopy(binding);mutate(changed)
+        try: route.initial_tasks(original,changed)
+        except ValueError as error: assert str(error)=='acceptance-route-initial-selection-invalid'
+        else: raise AssertionError('invalid workload binding accepted')
+    read_text=Path.read_text
+    changed=copy.deepcopy(original);changed['initial_setup'][0]['command']='missing'
+    def text(path,*args,**kwargs): return yaml.safe_dump(changed) if path==ROOT/ROUTE else read_text(path,*args,**kwargs)
+    with patch.object(Path,'read_text',text),patch.object(route.subprocess,'run',side_effect=AssertionError('invalid selection invoked parser')):
+        report=route.inspect(ROOT/CONTRACT,ROOT)
+    assert report['findings']==[{'code':'acceptance-route-initial-selection-invalid'}],report
+    report=route.inspect(ROOT/CONTRACT,ROOT,probe_commands=False)
+    assert report['verdict']=='covered',report
+    assert binding_path.relative_to(ROOT).as_posix() in report['references']
+    report=route.inspect(CONTRACT,ROOT,probe_commands=False)
+    assert report['verdict']=='covered',report
+    passed('initial selection uses declared workloads, resolves original proof owners and rejects invalid selections before parser work')
+
+
 def route_tests():
     route=load(Path('scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'),'route_tests')
     coverage=load(Path('scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'),'coverage_tests')
@@ -97,6 +150,7 @@ def route_tests():
     passed('missing actual required mode fails through declaration coverage')
     check_mutation(lambda v:v['proofs']['credential-revocation'].__setitem__('command','migration-state-observation'),'acceptance-route-proof-command-contract-mismatch')
     check_mutation(lambda v:v['proofs']['migration-applied-state'].pop('deadline_workload'),'acceptance-route-proof-command-contract-mismatch')
+    check_mutation(lambda v:v['initial_setup'][0]['proof'].__setitem__('operation','revoke-runtime'),'acceptance-route-proof-command-contract-mismatch')
     check_mutation(lambda v:v['proofs'].pop('isolated-restore'),'acceptance-route-required-proofs-mismatch',True)
     passed('valid wrong operation, missing proof contract and omitted required restore fail preflight')
     check_mutation(lambda v:v['proofs']['migration-applied-state'].__setitem__('command',[]),'acceptance-route-proof-binding-invalid',True)
@@ -501,4 +555,4 @@ def ordinary_update_route(C, root, evidence_root, facts, definitions, health_tas
 
 
 if __name__=='__main__':
-    route_tests();fresh_verifier_route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))
+    initial_task_tests();route_tests();fresh_verifier_route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))

@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-23"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -21,7 +21,8 @@
 """Simulated provider-only evidence. No AWS credential or live task is accessed."""
 from pathlib import Path
 import importlib.util, signal, time, unittest
-import contextlib,io,json,os,shutil,subprocess,sys,tempfile,yaml
+import contextlib,copy,io,json,os,shutil,subprocess,sys,tempfile,yaml
+from types import SimpleNamespace
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[8]
 OWNER=Path('scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate')
@@ -34,10 +35,12 @@ with p.with_suffix('.lock').open('a') as lock:
  state=json.loads(p.read_text());state.setdefault('calls',[]).append(args)
  definition=state.get('definition','arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:7')
  if op=='describe-stacks':result={'Stacks':[{'Outputs':[{'OutputKey':k,'OutputValue':v} for k,v in {'CoreServerPersistenceVerifierTaskDefinitionArn':definition,'PrivateSubnetIds':'subnet-private','VerifierSecurityGroupId':'sg-verifier'}.items()]}]}
- elif op=='describe-task-definition':result={'taskDefinition':{'taskDefinitionArn':value('--task-definition'),'family':'kanbien-core-platform-persistence-verifier','containerDefinitions':[{'name':'private-persistence-verifier','image':'fixture.invalid/verifier@sha256:'+'a'*64,'environment':[],'secrets':[]}]}}
+ elif op=='describe-task-definition':
+  result={'taskDefinition':{'taskDefinitionArn':state.get('returned_definition',value('--task-definition')),'family':'kanbien-core-platform-persistence-verifier','containerDefinitions':[{'name':state.get('container','private-persistence-verifier'),'image':'fixture.invalid/verifier@sha256:'+'a'*64,'environment':state.get('environment',[]),'secrets':state.get('secrets',[])}]}}
+  if state.get('returned_definition')=='missing':result['taskDefinition'].pop('taskDefinitionArn')
  elif op=='run-task':
-  index=1+len(state.get('tasks',[]));arn='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+f'{index:032x}'
-  task={'taskArn':arn,'taskDefinitionArn':value('--task-definition'),'startedBy':value('--started-by'),'lastStatus':'PENDING','containers':[{'name':'private-persistence-verifier','exitCode':state.get('exit_code',0)}],'startedAt':'2026-10-26T12:00:00Z','stoppedAt':state.get('stopped_at','2026-10-26T12:00:01Z'),'overrides':json.loads(value('--overrides'))}
+  index=1+len(state.get('tasks',[]));arn='arn:aws:ecs:eu-west-1:337159794548:task/'+value('--cluster').rsplit('/',1)[-1]+'/'+f'{index:032x}'
+  task={'taskArn':arn,'taskDefinitionArn':value('--task-definition'),'startedBy':value('--started-by'),'lastStatus':'PENDING','containers':[{'name':state.get('container','private-persistence-verifier'),'exitCode':state.get('exit_code',0)}],'startedAt':'2026-10-26T12:00:00Z','stoppedAt':state.get('stopped_at','2026-10-26T12:00:01Z'),'overrides':json.loads(value('--overrides'))}
   mode=next(item['value'] for item in task['overrides']['containerOverrides'][0]['environment'] if item['name']=='PERSISTENCE_VERIFIER_MODE')
   reservation=pathlib.Path('.git/private-persistence-verifier')/(mode+'.json')
   state.setdefault('durable_before_submission',[]).append(reservation.exists() and json.loads(reservation.read_text()).get('operation_id')==value('--client-token')==value('--started-by'))
@@ -68,7 +71,7 @@ class Fixture:
  def __init__(self):
   self.tmp=tempfile.TemporaryDirectory(prefix='verifier-operation-cli-');self.root=Path(self.tmp.name)
   subprocess.run(['git','init','--quiet',str(self.root)],check=True)
-  for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
+  for path in [OWNER/'script.py',OWNER/'script.sh',OWNER.parent/'ecs-task-evidence.py',OWNER.parent/'proof-receipts.py',OWNER.parent/'run-migration/script.py',OWNER.parent/'rehearse-runtime-credential-lifecycle/script.py',
                OWNER.parent/'deployment-diagnostics/binding.py',
                Path('scripts/04.deploy/shared/deployment-operation-diagnostics.py'),Path('scripts/repo/diagnostic-coverage/runtime_contract.py'),
                Path('scripts/04.deploy/shared/provider-adapters/aws/cli.py'), Path('scripts/04.deploy/shared/provider-adapters/aws/response.py'),
@@ -272,5 +275,179 @@ class OperationTests(unittest.TestCase):
    self.assertNotEqual(next_phase['facts']['operation_id'],handoff['operation_id']);self.assertEqual(len(f.runs()),6)
   finally:
    os.environ.clear();os.environ.update(old_environment)
+
+class RetainedFixture(Fixture):
+ def __init__(self):
+  super().__init__()
+  spec=importlib.util.spec_from_file_location('actual_retained_verifier',self.root/OWNER/'script.py')
+  self.control=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.control)
+  self.runtime={'schema':'deploy/aws-task-runtime/v1','session_id':'1'*32,'source_plan_sha256':'a'*64,'binding_sha256':'sha256:'+'b'*64,
+   'stack_id':'arn:aws:cloudformation:eu-west-1:337159794548:stack/session-test/'+'a'*36,
+   'cluster_arn':'arn:aws:ecs:eu-west-1:337159794548:cluster/session-test','family':'session-test-verifier',
+   'container_name':'renamed-verifier','log_group':'/session/test','log_stream_prefix':'selected-verifier'}
+  self.definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/session-test-verifier:7'
+  self.update(submission='normal',status='STOPPED',definition=self.definition,container=self.runtime['container_name'])
+  self.journal=self.control.task_journal();self.control.task_journal=lambda:self.journal
+  self.value=None;self.history=[];self.events=[];self.receipts={};self.failure=None;self.guard=True
+  native=self.control.aws;fixture=self
+  class Provider:
+   def __bool__(self):return False
+   def __call__(self,*arguments):
+    if arguments[:2]==('ecs','run-task'):
+     assert fixture.value is not None and fixture.events[-1]=='admitted'
+     assert arguments[arguments.index('--started-by')+1]==arguments[arguments.index('--client-token')+1]==fixture.value['operation_id']
+    with patch.dict(os.environ,fixture.env):return native(*arguments)
+  self.provider=Provider()
+ def read(self,key):return copy.deepcopy(self.value)
+ def compare_and_reserve(self,key,expected,proposed):
+  self.events.append('reserve')
+  if expected!=self.value:return False
+  self.history.append(copy.deepcopy(expected));self.value=copy.deepcopy(proposed)
+  return True
+ def before_submit(self,key,expected):
+  assert expected==self.value
+  self.events.append('admitted')
+  if self.guard=='throw':raise OSError('PRIVATE_VERIFIER_LOG_CANARY')
+  return self.guard
+ def attach(self,kind,expected,fields):
+  assert expected==self.value
+  self.events.append(kind)
+  if self.failure==kind:raise OSError('PRIVATE_VERIFIER_LOG_CANARY')
+  self.value=self.journal.with_integrity({**expected,**fields})
+  if self.failure==kind+'-lost':raise OSError('PRIVATE_VERIFIER_LOG_CANARY')
+  if self.failure==kind+'-changed':return self.journal.with_integrity({**self.value,'request':{**self.value['request'],'deadline_seconds':9}})
+  return copy.deepcopy(self.value)
+ def retain_task(self,key,expected,arn):return self.attach('task',expected,{'task_arn':arn})
+ def retain_proof(self,key,expected,reference):return self.attach('proof',expected,{'proof_receipt':reference['path'],'proof_sha256':reference['sha256']})
+ def retain_receipt(self,label,raw):
+  self.events.append('receipt')
+  if self.failure=='receipt':raise OSError('PRIVATE_VERIFIER_LOG_CANARY')
+  self.receipts.setdefault(label,raw);return self.receipts[label]
+ def read_receipt(self,label):
+  if self.failure=='read-receipt':raise OSError('PRIVATE_VERIFIER_LOG_CANARY')
+  return self.receipts[label]
+ def overrides(self,mode='create'):
+  return {'containerOverrides':[{'name':self.runtime['container_name'],'environment':[
+   {'name':'PERSISTENCE_VERIFIER_MODE','value':mode},{'name':'PERSISTENCE_ACCEPTANCE_RECORD_ID','value':self.control.RECORD_ID},
+   {'name':'PERSISTENCE_ACCEPTANCE_FACT','value':self.control.FACT}]}]}
+ def invoke(self,**changes):
+  arguments={'runtime':self.runtime,'provider':self.provider,'storage':self,'step_id':'create'}
+  args=SimpleNamespace(mode='create',new_operation=changes.pop('new_operation',False),expected_operation=changes.pop('expected_operation',None))
+  overrides=changes.pop('overrides',self.overrides());arguments.update(changes)
+  output,error=io.StringIO(),io.StringIO()
+  with patch.object(self.control,'aws',side_effect=AssertionError('no ambient provider')), \
+       patch.object(self.control,'operation_paths',side_effect=AssertionError('no local journal')), \
+       patch.object(self.control,'save_operation',side_effect=AssertionError('no local save')), \
+       contextlib.redirect_stdout(output),contextlib.redirect_stderr(error):
+   status=self.control.execute_reserved(args,1,self.definition,'session-network',json.dumps(overrides),**arguments)
+  result=json.loads(output.getvalue())
+  assert (status==0)==(result['verdict']=='accepted'),result
+  assert 'PRIVATE_VERIFIER_LOG_CANARY' not in output.getvalue()+error.getvalue()
+  assert not (self.root/'.git/private-persistence-verifier').exists()
+  assert not (self.root/'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts').exists()
+  return result
+
+
+class RetainedOperationTests(unittest.TestCase):
+ def fixture(self):
+  fixture=RetainedFixture();self.addCleanup(fixture.close);return fixture
+ def test_actual_runtime_routes_retained_proof_history_expiry_and_successor(self):
+  f=self.fixture();first=f.invoke();self.assertEqual(first['verdict'],'accepted',first)
+  self.assertEqual(f.value['request']['runtime'],f.runtime)
+  self.assertEqual(f.events,['reserve','admitted','task','receipt','proof'])
+  original=copy.deepcopy(f.receipts);count=len(f.data()['calls']);old=f.value['operation_id']
+  f.update(observation='missing',logs='expired')
+  self.assertEqual(f.invoke()['verdict'],'accepted');self.assertEqual(len(f.data()['calls']),count)
+  self.assertEqual(f.receipts,original);self.assertEqual(len(f.runs()),1)
+  f.update(observation='present',logs='normal')
+  result=f.invoke(new_operation=True,expected_operation=old);self.assertEqual(result['verdict'],'accepted',result)
+  self.assertEqual(f.value['predecessor'],old)
+  self.assertEqual(f.invoke(new_operation=True,expected_operation=old)['verdict'],'accepted');self.assertEqual(len(f.runs()),2)
+  for call in f.data()['calls']:
+   if call[:2] in (['ecs','run-task'],['ecs','describe-tasks'],['ecs','list-tasks']):self.assertEqual(call[call.index('--cluster')+1],f.runtime['cluster_arn'])
+   if call[:2]==['logs','get-log-events']:
+    self.assertEqual(call[call.index('--log-group-name')+1],f.runtime['log_group'])
+    self.assertTrue(call[call.index('--log-stream-name')+1].startswith('selected-verifier/renamed-verifier/'))
+ def test_lost_response_original_context_recovery_and_exact_overrides(self):
+  f=self.fixture();f.update(submission='lost');self.assertEqual(f.invoke()['verdict'],'uncertain')
+  for field,value in (('cluster_arn',f.runtime['cluster_arn']+'-other'),('session_id','2'*32),('binding_sha256','sha256:'+'c'*64)):
+   changed={**f.runtime,field:value};self.assertEqual(f.invoke(runtime=changed)['verdict'],'blocked')
+  for index in range(3):
+   changed=f.overrides();changed['containerOverrides'][0]['environment'][index]['value']='wrong'
+   self.assertEqual(f.invoke(overrides=changed)['verdict'],'blocked')
+  f.update(submission='normal');self.assertEqual(f.invoke()['verdict'],'accepted');self.assertEqual(len(f.runs()),1)
+ def test_guard_storage_runtime_and_isolation_rejections_never_send(self):
+  for guard in (False,None,1,'throw'):
+   f=self.fixture();f.guard=guard;result=f.invoke();self.assertEqual(result['verdict'],'blocked',result)
+   f.guard=True;self.assertEqual(f.invoke()['verdict'],'uncertain');self.assertEqual(len(f.runs()),0)
+  for changes in ({'provider':None},{'provider':False},{'storage':None},{'runtime':{}},{'step_id':'../escape'}):
+   f=self.fixture();self.assertEqual(f.invoke(**changes)['verdict'],'blocked');self.assertEqual(f.events,[]);self.assertEqual(len(f.runs()),0)
+  for changes in ({'secrets':[{'name':'password','valueFrom':'sensitive'}]},{'environment':[{'name':'PERSISTENCE_POSTGRES_HOST','value':'sensitive'}]}):
+   f=self.fixture();f.update(**changes);result=f.invoke();self.assertEqual(result['verdict'],'blocked',result)
+   self.assertIn('private-persistence-verifier-isolation-not-proven',[row['code'] for row in result['findings']]);self.assertEqual(len(f.runs()),0)
+ def test_uncertain_task_proof_and_receipt_retention_never_replays(self):
+  for failure in ('task','task-lost','task-changed','proof','proof-lost','proof-changed','receipt'):
+   f=self.fixture();f.failure=failure;result=f.invoke();self.assertEqual(result['verdict'],'uncertain',(failure,result))
+   raw=copy.deepcopy(f.receipts);f.failure=None;result=f.invoke();self.assertEqual(result['verdict'],'accepted',(failure,result))
+   self.assertEqual(len(f.runs()),1)
+   for label,value in raw.items():self.assertEqual(f.receipts[label],value)
+ def test_actual_attachments_share_validator_and_failed_terminal_proof_is_retained(self):
+  for method in ('retain_task','retain_proof'):
+   f=self.fixture();original=f.journal.attach_retained;calls=[]
+   def attach(*args,**kwargs):
+    calls.append(kwargs['method'])
+    if kwargs['method']==method:raise f.journal.JournalFailure('operation-retention-not-confirmed')
+    return original(*args,**kwargs)
+   with patch.object(f.journal,'attach_retained',side_effect=attach):self.assertEqual(f.invoke()['verdict'],'uncertain')
+   self.assertIn(method,calls);self.assertEqual(f.invoke()['verdict'],'accepted');self.assertEqual(len(f.runs()),1)
+  f=self.fixture();f.update(exit_code=3);self.assertEqual(f.invoke()['verdict'],'failed')
+  self.assertIsNotNone(f.value['proof_receipt']);old=f.value['operation_id']
+  f.failure='read-receipt';self.assertEqual(f.invoke()['verdict'],'uncertain');f.failure=None
+  self.assertEqual(f.invoke(new_operation=True,expected_operation=old)['verdict'],'failed');self.assertEqual(len(f.runs()),2)
+ def test_direct_readers_reject_missing_provider_and_malformed_runtime_without_ambient_access(self):
+  f=self.fixture();self.assertEqual(f.invoke()['verdict'],'accepted');task={**f.data()['tasks'][0],'lastStatus':'STOPPED'}
+  readers=[(lambda **kw:f.control.image_digest(f.definition,**kw),None),
+   (lambda **kw:f.control.no_direct_database_credential(f.definition,**kw),False),
+   (lambda **kw:f.control.log_accepted(task,f.control.SUCCESS['create'],**kw),(False,'private-persistence-verifier-evidence-unavailable')),
+   (lambda **kw:f.control.failed_task_log(task['taskArn'],**kw),{'task_log_observation':'unavailable'})]
+  count=len(f.data()['calls']);events=copy.deepcopy(f.events)
+  with patch.object(f.control,'aws',side_effect=AssertionError('ambient canary')):
+   for runtime,provider in [(f.runtime,None),(f.runtime,False),({},f.provider),('PRIVATE_VERIFIER_LOG_CANARY',f.provider)]:
+    for read,expected in readers:self.assertEqual(read(runtime=runtime,provider=provider),expected)
+  self.assertEqual(len(f.data()['calls']),count);self.assertEqual(f.events,events)
+ def test_direct_acceptance_guards_and_falsey_provider_keep_exact_terminal_identity(self):
+  f=self.fixture();self.assertEqual(f.invoke()['verdict'],'accepted');task={**f.data()['tasks'][0],'lastStatus':'STOPPED'}
+  refs=[];base={'runtime':f.runtime,'provider':f.provider,'receipt_storage':f,'on_receipt':refs.append}
+  foreign=copy.deepcopy(task);foreign['containers'][0]['name']='PRIVATE_VERIFIER_LOG_CANARY'
+  malformed=copy.deepcopy(task);malformed['overrides']['containerOverrides'][0]['environment'][1]['value']='wrong'
+  count=len(f.data()['calls']);events=copy.deepcopy(f.events)
+  with patch.object(f.control,'aws',side_effect=AssertionError('ambient canary')):
+   for changes,current in [({'runtime':{}},task),({'runtime':'PRIVATE_VERIFIER_LOG_CANARY'},task),({'provider':None},task),({'receipt_storage':None},task),({'on_receipt':None},task),({},foreign),({},malformed)]:
+    output=io.StringIO()
+    with contextlib.redirect_stdout(output):status=f.control.accepted_completion(current,1,'create',**{**base,**changes})
+    self.assertNotEqual(status,0);self.assertNotIn('PRIVATE_VERIFIER_LOG_CANARY',output.getvalue())
+   self.assertEqual(len(f.data()['calls']),count);self.assertEqual(f.events,events);self.assertEqual(refs,[])
+   self.assertEqual(f.control.image_digest(f.definition,runtime=f.runtime,provider=f.provider),'sha256:'+'a'*64)
+   self.assertTrue(f.control.no_direct_database_credential(f.definition,runtime=f.runtime,provider=f.provider))
+   self.assertEqual(f.control.log_accepted(task,f.control.SUCCESS['create'],runtime=f.runtime,provider=f.provider),(True,'ok'))
+   self.assertIn('task_log_observation',f.control.failed_task_log(task['taskArn'],runtime=f.runtime,provider=f.provider))
+   output=io.StringIO()
+   with contextlib.redirect_stdout(output):status=f.control.accepted_completion(task,1,'create',**base)
+   self.assertEqual(status,0,output.getvalue());self.assertEqual(len(refs),1)
+   self.assertEqual(refs[0],{'path':f.value['proof_receipt'],'sha256':f.value['proof_sha256']})
+ def test_direct_acceptance_rejects_wrong_or_missing_definition_identity_before_retention(self):
+  f=self.fixture();f.update(submission='lost');self.assertEqual(f.invoke()['verdict'],'uncertain')
+  task={**f.data()['tasks'][0],'lastStatus':'STOPPED'};refs=[];events=copy.deepcopy(f.events)
+  for returned in (f.definition+'0','missing'):
+   with self.subTest(returned=returned),patch.object(f.control,'aws',side_effect=AssertionError('ambient canary')):
+    f.update(returned_definition=returned);output=io.StringIO()
+    with contextlib.redirect_stdout(output):
+     status=f.control.accepted_completion(task,1,'create',runtime=f.runtime,provider=f.provider,receipt_storage=f,on_receipt=refs.append)
+    result=json.loads(output.getvalue());self.assertNotEqual(status,0);self.assertEqual(result['verdict'],'blocked')
+    self.assertEqual([row['code'] for row in result['findings']],['private-persistence-verifier-receipt-identity-unavailable'])
+    self.assertEqual(f.receipts,{});self.assertEqual(refs,[]);self.assertEqual(f.events,events)
+    self.assertIsNone(f.value['proof_receipt']);self.assertIsNone(f.value['proof_sha256']);self.assertEqual(len(f.runs()),1)
+    self.assertEqual(f.control.image_digest(f.definition,provider=f.provider),'sha256:'+'a'*64)
+
 
 if __name__=='__main__':unittest.main(verbosity=2)

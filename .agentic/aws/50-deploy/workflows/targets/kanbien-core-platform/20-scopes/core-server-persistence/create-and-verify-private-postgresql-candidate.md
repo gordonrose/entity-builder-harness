@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 9
+version: 10
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-11-19"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -82,6 +82,18 @@ because a client response was lost. CREATE review requires the exact change-set
 name, source revision, and both server and restore-verifier image digests.
 
 ## Run Proof
+
+The scope's `00-declaration/acceptance-route-contract.yml` now owns the ordered
+`initial_setup` task selection as well as the later release-qualification route.
+Its first five tasks prepare identities, schema and least-privilege access;
+the private create verifier follows service activation and readiness. The
+existing command-parser checks validate those task proof contracts. Controllers
+must capture this source selection rather than maintain their own setup list.
+This initial sequence establishes a usable candidate only: it neither replaces
+the fifteen release proofs below nor authorizes replay of an existing attempt.
+The examples remain ordinary production-capable commands; temporary execution
+additionally requires its source-bound instance, retained state and fresh
+session admission through the environment-lifecycle owner.
 
 ### Permission-separation update of an existing candidate
 

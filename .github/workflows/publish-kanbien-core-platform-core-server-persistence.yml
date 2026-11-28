@@ -4,7 +4,7 @@
 #   version: 4
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -32,14 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
-      - name: Enforce protected main source
-        run: test "$GITHUB_REF" = refs/heads/main
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.2
+      - name: Enforce approved source
+        run: python3 -B scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py --operation validate-source
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - name: Install dependencies
         run: npm ci --ignore-scripts
-      - name: Install script dependencies
-        run: python3 -m pip install PyYAML==6.0.2
       - name: Enforce delivery-chain registration and contracts
         run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 

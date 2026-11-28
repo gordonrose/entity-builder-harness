@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-evidence
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -230,5 +230,36 @@ EVIDENCE.record = lambda value: (_ for _ in ()).throw(RuntimeError(CANARY))
 assert EVIDENCE.failure_report(observed) == {"diagnostic_processing_condition": "task-diagnostic-not-confirmed"}
 assert observed.diagnostic == primary and observed.code == "task-unsuccessful-completion"
 EVIDENCE.record = old_record
+binding_spec = importlib.util.spec_from_file_location("entity_evidence_runtime_binding_fixture", Path(__file__).with_name("task-binding-test.py"))
+BINDING = importlib.util.module_from_spec(binding_spec); binding_spec.loader.exec_module(BINDING)
+task, reservation, result = fixture()
+reservation["request"] = BINDING.bound_request(reservation["request"])
+reservation["request_sha256"] = hashlib.sha256(EVIDENCE.CONTROL.canonical(reservation["request"])).hexdigest()
+task["taskArn"] = task["taskArn"].replace("/kanbien-core-platform/", "/session-check/")
+task["taskDefinitionArn"] = reservation["request"]["definition"]
+task["overrides"]["containerOverrides"][0]["name"] = "renamed-verifier"
+task["containers"][0]["name"] = "renamed-verifier"
+receipt = collect(task, reservation, result)
+assert EVIDENCE.validate_retained(receipt, reservation) == receipt
+original = copy.deepcopy(receipt)
+receipt["task"]["arn"] = receipt["task"]["arn"].replace("/session-check/", "/kanbien-core-platform/")
+fails(lambda: EVIDENCE.validate_retained(receipt, reservation), "task-identity-not-confirmed")
+changed = copy.deepcopy(reservation)
+changed["request"]["runtime"]["session_id"] = "9" * 32
+changed["request_sha256"] = hashlib.sha256(EVIDENCE.CONTROL.canonical(changed["request"])).hexdigest()
+fails(lambda: EVIDENCE.validate_retained(original, changed), "task-retained-receipt-mismatch")
+changed["request"]["runtime"] = {"native": CANARY}
+fails(lambda: EVIDENCE.validate_retained(original, changed), "task-retained-receipt-invalid")
+log_calls = []
+def runtime_logs(service, operation, **parameters):
+    assert (service, operation) == ("logs", "get-log-events")
+    assert parameters["logGroupName"] == "/aws/ecs/session-check"
+    assert parameters["logStreamName"] == "checked-verifier/renamed-verifier/" + "2" * 32
+    log_calls.append(parameters)
+    return {"events": [] if "nextToken" in parameters else [{"message": json.dumps(result)}], "nextForwardToken": "complete"}
+assert len(EVIDENCE.read_logs(runtime_logs, reservation["request"], task["taskArn"])["events"]) == 1
+assert len(log_calls) == 2
+fails(lambda: EVIDENCE.read_logs(runtime_logs, reservation["request"], task["taskArn"].replace("/session-check/", "/kanbien-core-platform/")), "task-log-identity-invalid")
+assert len(log_calls) == 2
 print(json.dumps({"schema": "deploy/entity-smoke-task-evidence-fixture/v1", "verdict": "passed", "success_protocol_cases": len(cases),
                   "checks": ["terminal-identity", "source-and-digest", "complete-steps", "times", "one-result", "no-native-values", "source-exported-diagnostics", "all-normal-failure-bundles", "bounded-forward-pagination", "success-prefix-cannot-hide-later-failure", "selected-primary-report-projection", "malformed-or-thrown-projection-safe"], "provider_observation": False}))

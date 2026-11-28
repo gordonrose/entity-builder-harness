@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.delivery-inventory
-#   version: 5
+#   version: 7
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -95,10 +95,106 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(report['routes'][0]['target'], 'synthetic')
         self.assertTrue(report['inputs']); self.assertTrue(report['routes'][0]['chain'])
 
+    def test_reached_profile_templates_follow_target_root_without_binding_arbitrary_text(self):
+        target = self.fixture.target.parent
+        profile = target / '00-target/target-profile.yml'
+        names = ['30-provider-realization/foundation.yml', '30-provider-realization/network.yml']
+        for name in names:
+            fixture.write(target / name, {'Resources': {}})
+        value = {'schema': 'deploy/target-profile/v1', 'provider': {'foundation': {
+            'template': names[0], 'instance_prerequisites': {'network': {'template': names[1]}}}}}
+        fixture.write(profile, value)
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        paths = {(target / name).relative_to(self.root).as_posix() for name in names}
+        self.assertTrue(paths <= set(report['routes'][0]['trace_inputs']))
+        self.assertTrue(all(item['routes'] for item in report['entrypoints'] if item['path'] in paths))
+        unrelated = target / '30-provider-realization/unrelated.yml'
+        fixture.write(unrelated, {'Resources': {}})
+        reference = unrelated.relative_to(self.root).as_posix()
+        value['notes'] = reference
+        fixture.write(profile, value)
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertIn(('delivery-consumer-unbound', reference), {(item['code'], item['path']) for item in report['findings']})
+        self.assertNotIn(reference, report['routes'][0]['trace_inputs'])
+        sibling = target.with_name('unrelated')
+        fixture.write(sibling / '30-provider-realization/isolated.yml', {'Resources': {}})
+        fixture.write(sibling / '00-target/target-profile.yml', {'schema': 'deploy/target-profile/v1',
+            'provider': {'foundation': {'template': '30-provider-realization/isolated.yml'}}})
+        fixture.write(sibling / '20-scopes/scope-index.yml', {'scopes': []})
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        reference = (sibling / '30-provider-realization/isolated.yml').relative_to(self.root).as_posix()
+        self.assertIn(('delivery-consumer-unbound', reference), {(item['code'], item['path']) for item in report['findings']})
+        self.assertNotIn(reference, report['routes'][0]['trace_inputs'])
+
+    def test_reached_profile_template_rejects_invalid_missing_and_symlink_paths(self):
+        target = self.fixture.target.parent
+        profile = target / '00-target/target-profile.yml'
+        template = target / '30-provider-realization/fixture.yml'
+        alias = template.with_name('alias.yml'); alias.symlink_to(template)
+        for reference, expected in [(None, 'invalid'), ([], 'invalid'), ('', 'invalid'),
+                ('../private-canary.yml', 'invalid'), ('/private-canary.yml', 'invalid'),
+                ('30-provider-realization//fixture.yml', 'invalid'), ('30-provider-realization/alias.yml', 'invalid'),
+                ('30-provider-realization/missing.yml', 'missing'), ('30-provider-realization', 'invalid')]:
+            for prerequisite in (False, True):
+                with self.subTest(reference=reference, prerequisite=prerequisite):
+                    foundation = {'template': '30-provider-realization/fixture.yml'}
+                    if prerequisite: foundation['instance_prerequisites'] = {'network': {'template': reference}}
+                    else: foundation['template'] = reference
+                    fixture.write(profile, {'schema': 'deploy/target-profile/v1', 'provider': {'foundation': foundation}})
+                    code, report = self.invoke()
+                    self.assertEqual(code, 1)
+                    failures = [item for item in report['findings'] if item['code'].startswith('delivery-profile-template-')]
+                    self.assertEqual(failures, [{'code': 'delivery-profile-template-' + expected,
+                        'path': profile.relative_to(self.root).as_posix(),
+                        'field': 'provider.foundation.' + ('instance_prerequisites.template' if prerequisite else 'template')}])
+                    self.assertNotIn('private-canary', json.dumps(failures))
+        for foundation, field in [(None, 'provider.foundation'),
+                ({'template': '30-provider-realization/fixture.yml', 'instance_prerequisites': []}, 'provider.foundation.instance_prerequisites'),
+                ({'template': '30-provider-realization/fixture.yml', 'instance_prerequisites': {'network': None}}, 'provider.foundation.instance_prerequisites.template')]:
+            fixture.write(profile, {'schema': 'deploy/target-profile/v1', 'provider': {'foundation': foundation}})
+            code, report = self.invoke()
+            self.assertEqual(code, 1)
+            self.assertIn({'code': 'delivery-profile-template-invalid', 'path': profile.relative_to(self.root).as_posix(), 'field': field}, report['findings'])
+
+    def test_reached_actual_session_fixture_imports_bind_records_and_transport_only(self):
+        base = 'scripts/04.deploy/shared/provider-adapters/aws/'
+        names = ['environment-sessions-test.py', 'environment_sessions.py', 'session_records.py', 'session_cli.py', 'cli.py']
+        for name in names:
+            destination = self.root / (base + name)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / (base + name), destination)
+        self.fixture.check_script('local', ['read-only', 'writes-files'], 'python3 ' + base + names[0] + '\n')
+        self.fixture.catalog['checks']['local']['inputs'].extend(base + name for name in names)
+        self.fixture.save()
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        self.assertTrue({base + name for name in names} <= set(report['routes'][0]['trace_inputs']))
+        entry = next(item for item in report['entrypoints'] if item['path'] == base + names[0])
+        self.assertFalse(entry['requires_delivery_chain'])
+        self.assertEqual(entry['effects'], ['read-only', 'writes-files'])
+        selected = self.root / (base + names[0])
+        original = selected.read_text()
+        exact = 'OWNER = load("tested_environment_sessions", Path(__file__).with_name("environment_sessions.py"))'
+        self.assertIn(exact, original)
+        (selected.parent / 'unrelated-test.py').write_text(original)
+        selected.write_text(original.replace(exact, '# ' + exact + '\npass  # environment_sessions.py'))
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        reached = set(report['routes'][0]['trace_inputs'])
+        self.assertTrue(all(base + name not in reached for name in names[1:]))
+        self.assertNotIn(base + 'unrelated-test.py', reached)
+        gaps = {(item['code'], item['path']) for item in report['findings']}
+        self.assertIn(('delivery-consumer-unbound', base + 'session_records.py'), gaps)
+        self.assertIn(('delivery-consumer-unbound', base + 'session_cli.py'), gaps)
+
     def publication_adapter_edge(self, workload):
         adapter = 'scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/' + workload + '-package-custody/publication.py'
         shared = 'scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py'
-        for relative in (adapter, shared):
+        template = 'scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py'
+        for relative in (adapter, shared, template):
             destination = self.root / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / relative, destination)
@@ -110,6 +206,7 @@ class DeliveryInventoryCLI(unittest.TestCase):
         code, report = self.invoke()
         self.assertEqual(code, 0, report['findings'])
         self.assertIn(shared, report['routes'][0]['trace_inputs'])
+        self.assertIn(template, report['routes'][0]['trace_inputs'])
         self.assertTrue(next(item for item in report['entrypoints'] if item['path'] == shared)['routes'])
         source = (self.root / adapter).read_text()
         exact = 'str((ROOT / "' + shared + '").parent)'
@@ -119,6 +216,7 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn(('delivery-consumer-unbound', shared), {(item['code'], item['path']) for item in report['findings']})
         self.assertNotIn(shared, report['routes'][0]['trace_inputs'])
+        self.assertNotIn(template, report['routes'][0]['trace_inputs'])
 
     def test_actual_feature_publication_import_binds_shared_provider(self):
         self.publication_adapter_edge('entity-smoke')

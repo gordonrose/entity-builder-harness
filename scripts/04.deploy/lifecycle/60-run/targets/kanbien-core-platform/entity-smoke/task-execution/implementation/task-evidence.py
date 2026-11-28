@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-evidence
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -160,11 +160,13 @@ def read_logs(provider, request, task_arn):
     proof. An unavailable/incomplete observation authorizes only later reads.
     """
     CONTROL.validate_request(request)
-    require(isinstance(task_arn, str) and re.fullmatch(r"arn:aws:ecs:" + CONTROL.REGION + ":" + CONTROL.ACCOUNT + ":task/" + CONTROL.CLUSTER + r"/[a-f0-9]{32}", task_arn) is not None, "task-log-identity-invalid")
+    selected = CONTROL.runtime(request)
+    prefix = "arn:aws:ecs:" + CONTROL.REGION + ":" + CONTROL.ACCOUNT + ":task/" + selected["cluster_arn"].rsplit("/", 1)[1]
+    require(isinstance(task_arn, str) and re.fullmatch(re.escape(prefix) + r"/[a-f0-9]{32}", task_arn) is not None, "task-log-identity-invalid")
     token, events = None, []
     for _page in range(3):
-        response = provider("logs", "get-log-events", logGroupName="/aws/ecs/kanbien-core-platform",
-                            logStreamName="entity-smoke-" + request["workload"] + "/entity-smoke-" + request["workload"] + "/" + task_arn.rsplit("/", 1)[1],
+        response = provider("logs", "get-log-events", logGroupName=selected["log_group"],
+                            logStreamName=selected["log_stream_prefix"] + "/" + selected["container_name"] + "/" + task_arn.rsplit("/", 1)[1],
                             startFromHead=True, limit=1000, **({"nextToken": token} if token is not None else {}))
         batch = response.get("events") if isinstance(response, dict) else None
         next_token = response.get("nextForwardToken") if isinstance(response, dict) else None
@@ -197,7 +199,7 @@ def collect(task, reservation, response, collected_at):
     containers = task.get("containers")
     require(isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict), "task-container-evidence-invalid")
     container = containers[0]
-    require(container.get("name") == "entity-smoke-" + request["workload"] and container.get("imageDigest") == request["image_digest"] and type(container.get("exitCode")) is int, "task-container-identity-not-confirmed")
+    require(container.get("name") == CONTROL.runtime(request)["container_name"] and container.get("imageDigest") == request["image_digest"] and type(container.get("exitCode")) is int, "task-container-identity-not-confirmed")
     created, start, stop = (timestamp(task.get(key)) for key in ("createdAt", "startedAt", "stoppedAt"))
     reserved = timestamp(reservation["reserved_at"])
     collected = timestamp(collected_at)
@@ -265,7 +267,7 @@ def validate_retained(value, reservation):
         observed = {"taskArn": task["arn"], "taskDefinitionArn": task["definition"], "startedBy": task["operation_id"],
                     "overrides": CONTROL.overrides(reservation["request"]), "lastStatus": "STOPPED", "launchType": "FARGATE",
                     "createdAt": task["created_at"], "startedAt": task["started_at"], "stoppedAt": task["stopped_at"],
-                    "containers": [{"name": "entity-smoke-" + value["workload"], "imageDigest": value["image_digest"], "exitCode": task["exit_code"]}]}
+                    "containers": [{"name": CONTROL.runtime(reservation["request"])["container_name"], "imageDigest": value["image_digest"], "exitCode": task["exit_code"]}]}
         result = value["result"]
         if isinstance(result, dict) and (value["workload"] == "migration" or result.get("operation") == "preflight" and value["workload"] != "administration"):
             # Migration stdout has no operation field; the collector adds the
@@ -279,4 +281,4 @@ def validate_retained(value, reservation):
         # not turn reconstructed stored fields into a new operational signal.
         raise EvidenceFailure("task-retained-receipt-mismatch") from None
     except EvidenceFailure: raise
-    except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError): raise EvidenceFailure("task-retained-receipt-invalid") from None
+    except (CONTROL.TaskFailure, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError): raise EvidenceFailure("task-retained-receipt-invalid") from None

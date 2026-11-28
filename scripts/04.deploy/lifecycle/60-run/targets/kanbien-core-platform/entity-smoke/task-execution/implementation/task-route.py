@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.entity-smoke.task-plan.implementation
-#   version: 5
+#   version: 7
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -99,7 +99,7 @@ class Provider(C.Provider):
                 request, store, key, guard = self.task_capability
                 reserved = store.read(key, request)
                 require(reserved is not None, "task-submission-reservation-required")
-                expected = {"cluster": C.RESOURCE.CLUSTER, "taskDefinition": request["definition"], "launchType": "FARGATE", "count": 1,
+                expected = {"cluster": RUNNER.CONTROL.runtime(request)["cluster"], "taskDefinition": request["definition"], "launchType": "FARGATE", "count": 1,
                             "networkConfiguration": {"awsvpcConfiguration": {"subnets": request["subnets"], "securityGroups": [request["security_group"]], "assignPublicIp": "DISABLED"}},
                             "overrides": RUNNER.CONTROL.overrides(request), "startedBy": reserved["operation_id"], "clientToken": reserved["operation_id"]}
                 require(RUNNER.CONTROL.canonical(parameters) == RUNNER.CONTROL.canonical(expected), "task-submission-does-not-match-plan")
@@ -121,7 +121,17 @@ class Provider(C.Provider):
         return self._invoke(service, operation, parameters)
 
 
-def operator(provider, definition, roles):
+_NO_RUNTIME = object()
+
+
+def operator(provider, definition, roles, *, runtime=_NO_RUNTIME):
+    cluster = "arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":cluster/" + C.RESOURCE.CLUSTER
+    if runtime is not _NO_RUNTIME:
+        selected = RUNNER.CONTROL.runtime({"runtime": runtime})
+        require(isinstance(definition, str) and re.fullmatch(
+            "arn:aws:ecs:" + re.escape(C.ALIGN.REGION) + ":" + C.ALIGN.ACCOUNT
+            + ":task-definition/" + re.escape(selected["family"]) + r":[1-9][0-9]*", definition) is not None, "runtime-binding-invalid")
+        cluster = selected["cluster_arn"]
     caller = provider("sts", "get-caller-identity")
     arn = caller.get("Arn") if isinstance(caller, dict) else None
     require(caller.get("Account") == C.ALIGN.ACCOUNT and isinstance(arn, str) and re.fullmatch(r"arn:aws:sts::" + C.ALIGN.ACCOUNT + r":assumed-role/[A-Za-z0-9+=,.@_-]+/[A-Za-z0-9+=,.@_-]+", arn) is not None, "task-operator-not-confirmed")
@@ -130,7 +140,7 @@ def operator(provider, definition, roles):
     require(isinstance(value, dict) and value.get("RoleName") == name and isinstance(value.get("Arn"), str) and value["Arn"].startswith("arn:aws:iam::" + C.ALIGN.ACCOUNT + ":role/") and value["Arn"].endswith("/" + name), "task-operator-not-confirmed")
     for action, resources in (("ecs:RunTask", [definition]), ("iam:PassRole", roles)):
         require(C.operator_resources_allowed(provider, value["Arn"], action, resources, context=[
-            {"ContextKeyName": "ecs:cluster", "ContextKeyValues": ["arn:aws:ecs:" + C.ALIGN.REGION + ":" + C.ALIGN.ACCOUNT + ":cluster/" + C.RESOURCE.CLUSTER], "ContextKeyType": "string"},
+            {"ContextKeyName": "ecs:cluster", "ContextKeyValues": [cluster], "ContextKeyType": "string"},
             {"ContextKeyName": "iam:PassedToService", "ContextKeyValues": ["ecs-tasks.amazonaws.com"], "ContextKeyType": "string"}]), "task-operator-policy-preflight-not-confirmed")
     return C.DEPLOY.fingerprint({"account": caller["Account"], "role": value["Arn"]})
 
@@ -202,10 +212,9 @@ def prepare(args, provider, *, retained_source_evidence=None):
     callees = {"server": BINDING.inspect(provider, "server", selected, resources, binding_snapshot)} if args.workload == "verifier" else {}
     expected = BINDING.expected_task(args.workload, selected, resources, binding_snapshot)
     roles = [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]
-    actor = operator(provider, checked["definition"], roles)
-    stage_suffix = "" if proof_stage == "baseline" else ":" + proof_stage
-    if proof_stage == "activation": stage_suffix += ":" + artifact
-    preflight_label = "entity-smoke-" + hashlib.sha256((args.proof_label + ":" + args.workload + ":" + args.operation + ":preflight" + stage_suffix).encode()).hexdigest()[:24]
+    actor = operator(provider, checked["definition"], roles, **({"runtime": checked["runtime"]} if "runtime" in checked else {}))
+    preflight_label = STEPS.preflight_label(args.proof_label, args.workload, args.operation, stage=proof_stage,
+                                          activation_generation=artifact if proof_stage == "activation" else None)
     if delivery:
         preflight_label = C.delivery_preflight_label(delivery, proof_stage, args.workload, args.operation)
     else:
@@ -336,7 +345,8 @@ def execute(args, provider):
                 and BINDING.inspect(observed, args.workload, selected, resources, binding_snapshot) == context["checked"], "task-target-changed-before-submission")
         require({name: BINDING.inspect(observed, name, selected, resources, binding_snapshot) for name in context["callees"]} == context["callees"], "task-callee-changed-before-submission")
         expected = BINDING.expected_task(args.workload, selected, resources, binding_snapshot)
-        require(operator(observed, request["definition"], [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])]) == safe["operator_sha256"], "task-operator-changed-before-submission")
+        require(operator(observed, request["definition"], [expected["executionRoleArn"], *([] if "taskRoleArn" not in expected else [expected["taskRoleArn"]])],
+                         **({"runtime": context["checked"]["runtime"]} if "runtime" in context["checked"] else {})) == safe["operator_sha256"], "task-operator-changed-before-submission")
         require(STEPS.prerequisites(deps, {**context, "binding_snapshot": binding_snapshot}, args, observed) == context["prerequisites"], "task-prerequisites-changed-before-submission")
         book.validate("change-set" if args.phase == "preflight" or negative else "execution-preflight", 1)
         source_guard()

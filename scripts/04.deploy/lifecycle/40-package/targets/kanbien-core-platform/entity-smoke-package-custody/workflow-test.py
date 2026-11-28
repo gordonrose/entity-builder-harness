@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-20"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -51,7 +51,11 @@ mutations = [
     lambda v: v["env"].update(ECR_REPOSITORY="another-repository"),
     lambda v: v["env"].update(AWS_ROLE_ARN="arn:aws:iam::337159794548:role/administrator"),
     lambda v: v["jobs"]["qualify-and-publish"].update(**{"continue-on-error": True}),
-    lambda v: step(v, "Enforce protected main source").update(run="true"),
+    lambda v: step(v, "Enforce approved source").update(run="true"),
+    lambda v: step(v, "Enforce approved source").update(**{"if": "false"}),
+    lambda v: step(v, "Enforce approved source").update(run=step(v, "Enforce approved source")["run"] + " || true"),
+    lambda v: v["jobs"]["qualify-and-publish"]["steps"].insert(5, v["jobs"]["qualify-and-publish"]["steps"].pop(2)),
+    lambda v: step(v, "Install script dependencies").update(run="true"),
     lambda v: step(v, "Qualify declarations and actual candidate payload").update(**{"if": "false"}),
     lambda v: step(v, "Qualify declarations and actual candidate payload").update(**{"continue-on-error": True}),
     lambda v: step(v, "Qualify declarations and actual candidate payload").update(run=step(v, "Qualify declarations and actual candidate payload")["run"].replace("bash " + CONTROL.BUILD, "true #")),

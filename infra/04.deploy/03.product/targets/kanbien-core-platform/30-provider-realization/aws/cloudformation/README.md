@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
-  version: 4
+  version: 5
   status: active
   created_on: "2026-10-20"
   updated_on: "2026-11-27"
@@ -63,8 +63,8 @@ conditions, resources and outputs; it does not select resources by service name.
 Production keeps its current defaults. A new temporary foundation omits its
 image-publication role; temporary persistence omits the two unused legacy
 password secrets and starts both service counts at zero while the database is
-prepared. The administrator secret, RDS deletion protection and snapshot policies
-remain. Desired-count rows also declare a positive `active` value from the
+prepared. The administrator secret remains; temporary database retention follows
+the explicit disposable settings below. Desired-count rows also declare a positive `active` value from the
 parameter's allowed values. The session planner uses it for a separate activation
 projection while keeping optional roles and secrets omitted. The entity service
 declares active count one without changing its production default of zero.
@@ -72,15 +72,22 @@ Activation still requires observed creation/database readiness and a checked
 operation; discard has its separate cleanup gate. No live command is connected
 by these template fields alone.
 
-Persistence also declares `Metadata.DiscardControls`, naming the database and
-the expected original values of four supported settings. The session reader
-copies the stopped temporary projection and changes its deletion/replacement
-policies to `Delete`, deletion protection to `false`, and automated-backup
-deletion to `true`. Production, creation and activation keep their protections;
-the seven-day backup retention setting is unchanged. Unlisted retaining
-resources, unsupported resource types and mismatched source expectations reject
-the discard plan. This only prepares a sealed session for later owned deletion;
-manual snapshots and other leftovers still need physical observation.
+Persistence also declares `Metadata.DiscardControls`: the source identifies each
+database or log group and the original values that the session reader must check
+before changing its temporary copy. For the database, temporary creation,
+activation and shutdown all select deletion/replacement policies of `Delete`,
+deletion protection `false`, automated-backup deletion `true`, and zero days of
+automated-backup retention. Production keeps its protections and seven-day backup
+retention. Application code is unchanged.
+
+For example, a temporary functionality test starts with a fresh database without
+automatic backups; it does not lower a running production database's retention.
+These tests do not prove backup recovery or cross-region replication. Testing
+those features needs a separately admitted retention-enabled session and cleanup
+proof. Unknown resource types, unlisted retention settings and mismatched original
+values reject the temporary plan. These source checks do not prove live settings
+or removal: manual snapshots, AWS Backup and other leftovers still need physical
+observation, and independent cleanup remains unfinished.
 
 These source defaults do not migrate an existing deployed template. Fixed UPDATE
 routes reject old templates missing the new parameters; their compatibility

@@ -1,0 +1,82 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.infrastructure.environment-session-records
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-28"
+#   updated_on: "2026-11-28"
+#   layer: 04.deploy
+#   domain: deployment.environment-lifecycle
+#   disciplines: [security, sre]
+#   kind: cloudformation-template
+#   purpose: Keep private versioned evidence outside per-session application and cleanup controls.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.command.environment-sessions
+#     path: scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions/script.py
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Private durable session evidence; no disposable workload or runtime control.
+Parameters:
+  SetupOperatorArn:
+    Type: String
+    AllowedPattern: 'arn:aws:iam::[0-9]{12}:(?:role/[A-Za-z0-9+=,.@_/-]+|user/[A-Za-z0-9+=,.@_/-]+)'
+Resources:
+  Records:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'kanbien-session-records-${AWS::AccountId}-${AWS::Region}'
+      VersioningConfiguration: {Status: Enabled}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerEnforced}]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+  RecordsPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Records
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: RequireTLS
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource: [!GetAtt Records.Arn, !Sub '${Records.Arn}/*']
+            Condition: {Bool: {'aws:SecureTransport': 'false'}}
+          - Sid: PreserveEvidenceVersions
+            Effect: Deny
+            Principal: '*'
+            Action: ['s3:DeleteObject', 's3:DeleteObjectVersion']
+            Resource: !Sub '${Records.Arn}/*'
+          - Sid: RestrictWriters
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:PutObject'
+            Resource: !Sub '${Records.Arn}/*'
+            Condition:
+              ArnNotLike:
+                aws:PrincipalArn: [!Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/s-*-cleanup-worker', !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/s-*-foreground', !Ref SetupOperatorArn]
+          - Sid: RequireConditionalWrites
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:PutObject'
+            Resource: !Sub '${Records.Arn}/*'
+            Condition:
+              'Null':
+                s3:if-match: 'true'
+                s3:if-none-match: 'true'
+              Bool:
+                s3:ObjectCreationOperation: 'true'
+Outputs:
+  RecordsBucket:
+    Value: !Ref Records
+  RecordsBucketArn:
+    Value: !GetAtt Records.Arn

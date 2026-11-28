@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.preflight-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -102,5 +102,29 @@ for workload in M.CONTROL.OPERATIONS:
         fails(lambda: M.CONTROL.invoke_once(absent, store, "alternate", request), "task-reconciliation-unresolved-no-replay", M.CONTROL.TaskFailure)
         assert calls.count("run-task") == 1
         assert CANARY not in next(Path(temporary).glob("*.json")).read_text()
+binding_spec = importlib.util.spec_from_file_location("entity_preflight_runtime_binding_fixture", Path(__file__).resolve().parents[2] / "task-execution/tests/task-binding-test.py")
+BINDING = importlib.util.module_from_spec(binding_spec); binding_spec.loader.exec_module(BINDING)
+legacy, legacy_reservation, task, legacy_receipt = fixture("verifier")
+request = BINDING.bound_request(legacy)
+reservation = {**legacy_reservation, "request": request, "request_sha256": hashlib.sha256(M.CONTROL.canonical(request)).hexdigest()}
+task["taskArn"] = task["taskArn"].replace("/kanbien-core-platform/", "/session-check/")
+task["taskDefinitionArn"] = request["definition"]
+task["overrides"]["containerOverrides"][0]["name"] = "renamed-verifier"
+task["containers"][0]["name"] = "renamed-verifier"
+result = copy.deepcopy(legacy_receipt["result"])
+receipt = M.EVIDENCE.collect(task, reservation, {"events": [{"message": json.dumps(result)}]}, "2026-11-08T12:00:06Z")
+business = copy.deepcopy(request)
+business["environment"]["ENTITY_SMOKE_VERIFICATION_OPERATION"] = "create"
+def runtime_admit(selected, reserved=reservation, proof=receipt):
+    return M.require_receipt(selected, reserved, proof, expected_preflight_label=LABEL,
+                             current_time="2026-11-08T12:00:10Z", required_after="2026-11-08T12:00:00Z")
+assert runtime_admit(business) == receipt
+for field, value in (("session_id", "9" * 32), ("binding_sha256", "sha256:" + "9" * 64),
+                     ("stack_id", request["runtime"]["stack_id"] + "9"), ("log_group", "/different")):
+    fails(lambda: runtime_admit({**business, "runtime": {**business["runtime"], field: value}}), "preflight-operation-binding-mismatch")
+legacy_business = copy.deepcopy(legacy)
+legacy_business["environment"]["ENTITY_SMOKE_VERIFICATION_OPERATION"] = "create"
+fails(lambda: runtime_admit(legacy_business), "preflight-operation-binding-mismatch")
+fails(lambda: runtime_admit(business, legacy_reservation, legacy_receipt), "preflight-operation-binding-mismatch")
 print(json.dumps({"verdict": "passed", "evidence_class": "controlled-task-protocol", "provider_observation": False, "workloads": 5,
                   "checks": ["read-only-mode-only", "ninety-second-bound", "immutable-matching", "source-owned-collector-result", "freshness-and-order", "alternate-key-no-replay"]}))

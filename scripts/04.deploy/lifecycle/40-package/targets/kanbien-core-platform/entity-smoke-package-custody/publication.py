@@ -5,7 +5,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -31,6 +31,7 @@ CONFIGURATION = (
 PUBLISHER = Publisher(ROOT, Binding(
     source_repository="gordonrose/entity-builder-harness",
     workflow="publish-kanbien-core-platform-entity-smoke.yml",
+    pipeline="entity-smoke-package-custody",
     target="kanbien-core-platform", scope="entity-smoke",
     account="337159794548", region="eu-west-1",
     repository="kanbien-core-platform/entity-smoke", role="github-kanbien-core-platform-entity-smoke-publisher",

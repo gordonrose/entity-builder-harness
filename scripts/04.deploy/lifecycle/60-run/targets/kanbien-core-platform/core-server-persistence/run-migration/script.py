@@ -131,12 +131,44 @@ FAILURE_CLASSES = {
 }
 
 
-def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[bool, str]:
+def runtime_context(runtime, workload):
+    """Shared syntax selection only; the controller supplies checked ownership."""
+    if runtime is None:
+        return {"container_name": workload, "log_group": LOG_GROUP, "log_stream_prefix": workload,
+                "cluster_arn": CLUSTER}
+    tasks = task_execution()
+    try: return tasks.runtime_binding(runtime, account=ACCOUNT, region=REGION)
+    except tasks.TaskFailure: return None
+
+
+def runtime_task_prefix(context):
+    return f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{context['cluster_arn'].rsplit('/', 1)[-1]}/"
+
+
+def runtime_task_matches(task, context):
+    containers = task.get("containers")
+    return (isinstance(task.get("taskArn"), str)
+        and re.fullmatch(re.escape(runtime_task_prefix(context)) + r"[a-f0-9]{32}", task["taskArn"]) is not None
+        and isinstance(containers, list) and len(containers) == 1
+        and isinstance(containers[0], dict) and containers[0].get("name") == context["container_name"])
+
+
+def retain_completion(receipts, receipt, *, root, storage, task_arn_prefix, on_receipt):
+    reference = receipts.retain(receipt, root=root, storage=storage, task_arn_prefix=task_arn_prefix)
+    if on_receipt is not None:
+        on_receipt(root / reference["path"] if storage is None else reference)
+    return reference
+
+
+def migration_log_accepted(task: dict[str, object], operation: str, *, runtime=None, provider=None) -> tuple[bool, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return False, "persistence-migration-evidence-unavailable"
-    stream = f"persistence-migration/persistence-migration/{arn.rsplit('/', 1)[-1]}"
-    ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    context = runtime_context(runtime, "persistence-migration")
+    if context is None or runtime is not None and not callable(provider): return False, "persistence-migration-evidence-unavailable"
+    if runtime is not None and not runtime_task_matches(task, context): return False, "persistence-migration-evidence-unavailable"
+    stream = f"{context['log_stream_prefix']}/{context['container_name']}/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = (aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", stream, "--start-from-head")
     if not ok:
         return False, code
     messages = events.get("events") if isinstance(events, dict) else None
@@ -156,7 +188,7 @@ def accepted_message(message: object, expected: str) -> bool:
     return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
 
 
-def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, object] | None, str]:
+def migration_log_rejection(task: dict[str, object], *, runtime=None, provider=None) -> tuple[dict[str, object] | None, str]:
     """Extract only a closed safe rejection record from an unsuccessful task.
 
     Task logs are untrusted provider evidence.  This deliberately parses their
@@ -167,8 +199,11 @@ def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, object] 
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return None, "persistence-migration-evidence-unavailable"
-    stream = f"persistence-migration/persistence-migration/{arn.rsplit('/', 1)[-1]}"
-    ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    context = runtime_context(runtime, "persistence-migration")
+    if context is None or runtime is not None and not callable(provider): return None, "persistence-migration-evidence-unavailable"
+    if runtime is not None and not runtime_task_matches(task, context): return None, "persistence-migration-evidence-unavailable"
+    stream = f"{context['log_stream_prefix']}/{context['container_name']}/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = (aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", stream, "--start-from-head")
     if not ok:
         return None, code
     messages = events.get("events") if isinstance(events, dict) else None
@@ -254,12 +289,16 @@ def task_evidence():
 def task_operation_bound(task: dict, mode: str) -> bool:
     return task_evidence().task_overrides_match(task, "persistence-migration", {"PERSISTENCE_MIGRATION_OPERATION": mode})
 
-def image_digest(task_definition: object) -> str | None:
+def image_digest(task_definition: object, *, runtime=None, provider=None) -> str | None:
     if not isinstance(task_definition, str):
         return None
-    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
+    context = runtime_context(runtime, "persistence-migration")
+    if context is None or runtime is not None and not callable(provider): return None
+    ok, definition, _ = (aws if provider is None else provider)("ecs", "describe-task-definition", "--task-definition", task_definition)
     value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
+    if runtime is not None and (not isinstance(value, dict) or value.get("taskDefinitionArn") != task_definition): return None
     containers = value.get("containerDefinitions") if isinstance(value, dict) else None
+    if runtime is not None and (not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != context["container_name"]): return None
     image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
     return image.rsplit("@", 1)[1] if isinstance(image, str) and image.count("@") == 1 and image.rsplit("@", 1)[1].startswith("sha256:") else None
 
@@ -283,19 +322,27 @@ def qualified_digest(path: Path) -> str | None:
     return value.get("image_digest") if isinstance(value, dict) and isinstance(value.get("image_digest"), str) else None
 
 
-def accepted_completion(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
+def accepted_completion(task: dict[str, object], seconds: int, operation: str, on_receipt=None, *, runtime=None, provider=None, receipt_storage=None) -> int:
+    context = runtime_context(runtime, "persistence-migration")
+    if context is None: return report("blocked", "persistence-migration-operation-runtime-invalid")
+    prefix = runtime_task_prefix(context)
+    if runtime is not None and (receipt_storage is None or not callable(provider) or not callable(on_receipt)):
+        return report("blocked", "persistence-migration-operation-storage-invalid")
+    if runtime is not None and not runtime_task_matches(task, context):
+        return report("uncertain", "persistence-migration-controller-task-identity-mismatch")
+    selected = {"runtime": runtime, "provider": provider} if runtime is not None or provider is not None else {}
     facts = {"migration_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
     observed_duration = duration(task)
     if observed_duration is None:
         return report("uncertain", "persistence-migration-duration-unavailable", facts=facts)
     if on_receipt is not None and (observed_duration > seconds or not task_exit(task)):
         try:
-            digest = image_digest(task.get("taskDefinitionArn"))
+            digest = image_digest(task.get("taskDefinitionArn"), **selected)
             if digest is None: raise ValueError()
             failure = "persistence-migration-completion-deadline-exceeded" if observed_duration > seconds else "persistence-migration-unsuccessful-completion"
             receipt = proof_receipts().make(proof_type="migration", operation=operation, task=task, image_digest=digest, result_code=failure,
-                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-            on_receipt(proof_receipts().persist(receipt))
+                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix)
+            retain_completion(proof_receipts(), receipt, root=ROOT, storage=receipt_storage, task_arn_prefix=prefix, on_receipt=on_receipt)
         except Exception: return report("uncertain", "persistence-migration-receipt-persistence-failed", facts=facts)
     if observed_duration > seconds:
         return report("failed", "persistence-migration-completion-deadline-exceeded", facts=facts)
@@ -303,29 +350,28 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str, o
     if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or type(containers[0].get("exitCode")) is not int:
         return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     if not task_exit(task):
-        rejection, code = migration_log_rejection(task)
+        rejection, code = migration_log_rejection(task, **selected)
         if rejection is not None:
             return report("failed", "persistence-migration-unsuccessful-completion", "persistence-migration-safe-rejection-observed", facts={**facts, **rejection})
         return report("failed", "persistence-migration-unsuccessful-completion", code, facts=facts)
-    accepted, code = migration_log_accepted(task, operation)
+    accepted, code = migration_log_accepted(task, operation, **selected)
     if not accepted:
         return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
     arn = task.get("taskArn")
-    digest = image_digest(task.get("taskDefinitionArn"))
+    digest = image_digest(task.get("taskDefinitionArn"), **selected)
     if not isinstance(arn, str) or digest is None:
         return report("blocked", "persistence-migration-receipt-identity-unavailable")
     try:
         receipt = proof_receipts().make(
             proof_type="migration", operation=operation, task=task, image_digest=digest,
             result_code=SUCCESS[operation], context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration},
-            controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix,
         )
-        path = proof_receipts().persist(receipt)
-        if on_receipt is not None: on_receipt(path)
+        reference = retain_completion(proof_receipts(), receipt, root=ROOT, storage=receipt_storage, task_arn_prefix=prefix, on_receipt=on_receipt)
     except Exception:
         return report("uncertain" if on_receipt is not None else "blocked", "persistence-migration-receipt-persistence-failed",
             facts=facts if on_receipt is not None else None)
-    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT)), **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
+    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": reference["path"], **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
 
 
 def main() -> int:

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.architecture.adr.0044-use-temporary-instances-of-production-deployments
-version: 1
+version: 2
 status: active
 created_on: "2026-11-27"
 updated_on: "2026-11-27"
@@ -51,6 +51,21 @@ instance names and dependency order from that captured graph. Template-owned
 controls describe stopped creation and later activation without altering
 production defaults. Instance identity stays separate from source/package
 identity. A valid source plan grants neither resource ownership nor permission.
+
+Select declared disposable retention from the first temporary creation and keep
+it during activation. This avoids a protected partial database requiring a later
+protection-lowering update solely to remove it. Bind explicit preserve-on-failure
+execution so partial creation can be reconciled without guessing a provider
+default. Ordinary fresh functionality-test databases also select zero automated-
+backup retention from creation, while production keeps its backup settings.
+Use the same declared retention projection, not a second template. These sessions
+do not prove backup recovery or replication functionality. Such tests require a
+separately admitted retention-enabled lifecycle and cleanup proof. Original
+zero-retention custody, native observations and a protected mutation boundary
+must all agree before excluding replication over the session lifetime; a final
+setting alone is insufficient. Manual snapshots and other backups still require
+observation. Failed operation reconciliation is not successful output or physical
+absence. The lifecycle standard owns the exact qualification requirements.
 
 Use the existing reservation, CloudFormation submission, diagnostic and proof
 owners. For independent workers, retain session admission and immutable operation

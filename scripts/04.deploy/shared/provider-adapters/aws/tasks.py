@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.task-execution
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -16,6 +16,8 @@
 #   used_by:
 #   - id: deploy.library.entity-smoke.task-control
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
+#   - id: deploy.library.core-persistence.task-operations
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
 """Private task mechanics. Callers own durable reservations, gates and proof.
 
 No function grants provider authority, retries a mutation or decides whether a
@@ -24,6 +26,7 @@ reservation owner; RunTask requires a caller-reserved identity. Historical recei
 schemas and workload-specific identity/admission checks remain with callers.
 """
 import json
+import re
 import time
 
 
@@ -39,6 +42,35 @@ class ProviderFailure(Exception):
         self.code = code
 
 
+def runtime_binding(value, *, account, region):
+    """Check copied runtime identity syntax, not provider ownership or admission.
+
+    Workload bindings supply their checked account/region and source-derived
+    identity. Keeping this context in their immutable request prevents recovery
+    from silently selecting a different environment. Persistent defaults stay
+    with those bindings; omission here is not a production fallback.
+    """
+    if not (isinstance(account, str) and re.fullmatch(r"[0-9]{12}", account)
+            and isinstance(region, str) and len(region) <= 32
+            and re.fullmatch(r"[a-z]{2}(?:-[a-z]+)+-[0-9]+", region)):
+        raise TaskFailure("runtime-binding-invalid")
+    patterns = {"session_id": r"[a-f0-9]{32}", "source_plan_sha256": r"[a-f0-9]{64}",
+                "binding_sha256": r"sha256:[a-f0-9]{64}",
+                "stack_id": rf"arn:aws:cloudformation:{re.escape(region)}:{account}:stack/[A-Za-z][A-Za-z0-9-]{{0,127}}/[A-Za-z0-9][A-Za-z0-9-]*",
+                "cluster_arn": rf"arn:aws:ecs:{re.escape(region)}:{account}:cluster/[A-Za-z0-9_-]{{1,255}}",
+                "family": r"[A-Za-z0-9_-]{1,255}", "container_name": r"[A-Za-z0-9_-]{1,255}",
+                "log_group": r"[.\-_/#A-Za-z0-9]{1,512}", "log_stream_prefix": r"[.\-_/#A-Za-z0-9]{1,512}"}
+    if not (isinstance(value, dict) and set(value) == {"schema", *patterns}
+            and value.get("schema") == "deploy/aws-task-runtime/v1"
+            and all(isinstance(value[key], str) and len(value[key]) <= 2048
+                    and re.fullmatch(pattern, value[key]) for key, pattern in patterns.items())
+            and len(value["log_stream_prefix"] + "/" + value["container_name"] + "/" + "0" * 32) <= 512
+            and all("//" not in value[key] and not {".", ".."}.intersection(value[key].split("/"))
+                    for key in ("log_group", "log_stream_prefix"))):
+        raise TaskFailure("runtime-binding-invalid")
+    return dict(value)
+
+
 def cli_provider(aws):
     """Adapt the existing tuple-returning CLI boundary, not an AWS client."""
     def invoke(service, operation, **parameters):
@@ -46,6 +78,7 @@ def cli_provider(aws):
             "run-task": ("cluster", "taskDefinition", "launchType", "count", "startedBy", "clientToken", "networkConfiguration", "overrides"),
             "list-tasks": ("cluster", "family", "desiredStatus"),
             "describe-tasks": ("cluster", "tasks"),
+            "stop-task": ("cluster", "task", "reason"),
         }
         if service != "ecs" or operation not in allowed or set(parameters) != set(allowed[operation]):
             raise ProviderFailure("ecs-task-provider-arguments-invalid")

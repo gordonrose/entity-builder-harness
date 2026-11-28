@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.delivery-inventory
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-28"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [architecture, sre]
@@ -19,12 +19,14 @@
 from __future__ import annotations
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
 import shlex
 import subprocess
 import sys
+import tokenize
 from collections import Counter
 from pathlib import Path
 import yaml
@@ -300,6 +302,40 @@ def route_proof_members(checks, roots, bodies):
     return found, findings
 
 
+def profile_templates(root, source, value):
+    """Follow declared foundation selections, never arbitrary profile strings."""
+    references, findings = set(), []
+    provider = value.get('provider', {})
+    if not isinstance(provider, dict) or 'foundation' not in provider:
+        return references, findings
+    foundation = provider['foundation']
+    target = (root / source).parent.parent
+    def invalid(field, code='delivery-profile-template-invalid'):
+        findings.append({'code': code, 'path': source, 'field': field})
+    if not isinstance(foundation, dict) or Path(source).parent.name != '00-target':
+        invalid('provider.foundation'); return references, findings
+    selected = [('provider.foundation.template', foundation.get('template'))]
+    prerequisites = foundation.get('instance_prerequisites', {})
+    if not isinstance(prerequisites, dict):
+        invalid('provider.foundation.instance_prerequisites')
+    else:
+        selected.extend(('provider.foundation.instance_prerequisites.template', row.get('template') if isinstance(row, dict) else None)
+                        for row in prerequisites.values())
+    for field, reference in selected:
+        if (not isinstance(reference, str) or not reference
+                or not re.fullmatch(r'[A-Za-z0-9_./-]+', reference)
+                or any(part in {'', '.', '..'} for part in reference.split('/'))
+                or Path(reference).suffix not in {'.yml', '.yaml'}):
+            invalid(field); continue
+        candidate = target / reference
+        if candidate.resolve() != candidate or not candidate.resolve().is_relative_to(target):
+            invalid(field); continue
+        if not candidate.is_file():
+            invalid(field, 'delivery-profile-template-missing'); continue
+        references.add(candidate.relative_to(root).as_posix())
+    return references, findings
+
+
 def report(root, source_revision=None, *, routes_only=False):
     root = root.resolve()
     catalog_path = root / 'scripts/repo/check-selection/checks.yml'
@@ -326,9 +362,12 @@ def report(root, source_revision=None, *, routes_only=False):
     if not isinstance(checks, dict): checks = {}
     requirements = {}
     declared = set()
-    references = {}
+    references, profile_references, profile_findings = {}, {}, {}
     for source, body in bodies.items():
         references[source] = {match.rstrip('.') for match in PATH.findall(body)}
+        if Path(source).name == 'target-profile.yml':
+            profile_references[source], profile_findings[source] = profile_templates(root, source, documents.get(source, {}))
+            references[source].update(profile_references[source])
         # Provider compositions and wrappers commonly use paths relative to themselves.
         for local in re.findall(r'(?<![A-Za-z0-9_.-])[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.(?:yml|yaml|py|sh|mjs)\b', body):
             candidate = (root / source).parent / local
@@ -423,12 +462,22 @@ def report(root, source_revision=None, *, routes_only=False):
                 module_exports[package['name'] + (export[1:] if export != '.' else '')] = candidate.resolve().relative_to(root).as_posix()
     trace_references = {}
     for source, body in bodies.items():
-        if Path(source).name == 'target-profile.yml': continue
+        if Path(source).name == 'target-profile.yml':
+            trace_references[source] = profile_references[source]
+            continue
         if source.startswith(('infra/', '.github/workflows/')):
             data = documents.get(source)
             semantic = json.dumps(data, default=str) if data else body
-        elif Path(source).suffix in {'.py', '.sh', '.mjs', '.ts'} and (not fixture_source(source) or source in operational):
+        elif Path(source).suffix in {'.py', '.sh', '.mjs', '.ts'}:
             semantic = '\n'.join(line for line in body.splitlines() if not line.lstrip().startswith(('#', '//')))
+            if fixture_source(source) and Path(source).suffix == '.py':
+                # Reached executable fixtures may import their real owners; even
+                # inline comments must not manufacture a consumer relationship.
+                try:
+                    semantic = tokenize.untokenize((token.type, token.string) for token in tokenize.generate_tokens(io.StringIO(body).readline)
+                                                  if token.type != tokenize.COMMENT)
+                except (tokenize.TokenError, IndentationError):
+                    semantic = ''
         else:
             continue
         trace_references[source] = {ref.rstrip('.') for ref in PATH.findall(semantic)}
@@ -454,6 +503,9 @@ def report(root, source_revision=None, *, routes_only=False):
             if added <= reached: break
             reached |= added
         route['trace_inputs'] = sorted(path for path in reached if path in bodies)
+        for source in reached:
+            for issue in profile_findings.get(source, []):
+                gap(issue['code'], issue['path'], field=issue['field'])
         for ref in reached: requirements.setdefault(ref, []).append(route['id'])
     # Image launch instructions independently reveal programs whose filenames
     # are not main.*; an index cannot be the only way to discover them.

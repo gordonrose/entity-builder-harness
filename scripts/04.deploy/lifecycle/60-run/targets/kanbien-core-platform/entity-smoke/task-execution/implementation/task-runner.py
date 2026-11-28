@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-runner
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -48,14 +48,24 @@ def require(allowed, code, reservation=None, task=None):
         raise RunnerFailure(code, reservation.get("operation_id") if reservation else None, task.get("taskArn") if task else None)
 
 
-def receipt_path(root, request, reservation):
+def receipt_path(root, request, reservation, *, storage=None):
     operation = request["environment"][CONTROL.OPERATIONS[request["workload"]][0]]
-    path = Path(root) / (request["workload"] + "-" + operation + "-" + reservation["operation_id"] + ".json")
+    label = request["workload"] + "-" + operation + "-" + reservation["operation_id"] + ".json"
+    if storage is not None:
+        return label
+    path = Path(root) / label
     CONTROL.no_symlinks(path)
     return path
 
 
-def read_receipt(path, reservation):
+def read_receipt(path, reservation, *, storage=None):
+    if storage is not None:
+        raw = storage.observe_receipt(path)
+        if raw is None:
+            return None
+        try: return EVIDENCE.validate_retained(json.loads(raw), reservation)
+        except (ValueError, TypeError, KeyError, UnicodeError, RecursionError):
+            raise RunnerFailure("task-retained-receipt-unavailable", reservation["operation_id"]) from None
     CONTROL.no_symlinks(path)
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
@@ -67,7 +77,11 @@ def read_receipt(path, reservation):
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError): raise RunnerFailure("task-retained-receipt-unavailable", reservation["operation_id"]) from None
 
 
-def retain(path, value, reservation):
+def retain(path, value, reservation, *, storage=None):
+    if storage is not None:
+        EVIDENCE.validate_retained(value, reservation)
+        raw = storage.retain_receipt(path, CONTROL.canonical(value) + b"\n")
+        return EVIDENCE.validate_retained(json.loads(raw), reservation)
     CONTROL.no_symlinks(path)
     EVIDENCE.validate_retained(value, reservation)
     try:
@@ -96,7 +110,8 @@ def fresh_enough(receipt, required_after):
 
 
 def run_owned_task(provider, store, key, request, receipt_root, *, required_after=None, preflight=None, revocation=None,
-                   clock=lambda: datetime.now(timezone.utc).isoformat(), monotonic=time.monotonic, sleep=time.sleep, on_progress=None):
+                   clock=lambda: datetime.now(timezone.utc).isoformat(), monotonic=time.monotonic, sleep=time.sleep, on_progress=None,
+                   evidence_storage=None):
     """Only the owning gated route may supply the live provider capability.
 
     An immutable retained receipt is historical proof for this exact reserved
@@ -111,10 +126,13 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
     is_unready = request["workload"] == "verifier" and request["environment"][selector] == "unready"
     require(revocation is None or is_unready, "task-revocation-context-not-applicable")
     require(not is_unready or preflight is None, "task-unready-not-readiness-admission")
+    require(evidence_storage is None or not is_unready, "task-remote-revocation-unsupported")
     if is_preflight:
         try: PREFLIGHT.validate_launch(request)
         except (PREFLIGHT.PreflightFailure, PREFLIGHT.CONTROL.TaskFailure) as failure: raise RunnerFailure(failure.code) from None
-    CONTROL.no_symlinks(Path(receipt_root))
+    if evidence_storage is None:
+        CONTROL.no_symlinks(Path(receipt_root))
+    retained = {} if evidence_storage is None else {"storage": evidence_storage}
     previous = store.read(key, request)
     def guarded_admission(call):
         try: return call()
@@ -127,13 +145,13 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
         required_after = max([after, *([] if required_after is None else [required_after])], key=EVIDENCE.timestamp)
     if previous is not None:
         if not is_preflight and not is_unready:
-            original_after = guarded_admission(lambda: PREFLIGHT.read_admission(receipt_root, previous))
+            original_after = guarded_admission(lambda: PREFLIGHT.read_admission(receipt_root, previous, **retained))
             required_after = max([original_after, *([] if required_after is None else [required_after])], key=EVIDENCE.timestamp)
-        path = receipt_path(receipt_root, request, previous)
-        retained = read_receipt(path, previous)
-        if retained is not None:
-            fresh_enough(retained, required_after)
-            return {"receipt": retained, "path": path, "reused": True}
+        path = receipt_path(receipt_root, request, previous, **retained)
+        previous_receipt = read_receipt(path, previous, **retained)
+        if previous_receipt is not None:
+            fresh_enough(previous_receipt, required_after)
+            return {"receipt": previous_receipt, "path": path, "reused": True}
     if previous is None and not is_preflight and not is_unready:
         require(isinstance(preflight, dict) and set(preflight) == {"reservation", "receipt", "label"} and required_after is not None, "task-preflight-receipt-required")
         checked = guarded_admission(lambda: PREFLIGHT.require_receipt(request, preflight["reservation"], preflight["receipt"], expected_preflight_label=preflight["label"], current_time=clock(), required_after=required_after))
@@ -144,7 +162,7 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
         if is_unready:
             guarded_admission(lambda: UNREADY.retain_admission(receipt_root, reservation, revocation, clock()))
         elif not is_preflight:
-            guarded_admission(lambda: PREFLIGHT.retain_admission(receipt_root, reservation, preflight, state_required_after, clock()))
+            guarded_admission(lambda: PREFLIGHT.retain_admission(receipt_root, reservation, preflight, state_required_after, clock(), **retained))
     reservation, current = CONTROL.invoke_once(provider, store, key, request, before_submit=before_submit)
     if is_unready:
         after = guarded_admission(lambda: UNREADY.read_admission(receipt_root, reservation, revocation))
@@ -152,16 +170,16 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
     elif not is_preflight:
         # Another process may reserve between the initial read and reserve.
         # Its original admission is still required before collecting evidence.
-        original_after = guarded_admission(lambda: PREFLIGHT.read_admission(receipt_root, reservation))
+        original_after = guarded_admission(lambda: PREFLIGHT.read_admission(receipt_root, reservation, **retained))
         required_after = max([original_after, *([] if required_after is None else [required_after])], key=EVIDENCE.timestamp)
-    path = receipt_path(receipt_root, request, reservation)
+    path = receipt_path(receipt_root, request, reservation, **retained)
     def progress(phase):
         if on_progress is not None:
             try: on_progress({"phase": phase, "operation_id": reservation["operation_id"], "task": current["taskArn"]})
             except Exception: pass
     def observe(previous):
         try:
-            return CONTROL.TASKS.describe_task(provider, cluster=CONTROL.CLUSTER, arn=previous["taskArn"],
+            return CONTROL.TASKS.describe_task(provider, cluster=CONTROL.runtime(request)["cluster"], arn=previous["taskArn"],
                 validate_task=lambda task: CONTROL.exact_task(task, reservation))
         except CONTROL.TASKS.TaskFailure as failure:
             code = "task-observation-identity-mismatch" if failure.code == "observation-identity-mismatch" else "task-observation-unavailable-reconcile-only"
@@ -176,6 +194,6 @@ def run_owned_task(provider, store, key, request, receipt_root, *, required_afte
     except Exception: raise RunnerFailure("task-log-observation-unavailable", reservation["operation_id"], current["taskArn"]) from None
     observation = EVIDENCE.collect(current, reservation, response, clock())
     fresh_enough(observation, required_after)
-    retained = retain(path, observation, reservation)
+    retained = retain(path, observation, reservation, **retained)
     progress("terminal-proof-retained")
     return {"receipt": retained, "path": path, "reused": False}

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-runner
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -39,21 +39,24 @@ instant = lambda seconds: (base + timedelta(seconds=seconds)).isoformat()
 
 
 class Provider:
-    def __init__(self, lost=False, running=False, failed=False, offset=0, startup_reason=False):
+    def __init__(self, lost=False, running=False, failed=False, offset=0, startup_reason=False, request=None):
         self.calls, self.remote, self.lost, self.running, self.failed = [], None, lost, running, failed
+        self.request = REQUEST if request is None else request
+        self.runtime = RUNNER.CONTROL.runtime(self.request)
         self.offset, self.operation = offset, "ready"
         self.startup_reason = startup_reason
     def __call__(self, service, operation, **parameters):
         self.calls.append((service, operation, parameters))
+        if service == "ecs": assert parameters["cluster"] == self.runtime["cluster"]
         if operation == "run-task":
             self.operation = next(item["value"] for item in parameters["overrides"]["containerOverrides"][0]["environment"] if item["name"] == "ENTITY_SMOKE_VERIFICATION_OPERATION")
-            self.remote = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "2" * 32, "taskDefinitionArn": REQUEST["definition"], "startedBy": parameters["startedBy"], "overrides": parameters["overrides"],
+            self.remote = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/" + self.runtime["cluster_arn"].rsplit("/", 1)[1] + "/" + "2" * 32, "taskDefinitionArn": self.request["definition"], "startedBy": parameters["startedBy"], "overrides": parameters["overrides"],
                            "lastStatus": "RUNNING", "launchType": "FARGATE", "createdAt": instant(1 + self.offset), "startedAt": instant(2 + self.offset), "stoppedAt": instant(3 + self.offset), "stoppedReason": CANARY,
-                           "containers": [{"name": "entity-smoke-verifier", "imageDigest": IMAGE, "exitCode": 1 if self.failed else 0}]}
+                           "containers": [{"name": self.runtime["container_name"], "imageDigest": IMAGE, "exitCode": 1 if self.failed else 0}]}
             if self.startup_reason is not False:
                 self.remote.update(lastStatus="STOPPED", stopCode="TaskFailedToStart", stoppedReason=self.startup_reason)
                 self.remote.pop("startedAt")
-                self.remote["containers"] = [{"name": "entity-smoke-verifier"}]
+                self.remote["containers"] = [{"name": self.runtime["container_name"]}]
             if self.lost: raise OSError(CANARY)
             return {"tasks": [copy.deepcopy(self.remote)]}
         if operation == "list-tasks": return {"taskArns": [self.remote["taskArn"]] if parameters["desiredStatus"] == "STOPPED" else []}
@@ -61,7 +64,8 @@ class Provider:
             self.remote["lastStatus"] = "RUNNING" if self.running else "STOPPED"
             return {"tasks": [copy.deepcopy(self.remote)]}
         assert (service, operation) == ("logs", "get-log-events")
-        assert parameters["limit"] == 1000 and parameters["logStreamName"].startswith("entity-smoke-verifier/entity-smoke-verifier/")
+        assert parameters["limit"] == 1000 and parameters["logGroupName"] == self.runtime["log_group"]
+        assert parameters["logStreamName"].startswith(self.runtime["log_stream_prefix"] + "/" + self.runtime["container_name"] + "/")
         if self.failed:
             records = [{"verdict": "failed", "code": "ENTITY_SMOKE_OPERATION_NOT_CONFIRMED", "diagnostic": {"schema": "core/diagnostic-record/v1", "code": "entity-smoke-target.proof-failed", "definitionVersion": 1, "detail": {"operation": "ready", "step": "readiness", "condition": "status-mismatch", "effect": "not-assessed"}}}]
             if parameters.get("nextToken") == "body-page":
@@ -265,5 +269,29 @@ with tempfile.TemporaryDirectory(prefix="entity-smoke-task-runner-") as temporar
     fails(lambda: RUNNER.run_owned_task(wrong_negative_result, RUNNER.CONTROL.AttemptStore(root / "healthy-not-unready"), "negative", negative, root / "healthy-not-unready-receipts",
                                        revocation=revoked, clock=lambda: instant(4), monotonic=monotonic, sleep=lambda _seconds: None), "task-http-result-not-confirmed", RUNNER.EVIDENCE.EvidenceFailure)
     assert not list((root / "healthy-not-unready-receipts").glob("verifier-*.json"))
+    binding_spec = importlib.util.spec_from_file_location("entity_runner_runtime_binding_fixture", Path(__file__).with_name("task-binding-test.py"))
+    BINDING = importlib.util.module_from_spec(binding_spec); binding_spec.loader.exec_module(BINDING)
+    runtime_request = BINDING.bound_request(REQUEST)
+    runtime_provider = Provider(lost=True, request=runtime_request)
+    runtime_store = RUNNER.CONTROL.AttemptStore(root / "runtime-attempts")
+    fails(lambda: RUNNER.run_owned_task(runtime_provider, runtime_store, "ready", runtime_request, root / "runtime-receipts",
+                                       clock=lambda: instant(4), monotonic=monotonic, sleep=lambda _seconds: None),
+          "task-submission-uncertain-reconcile-required", RUNNER.CONTROL.TaskFailure)
+    runtime_result = RUNNER.run_owned_task(runtime_provider, runtime_store, "alias", runtime_request, root / "runtime-receipts",
+                                         clock=lambda: instant(4), monotonic=monotonic, sleep=lambda _seconds: None)
+    assert runtime_result["receipt"]["task"]["arn"].startswith("arn:aws:ecs:eu-west-1:337159794548:task/session-check/")
+    assert sum(operation == "run-task" for _, operation, _ in runtime_provider.calls) == 1
+    assert any(operation == "describe-tasks" for _, operation, _ in runtime_provider.calls)
+    assert all(parameters["cluster"] == "arn:aws:ecs:eu-west-1:337159794548:cluster/session-check"
+               for service, _, parameters in runtime_provider.calls if service == "ecs")
+    assert all(parameters["logGroupName"] == "/aws/ecs/session-check" and parameters["logStreamName"].startswith("checked-verifier/renamed-verifier/")
+               for service, _, parameters in runtime_provider.calls if service == "logs")
+    before = len(runtime_provider.calls)
+    assert RUNNER.run_owned_task(runtime_provider, runtime_store, "third", runtime_request, root / "runtime-receipts")["reused"] is True
+    assert len(runtime_provider.calls) == before
+    changed = {**runtime_request, "runtime": {**runtime_request["runtime"], "cluster_arn": runtime_request["runtime"]["cluster_arn"] + "-foreign"}}
+    fails(lambda: RUNNER.run_owned_task(runtime_provider, runtime_store, "fourth", changed, root / "runtime-receipts"),
+          "attempt-reservation-mismatch", RUNNER.CONTROL.TaskFailure)
+    assert len(runtime_provider.calls) == before
 print(json.dumps({"schema": "deploy/entity-smoke-task-runner-fixture/v1", "verdict": "passed", "provider_observation": False,
                   "cases": ["terminal-proof-retained", "unchanged-historical-reuse", "minimum-observer-time", "lost-launch-reconciliation", "no-second-launch", "deadline-no-implicit-recovery", "all-bounded-failure-observations", "reporter-isolation", "business-preflight-before-reservation", "stale-proof-no-effects", "durable-admission-before-provider", "missing-or-changed-admission-blocks", "lost-business-launch-original-admission-only", "unready-matching-collected-revocation", "unready-invalid-evidence-before-effects", "unready-bound-and-closed-overrides", "unready-durable-admission", "unready-unchanged-historical-reuse", "unready-changed-or-missing-admission-blocks", "unready-cannot-admit-business", "unready-lost-response-alternate-key-no-replay", "unready-after-revocation", "unready-stale-revocation-no-launch"]}))

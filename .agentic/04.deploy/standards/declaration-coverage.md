@@ -4,7 +4,7 @@ id: deploy.standards.declaration-coverage
 version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-11-16"
+updated_on: "2026-11-27"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -198,6 +198,16 @@ resolved implementation. Missing registration or an unsupported executable
 relationship is a coverage gap; a registered neighboring command is not a
 substitute. The inventory owns bounded supported syntax and emits explicit
 unsupported relationships instead of evaluating arbitrary shell code.
+
+For an explicitly reached target profile, follow only its declared foundation
+template and instance-prerequisite template fields, resolving their relative
+paths against that profile's target root. Arbitrary profile text, sibling
+targets and unrelated template files must not establish a delivery route.
+An explicitly reached executable proof fixture may contribute its actual source
+references to the same transitive route trace. This does not change the fixture's
+effect classification or make catalogue input membership, unrelated fixtures,
+comments or governance citations into delivery consumers. Reject unsupported
+or escaping declared template paths instead of treating them as covered.
 
 Automatic delivery CI must cover the declared delivery inputs and normal pull
 request updates. The current executable contract permits unrestricted pull

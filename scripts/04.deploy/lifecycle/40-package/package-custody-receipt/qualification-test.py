@@ -2,22 +2,28 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.package-qualification-binding
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
 #   kind: script
-#   purpose: Exercise publication qualification omission, substitution and immutable artifact binding through real CLIs.
+#   purpose: Exercise publication qualification, authenticated custody acquisition and immutable artifact binding through real CLIs.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only, writes-files]
 #   used_by:
 #   - id: deploy.test.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh
+#   - id: deploy.test.aws.environment-sessions
+#     path: scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py
 """Exercise artifact/configuration binding and actual publication guard CLIs."""
 import copy
+import base64
+import hashlib
+import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -26,10 +32,345 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import yaml
+import zipfile
 
 ROOT=Path(__file__).resolve().parents[5]
 HELPER=ROOT/'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py'
+
+
+class CustodyAcquisitionFixture:
+    """Reusable real fake-gh process replies; never a qualified-success callback."""
+    def __init__(self, directory, publication=None, source_revision='a'*40, run_id=123):
+        self.root = Path(directory) / 'custody-acquisition'
+        self.root.mkdir()
+        self.state_path, self.calls_path = self.root / 'state.json', self.root / 'calls.jsonl'
+        self.state = {'api': {}, 'binary': {}, 'verify': {}, 'sequences': {}, 'fail': {}, 'repositories': {}, 'images': {}}
+        self.publications, self.receipts, self.requests = {}, {}, []
+        executable = self.root / 'gh'
+        executable.write_text('#!' + sys.executable + '\n' + '''import base64,json,os,sys
+from pathlib import Path
+state=json.loads(Path(os.environ['CUSTODY_FIXTURE_STATE']).read_text())
+path=Path(os.environ['CUSTODY_FIXTURE_CALLS']);args=sys.argv[1:]
+previous=[json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+with path.open('a') as stream:stream.write(json.dumps(args)+'\\n')
+if args==['attestation','verify','--help']:
+ key='help';value=state.get('help','--bundle-from-oci --source-ref --source-digest --signer-workflow --signer-digest --format --deny-self-hosted-runners')
+elif args[:1]==['api']:
+ key=args[-1];value=state['api'].get(key)
+elif args[:2]==['attestation','verify']:
+ key=args[2];value=state['verify'].get(key)
+else:sys.exit(90)
+if key in state['fail']:
+ print('credential-canary-value',file=sys.stderr);sys.exit(state['fail'][key])
+if key in state['sequences']:
+ index=sum(1 for call in previous if call==args);values=state['sequences'][key];value=values[min(index,len(values)-1)]
+if key in state['binary']:sys.stdout.buffer.write(base64.b64decode(state['binary'][key]))
+elif key=='help':print(value)
+elif value is not None:print(json.dumps(value))
+else:sys.exit(91)
+''')
+        executable.chmod(0o755)
+        self.environment = {'PATH': str(self.root) + os.pathsep + os.environ['PATH'],
+                            'CUSTODY_FIXTURE_STATE': str(self.state_path), 'CUSTODY_FIXTURE_CALLS': str(self.calls_path)}
+        if publication is None:
+            workflow = b'name: controlled custody fixture\n'
+            publication = {'target': 'example-target', 'account': '123456789012', 'region': 'eu-west-1',
+                'candidate': 'example-candidate', 'package': 'example-package', 'program': 'example-program', 'pipeline': 'example-custody',
+                'repository': 'example/package', 'repository_uri': '123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/package',
+                'repository_arn': 'arn:aws:ecr:eu-west-1:123456789012:repository/example/package',
+                'source_repository': 'example/source', 'workflow': '.github/workflows/publish-example.yml', 'source_ref': 'refs/heads/main',
+                'artifact_prefix': 'example-custody-', 'receipt_member': 'package-custody-receipt.json', 'workflow_sha256': hashlib.sha256(workflow).hexdigest()}
+        else:
+            workflow = (ROOT / publication['workflow']).read_bytes()
+        self.publication = copy.deepcopy(publication)
+        self.receipt = self.add(publication, source_revision, run_id, workflow_bytes=workflow)
+
+    def add(self, publication, source_revision='a'*40, run_id=123, *, workflow_bytes=None):
+        p = copy.deepcopy(publication)
+        workflow_bytes = (ROOT / p['workflow']).read_bytes() if workflow_bytes is None else workflow_bytes
+        repository_id = int(hashlib.sha256(p['source_repository'].encode()).hexdigest()[:8], 16) + 1
+        workflow_id = int(hashlib.sha256(p['workflow'].encode()).hexdigest()[:8], 16) + 1
+        digest = 'sha256:' + hashlib.sha256(('qualified:' + p['pipeline']).encode()).hexdigest()
+        runnable = 'sha256:' + hashlib.sha256(('runnable:' + p['pipeline']).encode()).hexdigest()
+        receipt = {'schema': 'deploy/package-custody-receipt/v1', 'target': p['target'], 'environment_class': 'private-fixture',
+            'provider_region_alias': 'aws-' + p['region'], 'candidate_id': p['candidate'], 'package_contract_id': p['package'],
+            'program_id': p['program'], 'source_revision': source_revision, 'image_digest': digest,
+            'release_identity': 'source-' + source_revision, 'checked_at': '2026-11-27T00:00:00+00:00',
+            'checks': {name: 'passed' for name in ('runnable_program_contract', 'dependency_boundary', 'delivery_access_static',
+                'delivery_access_live', 'local_image_smoke', 'sbom', 'provenance_attestation', 'ecr_scan')},
+            'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + str(run_id)}
+        self.publications[run_id], self.receipts[run_id] = p, receipt
+        base = 'repos/' + p['source_repository']
+        repository = {'id': repository_id, 'full_name': p['source_repository']}
+        run = {'id': run_id, 'run_attempt': 1, 'workflow_id': workflow_id, 'path': p['workflow'], 'head_sha': source_revision,
+               'head_branch': p['source_ref'].removeprefix('refs/heads/'), 'event': 'workflow_dispatch', 'status': 'completed', 'conclusion': 'success',
+               'repository': repository, 'head_repository': repository}
+        self.state['api'].update({base: repository, base + '/actions/runs/' + str(run_id): run,
+            base + '/actions/workflows/' + str(workflow_id): {'id': workflow_id, 'path': p['workflow']},
+            base + '/contents/' + p['workflow'] + '?ref=' + source_revision:
+                {'type': 'file', 'path': p['workflow'], 'encoding': 'base64', 'size': len(workflow_bytes),
+                 'content': base64.b64encode(workflow_bytes).decode()}})
+        self.state['api'][base + '/actions/runs/' + str(run_id) + '/artifacts?per_page=100&page=1'] = {'total_count': 1, 'artifacts': [
+            {'id': run_id + 10000, 'name': p['artifact_prefix'] + str(run_id), 'expired': False,
+             'workflow_run': {'id': run_id, 'repository_id': repository_id, 'head_repository_id': repository_id,
+                              'head_branch': p['source_ref'].removeprefix('refs/heads/'), 'head_sha': source_revision}}]}
+        repository_url = 'https://github.com/' + p['source_repository']
+        workflow_url = repository_url + '/' + p['workflow'] + '@' + p['source_ref']
+        certificate = {'issuer': 'https://token.actions.githubusercontent.com', 'sourceRepositoryURI': repository_url,
+            'sourceRepositoryIdentifier': str(repository_id), 'sourceRepositoryDigest': source_revision, 'sourceRepositoryRef': p['source_ref'],
+            'buildSignerURI': workflow_url, 'buildSignerDigest': source_revision, 'buildConfigURI': workflow_url, 'buildConfigDigest': source_revision,
+            'buildTrigger': 'workflow_dispatch', 'runnerEnvironment': 'github-hosted',
+            'runInvocationURI': repository_url + '/actions/runs/' + str(run_id) + '/attempts/1'}
+        self.state['verify']['oci://' + p['repository_uri'] + '@' + digest] = [{'verificationResult': {
+            'signature': {'certificate': certificate}, 'verifiedTimestamps': [{'type': 'Tlog', 'timestamp': '2026-11-27T00:00:00Z'}],
+            'statement': {'predicateType': 'https://slsa.dev/provenance/v1',
+                          'subject': [{'name': p['repository_uri'], 'digest': {'sha256': digest[7:]}}]}}}]
+        self.state['repositories'][p['repository']] = {'repositories': [{'repositoryName': p['repository'], 'repositoryUri': p['repository_uri'],
+            'imageTagMutability': 'IMMUTABLE', 'imageScanningConfiguration': {'scanOnPush': True}}]}
+        self.state['images'][p['repository']] = {'qualified': digest, 'runnable': runnable}
+        self.set_archive(run_id)
+        return copy.deepcopy(receipt)
+
+    def set_archive(self, run_id=123, entries=None):
+        p = self.publications[run_id]
+        contents = [(p['receipt_member'], json.dumps(self.receipts[run_id]).encode())] if entries is None else entries
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+            for name, value in contents: archive.writestr(name, value)
+        raw = stream.getvalue()
+        base = 'repos/' + p['source_repository']
+        row = self.state['api'][base + '/actions/runs/' + str(run_id) + '/artifacts?per_page=100&page=1']['artifacts'][0]
+        row.update(size_in_bytes=len(raw), digest='sha256:' + hashlib.sha256(raw).hexdigest())
+        self.state['binary'][base + '/actions/artifacts/' + str(run_id + 10000) + '/zip'] = base64.b64encode(raw).decode()
+        self.write()
+
+    def write(self):
+        self.state_path.write_text(json.dumps(self.state))
+
+    def calls(self):
+        return [json.loads(line) for line in self.calls_path.read_text().splitlines()] if self.calls_path.exists() else []
+
+    def aws(self, service, operation, **arguments):
+        self.requests.append((service, operation, copy.deepcopy(arguments)))
+        if service != 'ecr': raise AssertionError('unexpected provider service')
+        if operation == 'describe-repositories': return copy.deepcopy(self.state['repositories'][arguments['repositoryNames'][0]])
+        image = self.state['images'][arguments['repositoryName']]
+        if operation == 'batch-get-image':
+            if arguments['imageIds'] != [{'imageDigest': image['qualified']}]: raise AssertionError('wrong qualified image')
+            manifest = {'mediaType': 'application/vnd.oci.image.index.v1+json', 'manifests': [
+                {'mediaType': 'application/vnd.oci.image.manifest.v1+json', 'digest': image['runnable'], 'platform': {'architecture': 'amd64', 'os': 'linux'}}]}
+            return {'images': [{'imageId': {'imageDigest': image['qualified']}, 'imageManifest': json.dumps(manifest)}]}
+        if operation == 'describe-image-scan-findings':
+            return {'repositoryName': arguments['repositoryName'], 'imageId': arguments['imageId'],
+                    'imageScanStatus': {'status': 'COMPLETE'}, 'imageScanFindings': {'findingSeverityCounts': image.get('severity', {})}}
+        raise AssertionError('unexpected provider operation')
+
+
+class CustodyAcquisitionTests(unittest.TestCase):
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location('custody_acquisition_fixture', HELPER.with_name('acquire.py'))
+        self.owner = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.owner)
+        self.temporary = tempfile.TemporaryDirectory(); self.addCleanup(self.temporary.cleanup)
+        self.fixture = CustodyAcquisitionFixture(self.temporary.name)
+        self.patch = patch.dict(os.environ, self.fixture.environment); self.patch.start(); self.addCleanup(self.patch.stop)
+        self.p = self.fixture.publication
+        self.base = 'repos/' + self.p['source_repository']
+        self.run_path = self.base + '/actions/runs/123'
+        self.artifacts_path = self.run_path + '/artifacts?per_page=100&page=1'
+        self.image = 'oci://' + self.p['repository_uri'] + '@' + self.fixture.receipt['image_digest']
+
+    def acquire(self, **changes):
+        return self.owner.acquire_custody(**{'publication': self.p, 'run_id': 123, 'expected_source_revision': 'a'*40,
+                                           'aws_provider': self.fixture.aws, **changes})
+
+    def failure(self, reason, **changes):
+        with self.assertRaises(self.owner.AcquisitionFailure) as raised: self.acquire(**changes)
+        self.assertEqual(raised.exception.code, 'custody-acquisition-' + reason)
+        self.assertNotIn('credential-canary', str(raised.exception))
+
+    def test_actual_transport_receipt_certificate_and_distinct_manifest_handoff(self):
+        result = self.acquire()
+        self.assertEqual(result['receipt'], self.fixture.receipt)
+        evidence = dict(result['evidence'])
+        self.assertIsInstance(result['evidence'], tuple)
+        with self.assertRaises(TypeError): result['evidence'][0][1] = 'changed'
+        self.assertEqual(evidence['image_digest'], self.fixture.receipt['image_digest'])
+        self.assertNotEqual(evidence['image_digest'], evidence['runnable_digest'])
+        self.assertEqual((evidence['run_id'], evidence['run_attempt']), (123, 1))
+        calls = self.fixture.calls()
+        self.assertEqual(sum(call[-1] == self.run_path for call in calls), 2)
+        self.assertEqual(sum(call[-1] == self.artifacts_path for call in calls), 2)
+        verify = next(call for call in calls if call[:3] == ['attestation', 'verify', self.image])
+        self.assertIn('--bundle-from-oci', verify)
+        self.assertEqual(verify[verify.index('--source-digest') + 1], 'a'*40)
+        self.assertEqual(verify[verify.index('--signer-workflow') + 1], self.p['source_repository'] + '/' + self.p['workflow'])
+        self.assertEqual(self.fixture.requests[-1][2]['imageId'], {'imageDigest': evidence['runnable_digest']})
+        self.assertFalse(any('https://' in str(value) or 'credential' in str(value) for value in evidence.values()))
+
+    def test_closed_selection_and_missing_verifier_fail_before_remote_or_provider_use(self):
+        for changes in ({'run_id': True}, {'run_id': 0}, {'run_id': '123'}, {'expected_source_revision': 'private-canary'},
+                        {'publication': {**self.p, 'extra': 'private-canary'}}, {'publication': {**self.p, 'source_ref': 'refs/tags/task'}},
+                        {'publication': {**self.p, 'receipt_member': '../receipt.json'}}, {'publication': {**self.p, 'repository_uri': 'foreign'}},
+                        {'aws_provider': None}):
+            self.failure('selection-invalid', **changes)
+        self.assertEqual(self.fixture.calls(), [])
+        self.fixture.state['fail']['help'] = 1; self.fixture.write()
+        self.failure('verifier-unavailable')
+        self.assertEqual(self.fixture.requests, [])
+
+    def test_transport_limits_json_and_provider_failures_have_finite_private_causes(self):
+        baseline = copy.deepcopy(self.fixture.state)
+        for raw, reason in ((b'{"id":1,"id":2}', 'json-invalid'), (b'NaN', 'json-invalid'),
+                            (b'credential-canary-value', 'json-invalid'), (b' ' * (self.owner.JSON_LIMIT + 1), 'response-too-large')):
+            self.fixture.state = copy.deepcopy(baseline)
+            self.fixture.state['binary'][self.base] = base64.b64encode(raw).decode(); self.fixture.write()
+            self.failure(reason)
+        self.fixture.state = copy.deepcopy(baseline); self.fixture.state['fail'][self.base] = 71; self.fixture.write()
+        self.failure('github-unavailable'); self.assertEqual(self.fixture.requests, [])
+        self.fixture.state = baseline; self.fixture.write()
+        class ProviderFailure(Exception):
+            def __init__(self, code): self.code = code
+        for code, reason in (('aws-access-denied', 'aws-access-denied'), ('credential-canary-value', 'provider-unavailable')):
+            def unavailable(*_args, **_kwargs): raise ProviderFailure(code)
+            self.failure(reason, aws_provider=unavailable)
+        self.assertIsInstance(self.owner.FAILURE_CODES, frozenset)
+        self.assertEqual(str(self.owner.AcquisitionFailure('credential-canary-value')), 'custody-acquisition-observation-invalid')
+
+    def test_two_publications_share_transport_without_sharing_digest_or_run_identity(self):
+        second = {**self.p, 'pipeline': 'other-custody', 'repository': 'other/package',
+                  'repository_uri': self.p['repository_uri'].replace('example/package', 'other/package'),
+                  'repository_arn': self.p['repository_arn'].replace('example/package', 'other/package')}
+        receipt = self.fixture.add(second, run_id=124, workflow_bytes=b'name: controlled custody fixture\n')
+        first = self.acquire()
+        result = self.acquire(publication=second, run_id=124)
+        self.assertEqual(result['receipt'], receipt)
+        self.assertNotEqual(result['receipt']['image_digest'], first['receipt']['image_digest'])
+        self.assertEqual(dict(result['evidence'])['run_id'], 124)
+        for run_id in (123, 124):
+            self.assertEqual(sum(call[-1] == self.base + '/actions/runs/' + str(run_id) for call in self.fixture.calls()), 2)
+
+    def test_exact_task_ref_survives_real_transport_and_rejects_relabelled_main(self):
+        self.p['source_ref'] = 'refs/heads/chat/2026-11-26-22-09-reducing-aws-bill'
+        self.fixture.add(self.p, workflow_bytes=b'name: controlled custody fixture\n')
+        result = self.acquire()
+        self.assertEqual(result['receipt'], self.fixture.receipt)
+        verify = next(call for call in self.fixture.calls() if call[:3] == ['attestation', 'verify', self.image])
+        self.assertEqual(verify[verify.index('--source-ref') + 1], self.p['source_ref'])
+        baseline = copy.deepcopy(self.fixture.state)
+        mutations = [
+            (lambda s: s['api'][self.run_path].update(head_branch='main'), 'run-unconfirmed'),
+            (lambda s: s['api'][self.artifacts_path]['artifacts'][0]['workflow_run'].update(head_branch='main'), 'artifact-unconfirmed'),
+            (lambda s: s['verify'][self.image][0]['verificationResult']['signature']['certificate'].update(sourceRepositoryRef='refs/heads/main'), 'provenance-origin-mismatch'),
+            (lambda s: s['verify'][self.image][0]['verificationResult']['signature']['certificate'].update(buildSignerURI='https://github.com/' + self.p['source_repository'] + '/' + self.p['workflow'] + '@refs/heads/main'), 'provenance-origin-mismatch'),
+        ]
+        for mutate, reason in mutations:
+            self.fixture.state = copy.deepcopy(baseline); mutate(self.fixture.state); self.fixture.write()
+            self.fixture.requests.clear()
+            self.failure(reason)
+            self.assertEqual(self.fixture.requests, [])
+        with patch.object(self.owner.PUBLICATION, 'source_ref', side_effect=self.owner.PUBLICATION.PublicationFailure('publication-source-policy-invalid')) as checked:
+            self.failure('selection-invalid')
+            self.assertEqual(checked.call_count, 1)
+
+    def test_run_repository_workflow_and_source_predicates_are_observed(self):
+        baseline = copy.deepcopy(self.fixture.state)
+        changes = [(self.base, 'id', 0, 'repository-unconfirmed'),
+            (self.run_path, 'conclusion', 'failure', 'run-unconfirmed'), (self.run_path, 'event', 'push', 'run-unconfirmed'),
+            (self.run_path, 'status', 'in_progress', 'run-unconfirmed'), (self.run_path, 'head_branch', 'task', 'run-unconfirmed'),
+            (self.run_path, 'head_sha', 'b'*40, 'run-unconfirmed'), (self.run_path, 'path', '.github/workflows/other.yml', 'run-unconfirmed'),
+            (self.run_path, 'head_repository', {'id': 1, 'full_name': self.p['source_repository']}, 'run-unconfirmed')]
+        workflow_id = baseline['api'][self.run_path]['workflow_id']
+        changes.append((self.base + '/actions/workflows/' + str(workflow_id), 'path', '.github/workflows/foreign.yml', 'workflow-unconfirmed'))
+        for path, key, value, reason in changes:
+            self.fixture.state = copy.deepcopy(baseline); self.fixture.state['api'][path][key] = value; self.fixture.write()
+            with self.subTest(key=key): self.failure(reason)
+        self.fixture.state = baseline; self.fixture.write()
+        self.failure('workflow-source-mismatch', publication={**self.p, 'workflow_sha256': '0'*64})
+        self.assertEqual(self.fixture.requests, [])
+
+    def test_complete_pagination_and_unique_unexpired_bound_artifact(self):
+        original = copy.deepcopy(self.fixture.state)
+        row = original['api'][self.artifacts_path]['artifacts'][0]
+        changes = [({'total_count': 1, 'artifacts': []}, 'artifacts-incomplete'),
+                   ({'total_count': 0, 'artifacts': []}, 'artifact-unconfirmed'),
+                   ({'total_count': 2, 'artifacts': [row, {**row, 'id': 999}]}, 'artifact-unconfirmed'),
+                   ({'total_count': 2, 'artifacts': [row, row]}, 'artifacts-incomplete')]
+        for key, value in (('expired', True), ('digest', None), ('size_in_bytes', True), ('workflow_run', {})):
+            changes.append(({'total_count': 1, 'artifacts': [{**row, key: value}]}, 'artifact-unconfirmed'))
+        for document, reason in changes:
+            self.fixture.state = copy.deepcopy(original); self.fixture.state['api'][self.artifacts_path] = document; self.fixture.write()
+            self.failure(reason)
+        self.fixture.state = original
+        self.fixture.state['api'][self.artifacts_path] = {'total_count': 2, 'artifacts': [{'id': 1, 'name': 'unrelated'}]}
+        self.fixture.state['api'][self.artifacts_path.removesuffix('1') + '2'] = {'total_count': 2, 'artifacts': [row]}
+        self.fixture.write(); self.acquire()
+
+    def test_archive_digest_member_safety_and_receipt_bindings(self):
+        original = copy.deepcopy(self.fixture.state)
+        self.fixture.state['binary'][self.base + '/actions/artifacts/10123/zip'] = base64.b64encode(b'changed').decode()
+        self.fixture.write(); self.failure('archive-digest-mismatch')
+        self.fixture.state = original
+        archive_path = self.base + '/actions/artifacts/10123/zip'
+        corrupt = bytearray(base64.b64decode(self.fixture.state['binary'][archive_path]))
+        with zipfile.ZipFile(io.BytesIO(corrupt)) as archive:
+            entry = archive.getinfo(self.p['receipt_member'])
+            corrupt[entry.header_offset + 30 + len(entry.filename.encode()) + len(entry.extra)] = 255
+        self.fixture.state['binary'][archive_path] = base64.b64encode(corrupt).decode()
+        self.fixture.state['api'][self.artifacts_path]['artifacts'][0]['digest'] = 'sha256:' + hashlib.sha256(corrupt).hexdigest()
+        self.fixture.write(); self.failure('archive-invalid')
+        raw = json.dumps(self.fixture.receipt).encode()
+        link = zipfile.ZipInfo('linked.json'); link.create_system = 3; link.external_attr = 0o120777 << 16
+        for entries, reason in (([('../escape.json', raw)], 'archive-invalid'),
+                                ([('./receipt.json', raw)], 'archive-invalid'),
+                                ([('C:/receipt.json', raw)], 'archive-invalid'),
+                                ([(link, raw)], 'archive-invalid'),
+                                ([(self.p['receipt_member'], b'{' )], 'json-invalid'),
+                                ([('missing.json', raw)], 'receipt-missing'),
+                                ([(self.p['receipt_member'], b'x' * 65537)], 'receipt-invalid')):
+            self.fixture.set_archive(entries=entries); self.failure(reason)
+        for field, value, reason in (('provider_region_alias', 'aws-eu-west-2', 'receipt-region-mismatch'),
+                                    ('source_revision', 'b'*40, 'receipt-origin-mismatch'),
+                                    ('receipt_reference', 'github-actions-run:999', 'receipt-origin-mismatch'),
+                                    ('target', 'other-target', 'receipt-invalid')):
+            receipt = {**self.fixture.receipt, field: value}
+            self.fixture.set_archive(entries=[(self.p['receipt_member'], json.dumps(receipt).encode())]); self.failure(reason)
+
+    def test_verified_certificate_origin_cannot_be_replaced_by_predicate_claims(self):
+        baseline = copy.deepcopy(self.fixture.state)
+        for field in ('issuer', 'sourceRepositoryURI', 'sourceRepositoryIdentifier', 'sourceRepositoryDigest', 'sourceRepositoryRef',
+                      'buildSignerURI', 'buildSignerDigest', 'buildConfigURI', 'buildConfigDigest', 'buildTrigger', 'runnerEnvironment', 'runInvocationURI'):
+            self.fixture.state = copy.deepcopy(baseline)
+            result = self.fixture.state['verify'][self.image][0]['verificationResult']
+            result['statement']['predicate'] = copy.deepcopy(result['signature']['certificate'])
+            result['signature']['certificate'][field] = 'credential-canary-value'
+            self.fixture.write(); self.failure('provenance-origin-mismatch')
+        for value in ([], {}, None, [{'verificationResult': {}}]):
+            self.fixture.state = copy.deepcopy(baseline); self.fixture.state['verify'][self.image] = value; self.fixture.write()
+            self.failure('provenance-origin-mismatch' if value == [{'verificationResult': {}}] else 'provenance-unconfirmed')
+        self.fixture.state = baseline
+        self.fixture.state['verify'][self.image][0]['verificationResult']['statement']['subject'][0]['digest']['sha256'] = 'c'*64
+        self.fixture.write(); self.failure('provenance-subject-mismatch')
+        self.assertEqual(self.fixture.requests, [])
+
+    def test_repository_scan_and_final_origin_reobservation_are_required(self):
+        baseline = copy.deepcopy(self.fixture.state)
+        for change in (lambda row: row.update(imageTagMutability='MUTABLE'), lambda row: row.update(repositoryUri='foreign'),
+                       lambda row: row.update(imageScanningConfiguration=None), lambda row: row['imageScanningConfiguration'].update(scanOnPush=False)):
+            self.fixture.state = copy.deepcopy(baseline); change(self.fixture.state['repositories'][self.p['repository']]['repositories'][0]); self.fixture.write()
+            self.failure('publication-repository-not-confirmed')
+        self.fixture.state = copy.deepcopy(baseline); self.fixture.state['images'][self.p['repository']]['severity'] = {'HIGH': 1}; self.fixture.write()
+        self.failure('ecr-scan-blocked-severity')
+        self.fixture.state = copy.deepcopy(baseline)
+        first = self.fixture.state['api'][self.run_path]
+        self.fixture.state['sequences'][self.run_path] = [first, {**first, 'run_attempt': 2}]
+        self.fixture.calls_path.unlink(missing_ok=True); self.fixture.write(); self.failure('origin-changed')
+        self.fixture.state = copy.deepcopy(baseline)
+        first = self.fixture.state['api'][self.artifacts_path]
+        self.fixture.state['sequences'][self.artifacts_path] = [first, {**first, 'artifacts': [{**first['artifacts'][0], 'digest': 'sha256:' + 'f'*64}]}]
+        self.fixture.calls_path.unlink(missing_ok=True); self.fixture.write(); self.failure('origin-changed')
+
 
 class QualificationTests(unittest.TestCase):
     def test_shell_later_container_and_node_boundaries(self):
@@ -284,6 +625,19 @@ sys.exit(0)
                     nested=root/relative;nested.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,nested)
                 run(original,0)
                 if kind=='core-server-persistence':
+                    for change in ['omitted','conditional','suppressed','substituted','reordered','unprepared']:
+                        broken=copy.deepcopy(workflow);steps=broken['jobs'][job_name]['steps'];item=next(x for x in steps if x.get('name')=='Enforce approved source')
+                        if change=='omitted':steps.remove(item)
+                        elif change=='conditional':item['if']='false'
+                        elif change=='suppressed':item['continue-on-error']=True
+                        elif change=='substituted':item['run']='true'
+                        elif change=='reordered':steps.remove(item);steps.append(item)
+                        else:steps.remove(item);steps.insert(1,item)
+                        report=run(yaml.safe_dump(broken,sort_keys=False),1)
+                        self.assertIn({'code':'workflow-qualification-route-invalid'},report['findings'],change)
+                    broken=copy.deepcopy(workflow);broken['jobs'][job_name]['environment']='unprotected'
+                    report=run(yaml.safe_dump(broken,sort_keys=False),1)
+                    self.assertIn({'code':'workflow-qualification-route-invalid'},report['findings'])
                     for stage in ['Prove fixed delivery read access','Retain pre-publication identity','Retain safe failed-operation evidence']:
                         for change in ['omitted','suppressed','substituted','reordered']:
                             broken=copy.deepcopy(workflow);steps=broken['jobs'][job_name]['steps'];item=next(x for x in steps if x.get('name')==stage)
@@ -468,7 +822,7 @@ sys.exit(0)
     def test_missing_engine_is_unavailable_not_passed_cli(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);binary=root/'docker';binary.write_text('#!/bin/sh\nexit 1\n');binary.chmod(0o755)
-            for owner in ['lifecycle/40-package/build-core-server-image','lifecycle/40-package/smoke-test-core-server-image','smoke-test-platform-shell-image']:
+            for owner in ['lifecycle/40-package/build-core-server-image','lifecycle/40-package/smoke-test-core-server-image','legacy/kanbien-staging/smoke-test-platform-shell-image']:
                 result=subprocess.run(['bash',str(ROOT/'scripts/04.deploy'/owner/'script.sh'),'--allow-skip-without-engine'],cwd=ROOT,env={**os.environ,'PATH':str(root)+os.pathsep+os.environ['PATH']},capture_output=True,text=True,timeout=180)
                 self.assertEqual(result.returncode,77,result.stdout+result.stderr)
                 self.assertIn('SKIP:',result.stdout)

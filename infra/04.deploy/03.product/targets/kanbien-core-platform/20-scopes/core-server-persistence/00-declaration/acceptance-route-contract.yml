@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.acceptance-route
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -21,6 +21,7 @@
 #   - id: deploy.compiler.acceptance-route
 #     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
 schema: deploy/acceptance-route/v1
+initial_selection: {kind: ordered-commands/v1}
 ordinary_delivery:
   command: ordinary-update
   implementation: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ordinary-update.py
@@ -163,6 +164,22 @@ ordinary_update_inputs:
     owner: verify-candidate
     example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
 commands:
+  initial-bootstrap:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh, --operation, bootstrap-identities, --json]
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
+    effects: [aws-mutation, writes-files]
+  initial-migration:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh, --json]
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects: [aws-mutation, writes-files]
+  initial-grant-runtime:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh, --operation, grant-runtime-application-access, --json]
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
+    effects: [aws-mutation, writes-files]
+  initial-record:
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh, --mode, create, --json]
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects: [aws-mutation, writes-files]
   ordinary-update:
     argv: [bash, scripts/04.deploy/lifecycle/60-run/release-succession/ordinary-update.sh, --scope-contract, '{scope_contract}', --inputs, '{ordinary_update_inputs}', --plan-release, --json]
     owner: deploy.command.ordinary-update
@@ -656,6 +673,59 @@ commands:
     owner: deploy.command.release-succession
     effects:
     - writes-files
+# Initial candidate setup is not the complete release-qualification proof set.
+# Existing proof names below are references, not copied proof definitions.
+initial_setup:
+- id: bootstrap-identities
+  command: initial-bootstrap
+  phase: before-activation
+  workload: persistence-administration-task
+  proof:
+    proof_type: administration
+    operation: bootstrap-identities
+    result_code: PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
+- id: runtime-identity-initial-access
+  command: runtime-identity-initial-access
+  phase: before-activation
+  workload: persistence-administration-task
+  proof: runtime-identity-initial-access
+- id: migration
+  command: initial-migration
+  phase: before-activation
+  workload: persistence-migration-task
+  proof:
+    proof_type: migration
+    operation: apply
+    result_code: PERSISTENCE_MIGRATION_APPLIED
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+- id: grant-runtime
+  command: initial-grant-runtime
+  phase: before-activation
+  workload: persistence-administration-task
+  proof:
+    proof_type: administration
+    operation: grant-runtime-application-access
+    result_code: PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
+- id: effective-privilege
+  command: effective-privilege
+  phase: before-activation
+  workload: persistence-administration-task
+  proof: effective-privilege
+- id: original-record
+  command: initial-record
+  phase: after-activation
+  workload: private-release-verifier-task
+  proof:
+    proof_type: verifier
+    operation: create
+    result_code: KANBIEN_CORE_PERSISTENCE_RECORD_ACCEPTED
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
 proofs:
   migration-applied-state:
     command: migration-state-observation

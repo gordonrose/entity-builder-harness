@@ -1,0 +1,61 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.environment-session-controller.aws.publication-template
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-28"
+#   updated_on: "2026-11-28"
+#   layer: 04.deploy
+#   domain: deployment.environment-session-controller
+#   disciplines: [security, sre]
+#   kind: cloudformation-template
+#   purpose: Create only an immutable feature image repository and repository-limited publication identity without modifying accepted delivery roles.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.plan.disposable-test-environments
+#     path: docs/04.deploy/plans/disposable-test-environments.md
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Isolated controller image custody; no deployment or database authority.
+Parameters:
+  ExistingGitHubOidcProviderArn:
+    Type: String
+    AllowedPattern: '^arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com$'
+Resources:
+  ControllerRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: kanbien-core-platform/environment-session-controller
+      ImageTagMutability: IMMUTABLE
+      ImageScanningConfiguration: { ScanOnPush: true }
+      EncryptionConfiguration: { EncryptionType: AES256 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: environment-session-controller }]
+  ControllerPublisherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: github-kanbien-core-platform-session-publisher
+      Tags: [{ Key: Target, Value: kanbien-core-platform }, { Key: Scope, Value: environment-session-controller }]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Federated: !Ref ExistingGitHubOidcProviderArn }
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:gordonrose/entity-builder-harness:environment:kanbien-core-platform
+      Policies:
+        - PolicyName: publish-environment-session-controller-image-only
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:CompleteLayerUpload, ecr:DescribeImageScanFindings, ecr:DescribeImages, ecr:DescribeRepositories, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart]
+                Resource: !GetAtt ControllerRepository.Arn
+Outputs:
+  ControllerRepositoryUri: { Value: !GetAtt ControllerRepository.RepositoryUri }
+  ControllerRepositoryArn: { Value: !GetAtt ControllerRepository.Arn }
+  ControllerPublisherRoleArn: { Value: !GetAtt ControllerPublisherRole.Arn }

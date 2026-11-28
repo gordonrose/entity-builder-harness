@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-22"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -18,12 +18,34 @@
 #     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py
 """Fail-closed primitives for the existing publication workflow owners."""
 import shlex
+import re
 import yaml
 
 QUALIFICATION = "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py"
 
+class WorkflowLoader(yaml.SafeLoader):
+    """GitHub's on key is text; duplicate fields cannot replace a gate."""
+
+WorkflowLoader.yaml_implicit_resolvers = {key: [(tag, pattern) for tag, pattern in values
+    if tag != "tag:yaml.org,2002:bool"] for key, values in yaml.SafeLoader.yaml_implicit_resolvers.items()}
+WorkflowLoader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|false)$", re.I), list("tTfF"))
+
+def _workflow_mapping(loader, node, deep=False):
+    result = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str) or key in result:
+            raise ValueError("workflow-mapping-invalid")
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+WorkflowLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _workflow_mapping)
+
+def workflow_document(text):
+    return yaml.load(text, Loader=WorkflowLoader)
+
 def job_steps(text, job_name):
-    workflow = yaml.safe_load(text)
+    workflow = workflow_document(text)
     job = workflow["jobs"][job_name]
     for owner in (workflow, job):
         if owner.get("defaults", {}) != {} or "continue-on-error" in owner: raise ValueError("execution-defaults-overridden")

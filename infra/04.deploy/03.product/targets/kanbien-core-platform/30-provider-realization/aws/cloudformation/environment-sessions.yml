@@ -1,0 +1,493 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.infrastructure.environment-session-control
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-28"
+#   updated_on: "2026-11-28"
+#   layer: 04.deploy
+#   domain: deployment.environment-lifecycle
+#   disciplines: [security, sre]
+#   kind: cloudformation-template
+#   purpose: Keep versioned session evidence and an independently scheduled fixed cleanup worker outside disposable application stacks.
+#   portability: {class: internal, targets: [kanbien-core-platform]}
+#   used_by:
+#   - id: deploy.command.environment-sessions
+#     path: scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions/script.py
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Durable environment-session evidence and independent expiry; never a disposable application dependency.
+Parameters:
+  Records:
+    Type: String
+    AllowedPattern: '^kanbien-session-records-337159794548-eu-west-1$'
+  SessionId:
+    Type: String
+    AllowedPattern: '[a-f0-9]{32}'
+  ResourceNamePrefix:
+    Type: String
+    AllowedPattern: 's-[a-f0-9]{19}'
+  WorkerReady:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['false', 'true']
+  SetupOperatorArn:
+    Type: String
+    AllowedPattern: 'arn:aws:iam::[0-9]{12}:(?:role/[A-Za-z0-9+=,.@_/-]+|user/[A-Za-z0-9+=,.@_/-]+)'
+  SourceKey:
+    Type: String
+    Default: ''
+  SourceVersion:
+    Type: String
+    Default: ''
+  WorkerImage:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|337159794548\.dkr\.ecr\.eu-west-1\.amazonaws\.com/kanbien-core-platform/environment-session-controller@sha256:[a-f0-9]{64}'
+  ExpiresAt:
+    Type: String
+    AllowedPattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z'
+Rules:
+  ReadyRequiresPinnedSource:
+    RuleCondition: !Equals [!Ref WorkerReady, 'true']
+    Assertions:
+      - Assert: !Not [!Equals [!Ref SourceKey, '']]
+        AssertDescription: A qualified source object is required.
+      - Assert: !Not [!Equals [!Ref SourceVersion, '']]
+        AssertDescription: The immutable S3 source version is required.
+      - Assert: !Not [!Equals [!Ref SourceVersion, 'null']]
+        AssertDescription: An unversioned source is not admitted.
+      - Assert: !Not [!Equals [!Ref WorkerImage, '']]
+        AssertDescription: The worker image must be digest-pinned.
+Conditions:
+  Ready: !Equals [!Ref WorkerReady, 'true']
+Resources:
+  ForegroundRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-foreground'
+      MaxSessionDuration: 7200
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {AWS: !Ref SetupOperatorArn}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: bounded-session-invoker
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AbsoluteDeadline
+                Effect: Deny
+                Action: [cloudformation:CreateChangeSet, cloudformation:ExecuteChangeSet, ecs:RunTask, iam:PassRole]
+                Resource: '*'
+                Condition: &DeadlineCondition {DateGreaterThanEquals: {'aws:CurrentTime': !Ref ExpiresAt}}
+              - Effect: Allow
+                Action: [cloudformation:CreateChangeSet, cloudformation:ExecuteChangeSet]
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ResourceNamePrefix}-*/*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt CreationRole.Arn
+                Condition: {StringEquals: {'iam:PassedToService': cloudformation.amazonaws.com}}
+              - Effect: Allow
+                Action: ecs:RunTask
+                Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/${ResourceNamePrefix}-*:*'
+                Condition: {ArnEquals: {'ecs:cluster': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ResourceNamePrefix}'}}
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: &WorkloadRoles
+                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ResourceNamePrefix}-task-execution'
+                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ResourceNamePrefix}-persistence-*'
+                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ResourceNamePrefix}-entity-*'
+                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ResourceNamePrefix}-observability-*'
+                Condition: {StringEquals: {'iam:PassedToService': ecs-tasks.amazonaws.com}}
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource: !Sub 'arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${ResourceNamePrefix}-expiry:*'
+  WorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-cleanup-worker'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: codebuild.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+              ArnEquals: {'aws:SourceArn': !Sub 'arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/${ResourceNamePrefix}-cleanup'}
+      Policies:
+        - PolicyName: session-cleanup-invoker
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage]
+                Resource: !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/environment-session-controller'
+              - Effect: Allow
+                Action: [cloudformation:CreateChangeSet, cloudformation:ExecuteChangeSet, cloudformation:DeleteStack]
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ResourceNamePrefix}-*/*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt CleanupRole.Arn
+                Condition: {StringEquals: {'iam:PassedToService': cloudformation.amazonaws.com}}
+              - Effect: Allow
+                Action: ecs:StopTask
+                Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:task/${ResourceNamePrefix}/*'
+                Condition: {ArnEquals: {'ecs:cluster': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ResourceNamePrefix}'}}
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt WorkerLogs.Arn
+              - Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion]
+                Resource: !Sub 'arn:${AWS::Partition}:s3:::${Records}/sources/*'
+  CreationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-cfn-create'
+      AssumeRolePolicyDocument: &CloudFormationTrust
+        Version: '2012-10-17'
+        Statement: [{Effect: Allow, Principal: {Service: cloudformation.amazonaws.com}, Action: sts:AssumeRole}]
+      Policies:
+        - PolicyName: bounded-session-creation
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AbsoluteDeadline
+                Effect: Deny
+                Action: '*'
+                Resource: '*'
+                Condition: *DeadlineCondition
+              - Effect: Allow
+                Action: iam:CreateRole
+                Resource: *WorkloadRoles
+                Condition:
+                  ArnEquals: {'iam:PermissionsBoundary': !Ref WorkloadBoundary}
+                  StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}
+              - Effect: Allow
+                Action: [iam:PutRolePolicy, iam:UpdateAssumeRolePolicy]
+                Resource: *WorkloadRoles
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: iam:TagRole
+                Resource: *WorkloadRoles
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: *WorkloadRoles
+                Condition: {StringEquals: {'iam:PassedToService': ecs-tasks.amazonaws.com}}
+              - Effect: Allow
+                Action: [ec2:CreateVpc, ec2:CreateSubnet, ec2:CreateRouteTable, ec2:CreateSecurityGroup, ec2:CreateVpcEndpoint]
+                Resource: &NetworkResources
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc/*'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:subnet/*'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:route-table/*'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:security-group/*'
+                  - !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:vpc-endpoint/*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [ec2:CreateSubnet, ec2:CreateRouteTable, ec2:CreateSecurityGroup, ec2:CreateVpcEndpoint, ec2:AssociateRouteTable, ec2:ModifyVpcAttribute, ec2:AuthorizeSecurityGroupIngress, ec2:AuthorizeSecurityGroupEgress, ec2:RevokeSecurityGroupIngress, ec2:RevokeSecurityGroupEgress]
+                Resource: *NetworkResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: ec2:CreateTags
+                Resource: *NetworkResources
+                Condition:
+                  StringEquals:
+                    'aws:RequestTag/kanbien:session-id': !Ref SessionId
+                    ec2:CreateAction: [CreateVpc, CreateSubnet, CreateRouteTable, CreateSecurityGroup, CreateVpcEndpoint]
+              - Effect: Allow
+                Action: [ecs:CreateCluster, ecs:CreateService, ecs:RegisterTaskDefinition, ecs:TagResource]
+                Resource: &ContainerResources
+                  - !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ResourceNamePrefix}'
+                  - !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:service/${ResourceNamePrefix}/*'
+                  - !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/${ResourceNamePrefix}-*:*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [ecs:UpdateService, ecs:UpdateClusterSettings]
+                Resource: *ContainerResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [rds:CreateDBInstance, rds:CreateDBSubnetGroup, rds:AddTagsToResource]
+                Resource: &DatabaseResources
+                  - !Sub 'arn:${AWS::Partition}:rds:${AWS::Region}:${AWS::AccountId}:db:${ResourceNamePrefix}-*'
+                  - !Sub 'arn:${AWS::Partition}:rds:${AWS::Region}:${AWS::AccountId}:subgrp:${ResourceNamePrefix}-*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [logs:CreateLogGroup, logs:TagResource]
+                Resource: &SessionLogGroups
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/ecs/${ResourceNamePrefix}:*'
+                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/ecs/containerinsights/${ResourceNamePrefix}/performance:*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: logs:PutRetentionPolicy
+                Resource: *SessionLogGroups
+              - Effect: Allow
+                Action: [secretsmanager:CreateSecret, secretsmanager:TagResource]
+                Resource: &SessionSecrets
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${ResourceNamePrefix}-*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [secretsmanager:PutSecretValue, secretsmanager:GetSecretValue]
+                Resource: *SessionSecrets
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: secretsmanager:GetRandomPassword
+                Resource: '*'
+              - Effect: Allow
+                Action: [servicediscovery:CreatePrivateDnsNamespace, servicediscovery:CreateService, servicediscovery:TagResource]
+                Resource: &DiscoveryResources
+                  - !Sub 'arn:${AWS::Partition}:servicediscovery:${AWS::Region}:${AWS::AccountId}:namespace/*'
+                  - !Sub 'arn:${AWS::Partition}:servicediscovery:${AWS::Region}:${AWS::AccountId}:service/*'
+                Condition: {StringEquals: {'aws:RequestTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: servicediscovery:CreateService
+                Resource: !Sub 'arn:${AWS::Partition}:servicediscovery:${AWS::Region}:${AWS::AccountId}:namespace/*'
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: route53:CreateHostedZone
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    route53:VPCs: !Sub 'VPCId=${!aws:PrincipalTag/kanbien:session-vpc-id},VPCRegion=${AWS::Region}'
+                  'Null': {'aws:PrincipalTag/kanbien:session-vpc-id': 'false', 'route53:VPCs': 'false'}
+  CleanupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-cfn-cleanup'
+      AssumeRolePolicyDocument: *CloudFormationTrust
+      Policies:
+        - PolicyName: session-removal-only
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [ec2:DeleteVpcEndpoints, ec2:DeleteSecurityGroup, ec2:DeleteSubnet, ec2:DeleteRouteTable, ec2:DeleteVpc, ec2:DisassociateRouteTable, ec2:RevokeSecurityGroupIngress, ec2:RevokeSecurityGroupEgress]
+                Resource: *NetworkResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [ecs:UpdateService, ecs:DeleteService, ecs:DeleteCluster]
+                Resource: *ContainerResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: ecs:DeregisterTaskDefinition
+                Resource: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/${ResourceNamePrefix}-*:*'
+              - Effect: Allow
+                Action: [rds:DeleteDBInstance, rds:DeleteDBSubnetGroup]
+                Resource: *DatabaseResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [iam:DeleteRole, iam:DeleteRolePolicy]
+                Resource: *WorkloadRoles
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: *WorkloadRoles
+                Condition: {StringEquals: {'iam:PassedToService': ecs-tasks.amazonaws.com}}
+              - Effect: Allow
+                Action: logs:DeleteLogGroup
+                Resource: *SessionLogGroups
+              - Effect: Allow
+                Action: secretsmanager:DeleteSecret
+                Resource: *SessionSecrets
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+              - Effect: Allow
+                Action: [servicediscovery:DeleteNamespace, servicediscovery:DeleteService]
+                Resource: *DiscoveryResources
+                Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+  SessionReads:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub '${ResourceNamePrefix}-metadata'
+      Roles: [!Ref ForegroundRole, !Ref WorkerRole, !Ref CreationRole, !Ref CleanupRole]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: [sts:GetCallerIdentity, backup:ListBackupPlans, ec2:DescribeRegions, ec2:DescribeAvailabilityZones, ec2:DescribeManagedPrefixLists, ec2:DescribeVpcs, ec2:DescribeVpcAttribute, ec2:DescribeSubnets, ec2:DescribeRouteTables, ec2:DescribeVpcEndpoints, ec2:DescribeSecurityGroups, rds:DescribeDBInstances, rds:DescribeDBSubnetGroups, rds:DescribeDBSnapshots, rds:DescribeDBInstanceAutomatedBackups, route53:GetHostedZone, route53:GetChange, route53:ListHostedZonesByName, servicediscovery:GetNamespace, servicediscovery:GetService, servicediscovery:GetOperation, servicediscovery:ListTagsForResource, ecs:DescribeClusters, ecs:DescribeServices, ecs:DescribeTaskDefinition, ecs:DescribeTasks, ecs:ListTasks, ecs:ListTagsForResource, logs:DescribeLogGroups, iam:GetRole, iam:ListRolePolicies, iam:ListAttachedRolePolicies, iam:GetRolePolicy, iam:GetPolicy, iam:GetPolicyVersion, iam:ListRoleTags, secretsmanager:DescribeSecret, ecr:DescribeRepositories, ecr:DescribeImageScanFindings, ecr:GetAuthorizationToken, states:DescribeExecution, states:DescribeStateMachine, codebuild:BatchGetProjects, codebuild:BatchGetBuilds, s3:GetBucketVersioning, s3:GetEncryptionConfiguration, s3:GetBucketPolicy, s3:GetBucketPublicAccessBlock, s3:GetBucketOwnershipControls, s3:GetBucketLocation]
+            Resource: '*'
+          - Effect: Allow
+            Action: [logs:GetLogEvents, logs:DescribeLogStreams]
+            Resource: *SessionLogGroups
+          - Effect: Allow
+            Action: ecr:BatchGetImage
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/core-server'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
+          - Effect: Allow
+            Action: [cloudformation:DescribeStacks, cloudformation:DescribeStackEvents, cloudformation:ListStackResources, cloudformation:DescribeChangeSet, cloudformation:GetTemplate]
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ResourceNamePrefix}-*/*'
+              - !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/kanbien-environment-session-records/*'
+          - Effect: Allow
+            Action: [s3:GetObject, s3:GetObjectVersion, s3:PutObject]
+            Resource: !Sub 'arn:${AWS::Partition}:s3:::${Records}/sessions/*'
+  WorkloadBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub '${ResourceNamePrefix}-workloads'
+      Description: Maximum application-role permissions; never grants controller or evidence-store access.
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ExpireApplicationPermissions
+            Effect: Deny
+            Action: '*'
+            Resource: '*'
+            Condition: {DateGreaterThanEquals: {'aws:CurrentTime': !Ref ExpiresAt}}
+          - Sid: ImageAuthorization
+            Effect: Allow
+            Action: ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: QualifiedImagesReadOnly
+            Effect: Allow
+            Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage]
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/core-server'
+              - !Sub 'arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/kanbien-core-platform/entity-smoke'
+          - Sid: SessionLogsOnly
+            Effect: Allow
+            Action: [logs:CreateLogStream, logs:PutLogEvents]
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/ecs/${ResourceNamePrefix}:log-stream:*'
+          - Sid: SessionDatabaseIdentitiesOnly
+            Effect: Allow
+            Action: rds-db:connect
+            Resource: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:*/*'
+            Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+          - Sid: SessionAdministratorSecretOnly
+            Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${ResourceNamePrefix}-*'
+            Condition: {StringEquals: {'aws:ResourceTag/kanbien:session-id': !Ref SessionId}}
+  WorkerLogs:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/codebuild/${ResourceNamePrefix}-cleanup'
+      RetentionInDays: 14
+  Cleanup:
+    Type: AWS::CodeBuild::Project
+    Condition: Ready
+    Properties:
+      Name: !Sub '${ResourceNamePrefix}-cleanup'
+      ServiceRole: !GetAtt WorkerRole.Arn
+      Artifacts: {Type: NO_ARTIFACTS}
+      ConcurrentBuildLimit: 1
+      AutoRetryLimit: 0
+      TimeoutInMinutes: 10
+      QueuedTimeoutInMinutes: 10
+      Visibility: PRIVATE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Ref WorkerImage
+        ImagePullCredentialsType: SERVICE_ROLE
+        PrivilegedMode: false
+      Source:
+        Type: S3
+        Location: !Sub '${Records}/${SourceKey}'
+        BuildSpec: |
+          version: 0.2
+          phases:
+            build:
+              commands:
+                - /usr/local/bin/python3 -I -B /opt/controller/scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions/script.py cleanup --input "$CODEBUILD_SRC_DIR/session-input.json" --max-seconds 540
+      SourceVersion: !Ref SourceVersion
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref WorkerLogs
+  ExpiryRole:
+    Type: AWS::IAM::Role
+    Condition: Ready
+    Properties:
+      RoleName: !Sub '${ResourceNamePrefix}-expiry-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: states.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+              ArnEquals:
+                aws:SourceArn: !Sub 'arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${ResourceNamePrefix}-expiry'
+      Policies:
+        - PolicyName: fixed-cleanup-project
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: codebuild:StartBuild
+                Resource: !GetAtt Cleanup.Arn
+              - Effect: Allow
+                Action: [codebuild:BatchGetBuilds, codebuild:StopBuild]
+                Resource: !Sub 'arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:build/${ResourceNamePrefix}-cleanup:*'
+              - Effect: Allow
+                Action: [events:PutTargets, events:PutRule, events:DescribeRule]
+                Resource: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventForCodeBuildStartBuildRule'
+  Expiry:
+    Type: AWS::StepFunctions::StateMachine
+    Condition: Ready
+    Properties:
+      StateMachineName: !Sub '${ResourceNamePrefix}-expiry'
+      StateMachineType: STANDARD
+      RoleArn: !GetAtt ExpiryRole.Arn
+      Definition:
+        StartAt: SelectCleanupTime
+        States:
+          SelectCleanupTime:
+            Type: Choice
+            Choices:
+              - Variable: $.cleanup_now
+                BooleanEquals: true
+                Next: Cleanup
+            Default: WaitUntilExpiry
+          WaitUntilExpiry:
+            Type: Wait
+            Timestamp: !Ref ExpiresAt
+            Next: Cleanup
+          Cleanup:
+            Type: Task
+            Resource: !Sub 'arn:${AWS::Partition}:states:::codebuild:startBuild.sync'
+            Parameters: {ProjectName: !Ref Cleanup}
+            TimeoutSeconds: 900
+            Retry:
+              - ErrorEquals: [States.ALL]
+                IntervalSeconds: 60
+                BackoffRate: 1
+                MaxAttempts: 3
+            End: true
+  ExpiryVersion:
+    Type: AWS::StepFunctions::StateMachineVersion
+    Condition: Ready
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      StateMachineArn: !Ref Expiry
+      StateMachineRevisionId: !GetAtt Expiry.StateMachineRevisionId
+Outputs:
+  ForegroundRoleArn:
+    Value: !GetAtt ForegroundRole.Arn
+  WorkerRoleArn:
+    Value: !GetAtt WorkerRole.Arn
+  CreationRoleArn:
+    Value: !GetAtt CreationRole.Arn
+  CleanupRoleArn:
+    Value: !GetAtt CleanupRole.Arn
+  WorkloadBoundaryArn:
+    Value: !Ref WorkloadBoundary
+  RecordsBucket:
+    Value: !Ref Records
+  RecordsBucketArn:
+    Value: !Sub 'arn:${AWS::Partition}:s3:::${Records}'
+  CleanupProjectArn:
+    Condition: Ready
+    Value: !GetAtt Cleanup.Arn
+  ExpiryVersionArn:
+    Condition: Ready
+    Value: !Ref ExpiryVersion

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-11-27"
@@ -18,6 +18,14 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Proposed private foundation for kanbien-core-platform; no public ingress.
 
 Metadata:
+  TemporaryDefaultConditions: [CreateTargetBudget]
+  DiscardControls:
+    ContainerInsightsLogGroup:
+      type: AWS::Logs::LogGroup
+      attributes:
+        DeletionPolicy: {expected: Retain, discard: Delete}
+        UpdateReplacePolicy: {expected: Retain, discard: Delete}
+      properties: {}
   CreationControls:
     EnableDeliveryRole:
       kind: optional-resources
@@ -66,8 +74,16 @@ Conditions:
   CreateTargetBudget: !Equals [!Ref EnableTargetBudget, 'true']
 
 Resources:
+  ContainerInsightsLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      LogGroupName: !Sub '/aws/ecs/containerinsights/${ResourceNamePrefix}/performance'
+      Tags: [{ Key: Target, Value: !Ref ResourceNamePrefix }]
   Cluster:
     Type: AWS::ECS::Cluster
+    DependsOn: ContainerInsightsLogGroup
     Properties:
       ClusterName: !Ref ResourceNamePrefix
       ClusterSettings: [{ Name: containerInsights, Value: enabled }]
@@ -253,7 +269,11 @@ Resources:
 
 Outputs:
   VpcId: { Value: !Ref VpcId }
+  VpcCidr: { Value: !Ref VpcCidr }
   PrivateSubnetIds: { Value: !Join [',', !Ref PrivateSubnetIds] }
+  NamespaceId: { Value: !Ref Namespace }
+  EndpointSecurityGroupId: { Value: !Ref EndpointSecurityGroup }
+  S3ArtifactPrefixListId: { Value: !Ref S3ArtifactPrefixListId }
   RepositoryUri: { Value: !Ref ExistingRepositoryUri }
   ClusterArn: { Value: !GetAtt Cluster.Arn }
   LogGroupName: { Value: !Ref LogGroup }

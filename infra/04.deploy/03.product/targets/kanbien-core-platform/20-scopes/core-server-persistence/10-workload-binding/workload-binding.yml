@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.binding
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -37,17 +37,20 @@ workloads:
     workload_type: run-to-completion-task
     runtime_class: task
     provider_reference: CoreServerPersistenceVerifierTaskDefinition
+    security_group: {component: foundation, resource: VerifierSecurityGroup, parameter: VerifierSecurityGroupId, output: VerifierSecurityGroupId}
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts, command_description: node artifacts/kanbien-core-server-persistence-verifier.main.js }
   - id: persistence-migration-task
     workload_type: run-to-completion-task
     runtime_class: task
     provider_reference: CoreServerPersistenceMigrationTaskDefinition
+    security_group: {component: core-server-persistence, resource: MigrationSecurityGroup}
     required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts, command_description: node artifacts/kanbien-core-server-persistence-migration.main.js }
   - id: persistence-administration-task
     workload_type: run-to-completion-task
     runtime_class: task
     provider_reference: CoreServerPersistenceAdministrationTaskDefinition
+    security_group: {component: core-server-persistence, resource: AdministrationSecurityGroup}
     required_role_actions: { TaskRoleArn: ["rds-db:connect"], ExecutionRoleArn: ["secretsmanager:GetSecretValue"] }
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts, command_description: node artifacts/kanbien-core-server-persistence-administration.main.js }
   - id: persistence-restoration-verifier-task
@@ -59,6 +62,23 @@ proposed_provider_binding:
   stack: kanbien-core-platform-core-server-persistence
   publication_pipeline: core-server-persistence-package-custody
   dependencies: {}
+  execution_parameters:
+    VpcId: {kind: output, component: foundation, output: VpcId}
+    VpcCidr: {kind: output, component: foundation, output: VpcCidr}
+    PrivateSubnetIds: {kind: output, component: foundation, output: PrivateSubnetIds}
+    ClusterArn: {kind: output, component: foundation, output: ClusterArn}
+    NamespaceId: {kind: output, component: foundation, output: NamespaceId}
+    EndpointSecurityGroupId: {kind: output, component: foundation, output: EndpointSecurityGroupId}
+    S3ArtifactPrefixListId: {kind: output, component: foundation, output: S3ArtifactPrefixListId}
+    LogGroupName: {kind: output, component: foundation, output: LogGroupName}
+    VerifierSecurityGroupId: {kind: output, component: foundation, output: VerifierSecurityGroupId}
+    ImageRepositoryArn: {kind: source, field: repository_arn}
+    ImageRepositoryUri: {kind: source, field: repository_uri}
+    ImageDigest: {kind: package, field: image_digest}
+    SupportImageDigest: {kind: package, field: image_digest}
+    RestoreVerifierImageDigest: {kind: package, field: image_digest}
+    SourceRevision: {kind: package, field: source_revision}
+    ObservabilityAlertEmail: {kind: omit-if-unused}
   configuration_adapter: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
   template: 30-provider-realization/aws/cloudformation/core-server-persistence.yml
   workload_kind: ecs-fargate-service-and-run-to-completion-tasks

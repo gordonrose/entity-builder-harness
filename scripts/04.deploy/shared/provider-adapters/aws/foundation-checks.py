@@ -2,18 +2,20 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.foundation-checks
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-16"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [architecture, security, sre]
 #   kind: script
-#   purpose: Validate shared AWS foundation and private-network observations through caller-owned read access.
+#   purpose: Validate shared AWS foundation observations and proposed or existing private networks through caller-owned read access.
 #   portability: {class: reusable, targets: [entity-builder]}
 #   effects: [network]
 #   used_by:
+#   - id: deploy.library.aws.environment-sessions
+#     path: scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
 #   - id: deploy.plan.consolidate-core-platform-deployment-routes
 #     path: .agentic/04.deploy/plans/implementation/consolidate-core-platform-deployment-routes.md
 from ipaddress import IPv4Network
@@ -177,6 +179,53 @@ def s3_prefix_list(provider, region):
     require(bool(rows), "s3-prefix-missing")
     require(len(rows) == 1, "s3-prefix-ambiguous")
     return rows[0]["PrefixListId"]
+
+
+def private_network_choice_syntax(choices, region):
+    """Validate non-sensitive private ranges and zone names before retaining input."""
+    fields = {"vpc_cidr", "subnet_one_cidr", "subnet_two_cidr", "availability_zone_one", "availability_zone_two"}
+    require(isinstance(region, str)
+            and re.fullmatch(r"[a-z]{2}(?:-[a-z]+)+-[0-9]+", region) is not None,
+            "network-choice-context-invalid")
+    require(isinstance(choices, dict) and set(choices) == fields
+            and all(isinstance(value, str) for value in choices.values()), "network-choices-invalid")
+    private = tuple(IPv4Network(value) for value in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+    ranges = []
+    for field in ("vpc_cidr", "subnet_one_cidr", "subnet_two_cidr"):
+        try:
+            value = IPv4Network(choices[field], strict=True)
+        except ValueError:
+            raise FoundationFailure("foundation-network-cidr-invalid") from None
+        require(str(value) == choices[field], "network-cidr-invalid")
+        require(any(value.subnet_of(parent) for parent in private), "network-cidr-not-private")
+        require(16 <= value.prefixlen <= 28, "network-cidr-size-invalid")
+        ranges.append(value)
+    vpc, first, second = ranges
+    require(all(value.subnet_of(vpc) and value != vpc for value in (first, second)), "network-subnet-containment-invalid")
+    require(not first.overlaps(second), "network-subnet-overlap")
+    zones = [choices["availability_zone_one"], choices["availability_zone_two"]]
+    require(len(set(zones)) == 2 and all(re.fullmatch(re.escape(region) + r"[a-z]", name) for name in zones),
+            "network-zone-selection-invalid")
+    return dict(choices)
+
+
+def private_network_choices(provider, choices, region):
+    """Check syntax through its shared owner, then prove the actual native zones."""
+    require(callable(provider), "network-choice-context-invalid")
+    choices = private_network_choice_syntax(choices, region)
+    zones = [choices["availability_zone_one"], choices["availability_zone_two"]]
+    response = provider("ec2", "describe-availability-zones", ZoneNames=zones)
+    rows = response.get("AvailabilityZones") if isinstance(response, dict) else None
+    require(isinstance(rows, list) and all(isinstance(row, dict)
+            and all(isinstance(row.get(key), str) for key in ("ZoneName", "ZoneId", "RegionName", "State", "ZoneType"))
+            for row in rows), "network-zone-observation-invalid")
+    require(len(rows) == 2 and {row["ZoneName"] for row in rows} == set(zones), "network-zone-selection-mismatch")
+    require(all(row["RegionName"] == region for row in rows), "network-zone-region-mismatch")
+    require(all(row["State"] == "available" for row in rows), "network-zone-not-available")
+    require(all(row["ZoneType"] == "availability-zone" for row in rows), "network-zone-type-unsupported")
+    require(all(re.fullmatch(r"[a-z0-9]+-az[0-9]+", row["ZoneId"]) for row in rows)
+            and len({row["ZoneId"] for row in rows}) == 2, "network-zone-ambiguous")
+    return dict(choices)
 
 
 def private_network(provider, outputs, namespace_name, region):

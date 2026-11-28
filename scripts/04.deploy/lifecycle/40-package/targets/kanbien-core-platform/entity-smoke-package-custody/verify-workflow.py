@@ -5,7 +5,7 @@
 #   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-25"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -21,7 +21,6 @@ import importlib.util
 import json
 from pathlib import Path
 import shlex
-import re
 import sys
 import yaml
 
@@ -29,22 +28,8 @@ ROOT = Path(__file__).resolve().parents[7]
 sys.path.insert(0, str(ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt"))
 from workflow_guard import reserved_publication_binding, job_steps, protected_step, protected_script, record_command, custody_tail, scan_step, CANDIDATE_BUILD_OPERATIONS, protected_candidate_build
 
-class WorkflowLoader(yaml.SafeLoader):
-    pass
+from workflow_guard import WorkflowLoader
 
-# GitHub treats `on` as a field name, not the YAML-1.1 boolean True.
-WorkflowLoader.yaml_implicit_resolvers = {key: [(tag, pattern) for tag, pattern in values if tag != "tag:yaml.org,2002:bool"] for key, values in yaml.SafeLoader.yaml_implicit_resolvers.items()}
-WorkflowLoader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|false)$", re.I), list("tTfF"))
-
-def unique_mapping(loader, node, deep=False):
-    result = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        if key in result: raise ValueError("duplicate-workflow-field")
-        result[key] = loader.construct_object(value_node, deep=deep)
-    return result
-
-WorkflowLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
 WORKFLOW = ".github/workflows/publish-kanbien-core-platform-entity-smoke.yml"
 BASE = "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody"
 BUILD = "scripts/04.deploy/lifecycle/40-package/build-entity-smoke-image/script.sh"
@@ -110,7 +95,7 @@ def inspect(text, builder=None, smoke=None, operations=None):
             raise ValueError("job")
         steps = job_steps(text, "qualify-and-publish")
         order = [
-            "@actions/checkout@v4", "Enforce protected main source", "@actions/setup-node@v4", "Install dependencies", "Install script dependencies",
+            "@actions/checkout@v4", "Install script dependencies", "Enforce approved source", "@actions/setup-node@v4", "Install dependencies",
             "Enforce delivery-chain registration and contracts", "Qualify declarations and actual candidate payload",
             "@aws-actions/configure-aws-credentials@v4", "Prove fixed delivery read access", "Retain pre-publication identity",
             "Log in to Amazon ECR", "Publish immutable image", "Require clean ECR scan", "Generate SBOM", "Attest image provenance", "Attest image SBOM",
@@ -118,9 +103,9 @@ def inspect(text, builder=None, smoke=None, operations=None):
         ]
         if [step.get("name", "@"+str(step.get("uses"))) for step in steps] != order:
             raise ValueError("steps")
-        if steps[0] != {"uses": "actions/checkout@v4", "with": {"persist-credentials": False}} or steps[2] != {"uses": "actions/setup-node@v4", "with": {"node-version": "22"}}:
+        if steps[0] != {"uses": "actions/checkout@v4", "with": {"persist-credentials": False}} or steps[3] != {"uses": "actions/setup-node@v4", "with": {"node-version": "22"}}:
             raise ValueError("source")
-        protected_step(steps, "Enforce protected main source", [["test", "$GITHUB_REF", "=", "refs/heads/main"]])
+        protected_step(steps, "Enforce approved source", [["python3", "-B", BASE+"/publication.py", "--operation", "validate-source"]])
         protected_step(steps, "Install dependencies", [["npm", "ci", "--ignore-scripts"]])
         protected_step(steps, "Install script dependencies", [["python3", "-m", "pip", "install", "PyYAML==6.0.2"]])
         protected_step(steps, "Enforce delivery-chain registration and contracts", [["python3", "scripts/04.deploy/inventory-deploy-control/script.py", "--delivery", "--check"]])

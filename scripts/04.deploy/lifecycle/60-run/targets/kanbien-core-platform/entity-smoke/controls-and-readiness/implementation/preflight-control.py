@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.preflight-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -75,7 +75,8 @@ def require_receipt(request, reservation, receipt, *, expected_preflight_label, 
     retained = EVIDENCE.validate_retained(receipt, reservation)
     require(probe["proof_label"] == expected_preflight_label, "preflight-label-not-selected")
     immutable = set(request) - {"environment", "deadline_seconds", "proof_label"}
-    require(all(probe[key] == request[key] for key in immutable), "preflight-operation-binding-mismatch")
+    require(set(probe) - {"environment", "deadline_seconds", "proof_label"} == immutable
+            and all(probe[key] == request[key] for key in immutable), "preflight-operation-binding-mismatch")
     observed, current, prerequisite = (EVIDENCE.timestamp(value) for value in (retained["task"]["stopped_at"], current_time, required_after))
     created = EVIDENCE.timestamp(retained["task"]["created_at"])
     collected = EVIDENCE.timestamp(retained["collected_at"])
@@ -107,7 +108,14 @@ def validate_admission(value, reservation):
     return max(value["required_after"], checked["task"]["stopped_at"], key=EVIDENCE.timestamp)
 
 
-def read_admission(root, reservation):
+def read_admission(root, reservation, *, storage=None):
+    if storage is not None:
+        raw = storage.read_context()
+        require(raw is not None, "preflight-admission-not-retained")
+        try: value = json.loads(raw)
+        except (ValueError, TypeError, UnicodeError, RecursionError):
+            raise PreflightFailure("preflight-admission-unavailable") from None
+        return validate_admission(value, reservation)
     path = admission_path(root, reservation)
     try:
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
@@ -119,10 +127,13 @@ def read_admission(root, reservation):
     return validate_admission(value, reservation)
 
 
-def retain_admission(root, reservation, packet, required_after, admitted_at):
+def retain_admission(root, reservation, packet, required_after, admitted_at, *, storage=None):
     value = {"schema": "deploy/entity-smoke-task-admission/v1", "reservation_sha256": hashlib.sha256(CONTROL.canonical(reservation)).hexdigest(),
              "preflight": packet, "required_after": required_after, "admitted_at": admitted_at}
     effective_after = validate_admission(value, reservation)
+    if storage is not None:
+        require(storage.retain_context(CONTROL.canonical(value)) is True, "preflight-admission-already-retained")
+        return effective_after
     path = admission_path(root, reservation)
     try: written = STORAGE.write_exclusive(path, value)
     except STORAGE.ResourceFailure as failure: raise PreflightFailure(failure.code) from None

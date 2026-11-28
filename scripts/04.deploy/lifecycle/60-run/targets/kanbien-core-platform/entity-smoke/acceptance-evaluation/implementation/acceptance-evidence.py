@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.acceptance-evidence
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -36,14 +36,7 @@ POLICY = module("entity_smoke_shared_proof_policy", C.ROOT / "scripts/04.deploy/
 SCHEMA = "deploy/entity-smoke-retained-task-proof/v1"
 # Explicit selections, not all operations that might later be added to a runner.
 TASKS = {
-    "bootstrap": ("baseline", "administration", ("bootstrap",)),
-    "migration": ("baseline", "migration", ("apply",)),
-    "grant-runtime": ("baseline", "administration", ("grant-runtime",)),
-    "baseline-permissions": ("baseline", "database-proof", ("permissions",)),
-    "original-record": ("baseline", "verifier", ("create", "observe-create")),
-    "lifecycle": ("baseline", "verifier", ("lifecycle",)),
-    "collision": ("baseline", "database-proof", ("collision",)),
-    "baseline-read": ("baseline", "verifier", ("read",)),
+    **T.STEPS.baseline_tasks(),
     "replacement-read": ("server-replacement", "verifier", ("read",)),
     "initial-read": ("initial-recovery", "verifier", ("read",)),
     "migration-state": ("initial-recovery", "administration", ("observe-migration-state",)),
@@ -87,8 +80,7 @@ def preflight_label(binding, stage, workload, operation, *, delivery=None, names
     namespace = delivery or namespace_delivery
     if namespace is not None:
         return C.delivery_preflight_label(namespace, stage, workload, operation)
-    suffix = "" if stage == "baseline" else ":" + stage
-    original = "entity-smoke-" + hashlib.sha256((binding["proof_label"] + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+    original = T.STEPS.preflight_label(binding["proof_label"], workload, operation, stage=stage)
     # Historical selection only, not launch authority: the public task route
     # requires the original failure and actual repair receipt before recovery.
     if (binding["proof_label"], workload, operation, stage) == (T.IMAGE_REPAIR.LABEL, "administration", "bootstrap", "baseline"):

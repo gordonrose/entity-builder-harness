@@ -8,10 +8,10 @@ state, the exact task definition/image and the safe application result.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.kanbien-core-platform.persistence-proof-receipts
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-31"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,7 +23,9 @@ state, the exact task definition/image and the safe application result.
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
 #   - id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 #     path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md
-#   effects: [writes-files]
+#   - id: deploy.test.kanbien-core-platform.persistence-proof-receipts
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py
+#   effects: [network, writes-files]
 from __future__ import annotations
 
 import hashlib
@@ -43,6 +45,7 @@ ALLOWED_PROOFS = {"administration", "migration", "verifier", "restore", "server-
 EVIDENCE_CLASS = "live"
 OPERATIONS = {"administration": {"bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege", "observe-migration-state"}, "migration": {"apply"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
 TASK_ARN_PREFIX = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"
+MAX_RECEIPT_BYTES = 1048576
 
 
 class ReceiptError(ValueError):
@@ -71,8 +74,15 @@ def _timestamp(value: object, field: str) -> str:
     return result
 
 
-def _context(proof_type: str, value: object) -> dict[str, Any]:
+def _checked_task_prefix(value: str) -> str:
+    if not isinstance(value, str) or re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/[A-Za-z0-9_-]+/", value) is None:
+        raise ReceiptError("persistence-proof-receipt-task-prefix-invalid")
+    return value
+
+
+def _context(proof_type: str, value: object, *, task_arn_prefix: str = TASK_ARN_PREFIX) -> dict[str, Any]:
     """Allowlist non-secret facts needed to understand a completed proof."""
+    task_arn_prefix = _checked_task_prefix(task_arn_prefix)
     if not isinstance(value, dict):
         raise ReceiptError("persistence-proof-receipt-context-invalid")
     if proof_type in {"administration", "migration"}:
@@ -91,14 +101,15 @@ def _context(proof_type: str, value: object) -> dict[str, Any]:
         allowed = {"original_stopped_reason", "successor_task_arn", "successor_started_at", "runtime_task_definition", "recovery_boundary"}
         if set(value) != allowed or not all(isinstance(value[key], str) and value[key] for key in allowed):
             raise ReceiptError("persistence-proof-receipt-context-invalid")
-        if not value["successor_task_arn"].startswith(TASK_ARN_PREFIX):
+        if not value["successor_task_arn"].startswith(task_arn_prefix):
             raise ReceiptError("persistence-proof-receipt-context-invalid")
         _timestamp(value["successor_started_at"], "context-successor-started-at")
         _timestamp(value["recovery_boundary"], "context-recovery-boundary")
     return value
 
 
-def validate(receipt: object) -> dict[str, Any]:
+def validate(receipt: object, *, task_arn_prefix: str = TASK_ARN_PREFIX) -> dict[str, Any]:
+    task_arn_prefix = _checked_task_prefix(task_arn_prefix)
     if not isinstance(receipt, dict):
         raise ReceiptError("persistence-proof-receipt-invalid")
     allowed = {"schema", "target", "scope", "proof_type", "operation", "task", "context", "provenance", "integrity"}
@@ -115,7 +126,7 @@ def validate(receipt: object) -> dict[str, Any]:
         raise ReceiptError("persistence-proof-receipt-task-invalid")
     for field in ("arn", "definition", "image_digest", "terminal_status", "result_code"):
         _string(task.get(field), f"task-{field}")
-    if re.fullmatch(re.escape(TASK_ARN_PREFIX) + r"[0-9a-f]{32}", task["arn"]) is None:
+    if re.fullmatch(re.escape(task_arn_prefix) + r"[0-9a-f]{32}", task["arn"]) is None:
         raise ReceiptError("persistence-proof-receipt-task-arn-invalid")
     _timestamp(task.get("started_at"), "task-started-at")
     _timestamp(task.get("stopped_at"), "task-stopped-at")
@@ -123,7 +134,7 @@ def validate(receipt: object) -> dict[str, Any]:
         raise ReceiptError("persistence-proof-receipt-terminal-invalid")
     if "stopped_reason" in task and not isinstance(task["stopped_reason"], str):
         raise ReceiptError("persistence-proof-receipt-terminal-invalid")
-    _context(proof_type, receipt.get("context"))
+    _context(proof_type, receipt.get("context"), task_arn_prefix=task_arn_prefix)
     provenance = receipt.get("provenance")
     if not isinstance(provenance, dict) or set(provenance) not in ({"controller", "collection_method", "collected_at"}, {"controller", "collection_method", "collected_at", "evidence_class"}):
         raise ReceiptError("persistence-proof-receipt-provenance-invalid")
@@ -140,7 +151,7 @@ def validate(receipt: object) -> dict[str, Any]:
     return receipt
 
 
-def make(*, proof_type: str, operation: str, task: dict[str, object], image_digest: str, result_code: str, context: dict[str, object], controller: str, collected_at: str) -> dict[str, Any]:
+def make(*, proof_type: str, operation: str, task: dict[str, object], image_digest: str, result_code: str, context: dict[str, object], controller: str, collected_at: str, task_arn_prefix: str = TASK_ARN_PREFIX) -> dict[str, Any]:
     if not isinstance(proof_type, str) or proof_type not in ALLOWED_PROOFS:
         raise ReceiptError("persistence-proof-receipt-proof-type-invalid")
     containers = task.get("containers")
@@ -171,28 +182,37 @@ def make(*, proof_type: str, operation: str, task: dict[str, object], image_dige
             raise ReceiptError("persistence-proof-receipt-context-invalid")
         body["task"]["stopped_reason"] = "governed core-server-persistence replacement rehearsal"
     body["integrity"] = {"algorithm": "sha256", "payload_sha256": digest(body)}
-    return validate(body)
+    return validate(body, task_arn_prefix=task_arn_prefix)
+
+
+def substantive(value):
+    """Collection time is provenance, not a new execution or proof identity."""
+    task = value["task"]
+    if value["proof_type"] != "server-replacement":
+        task = {key: item for key, item in task.items() if key != "stopped_reason"}
+    return {**{key: item for key, item in value.items() if key not in {"integrity", "provenance"}}, "task": task,
+            "provenance": {**{key: item for key, item in value["provenance"].items() if key != "collected_at"}, "evidence_class": value["provenance"].get("evidence_class", "live")}}
+
+
+def _label(value):
+    return f"{value['proof_type']}-{value['operation']}-{value['task']['arn'].rsplit('/', 1)[-1]}.json"
+
+
+def _render(value):
+    return (json.dumps(value, sort_keys=True, indent=2) + "\n").encode("utf-8")
 
 
 def persist(receipt: dict[str, Any]) -> Path:
     validated = validate(receipt)
-    task_id = validated["task"]["arn"].rsplit("/", 1)[-1]
-    destination = RECEIPTS / f"{validated['proof_type']}-{validated['operation']}-{task_id}.json"
+    destination = RECEIPTS / _label(validated)
     RECEIPTS.mkdir(parents=True, exist_ok=True)
-    rendered = json.dumps(validated, sort_keys=True, indent=2) + "\n"
+    rendered = _render(validated).decode("utf-8")
     if destination.exists():
         try:
             existing = validate(json.loads(destination.read_text(encoding="utf-8")))
         except (OSError, UnicodeError, json.JSONDecodeError, ReceiptError) as error:
             raise ReceiptError("persistence-proof-receipt-existing-invalid") from error
         # Re-observing the same completed proof must preserve the first receipt.
-        # Collection time is provenance, not a new execution or proof identity.
-        def substantive(value):
-            task = value["task"]
-            if value["proof_type"] != "server-replacement":
-                task = {key: item for key, item in task.items() if key != "stopped_reason"}
-            return {**{key: item for key, item in value.items() if key not in {"integrity", "provenance"}}, "task": task,
-                    "provenance": {**{key: item for key, item in value["provenance"].items() if key != "collected_at"}, "evidence_class": value["provenance"].get("evidence_class", "live")}}
         if substantive(existing) != substantive(validated):
             raise ReceiptError("persistence-proof-receipt-conflict")
         return destination
@@ -203,3 +223,90 @@ def persist(receipt: dict[str, Any]) -> Path:
         os.fsync(handle.fileno())
     os.replace(temporary, destination)
     return destination
+
+
+def _bounded(raw):
+    if type(raw) is not bytes or not raw or len(raw) > MAX_RECEIPT_BYTES:
+        raise ReceiptError("persistence-proof-receipt-storage-invalid")
+    return raw
+
+
+def _decode(raw, *, task_arn_prefix):
+    _bounded(raw)
+    try: value = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, ValueError, RecursionError):
+        raise ReceiptError("persistence-proof-receipt-storage-invalid") from None
+    return validate(value, task_arn_prefix=task_arn_prefix)
+
+
+def _storage(storage):
+    if not all(callable(getattr(storage, name, None)) for name in ("read_receipt", "retain_receipt")):
+        raise ReceiptError("persistence-proof-receipt-storage-invalid")
+    return storage
+
+
+def _reference(reference, *, retained):
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+        raise ReceiptError("persistence-proof-receipt-reference-invalid")
+    path, digest_value = reference["path"], reference["sha256"]
+    if not isinstance(path, str) or not path or "\\" in path or Path(path).is_absolute() or Path(path).as_posix() != path or ".." in Path(path).parts or not isinstance(digest_value, str) or re.fullmatch(r"[a-f0-9]{64}", digest_value) is None:
+        raise ReceiptError("persistence-proof-receipt-reference-invalid")
+    label = Path(path).name
+    matched = re.fullmatch(r"([a-z-]+)-([a-f0-9]{32})\.json", label)
+    if matched is None or matched[1] not in {kind + "-" + operation for kind, operations in OPERATIONS.items() for operation in operations} or (retained and path != label):
+        raise ReceiptError("persistence-proof-receipt-reference-invalid")
+    return path
+
+
+def retain(receipt, *, root, storage=None, task_arn_prefix=TASK_ARN_PREFIX):
+    """Return journal reference facts, not task admission or storage authority.
+
+    The retained adapter owns session binding and exact child-version/readback
+    proof. It returns the positively retained first bytes, including on reuse.
+    """
+    validated = validate(receipt, task_arn_prefix=task_arn_prefix)
+    proposed = _bounded(_render(validated))
+    label = _label(validated)
+    if storage is None:
+        root = Path(root)
+        if not root.is_absolute() or not RECEIPTS.resolve().is_relative_to(root.resolve()):
+            raise ReceiptError("persistence-proof-receipt-reference-invalid")
+        try:
+            path = persist(validated)
+            with path.open("rb") as stream: raw = stream.read(MAX_RECEIPT_BYTES + 1)
+        except OSError: raise ReceiptError("persistence-proof-receipt-storage-unavailable") from None
+        reference_path = path.relative_to(root).as_posix()
+    else:
+        adapter = _storage(storage)
+        try: raw = adapter.retain_receipt(label, proposed)
+        except Exception: raise ReceiptError("persistence-proof-receipt-retention-not-confirmed") from None
+        reference_path = label
+    observed = _decode(raw, task_arn_prefix=task_arn_prefix)
+    if _label(observed) != label or substantive(observed) != substantive(validated):
+        raise ReceiptError("persistence-proof-receipt-conflict")
+    return {"path": reference_path, "sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def read(reference, *, root, storage=None, task_arn_prefix=TASK_ARN_PREFIX):
+    """Read exact referenced bytes and apply the existing receipt validator."""
+    task_arn_prefix = _checked_task_prefix(task_arn_prefix)
+    label = _reference(reference, retained=storage is not None)
+    if storage is None:
+        root = Path(root)
+        path = root / label
+        if not root.is_absolute() or not path.resolve().is_relative_to(root.resolve()) or any(item.is_symlink() for item in (path, *path.parents)):
+            raise ReceiptError("persistence-proof-receipt-reference-invalid")
+        try:
+            with path.open("rb") as stream: raw = stream.read(MAX_RECEIPT_BYTES + 1)
+        except OSError: raise ReceiptError("persistence-proof-receipt-storage-unavailable") from None
+    else:
+        adapter = _storage(storage)
+        try: raw = adapter.read_receipt(label)
+        except Exception: raise ReceiptError("persistence-proof-receipt-storage-unavailable") from None
+    _bounded(raw)
+    if hashlib.sha256(raw).hexdigest() != reference["sha256"]:
+        raise ReceiptError("persistence-proof-receipt-reference-mismatch")
+    observed = _decode(raw, task_arn_prefix=task_arn_prefix)
+    if _label(observed) != Path(label).name:
+        raise ReceiptError("persistence-proof-receipt-reference-mismatch")
+    return observed

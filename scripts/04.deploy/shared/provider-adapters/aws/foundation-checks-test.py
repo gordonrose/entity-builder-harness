@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.foundation-checks
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-15"
 #   updated_on: "2026-11-27"
@@ -10,7 +10,7 @@
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Exercise foundation observations, bounded source projection and the owned private-network template without AWS.
+#   purpose: Exercise foundation choices and observations, complete input validation, bounded source projection and the owned private-network template without AWS.
 #   portability: {class: reusable, targets: [entity-builder]}
 #   effects: [read-only]
 #   used_by:
@@ -22,7 +22,7 @@ import json
 from pathlib import Path
 import re
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 SPEC = importlib.util.spec_from_file_location("foundation_checks", Path(__file__).with_name("foundation-checks.py"))
 M = importlib.util.module_from_spec(SPEC)
@@ -48,6 +48,86 @@ def network():
 
 
 class FoundationTests(unittest.TestCase):
+    def proposed_network(self):
+        choices = {"vpc_cidr": "10.71.0.0/16", "subnet_one_cidr": "10.71.1.0/24", "subnet_two_cidr": "10.71.2.0/24",
+                   "availability_zone_one": "eu-west-1a", "availability_zone_two": "eu-west-1b"}
+        zones = {"AvailabilityZones": [{"ZoneName": "eu-west-1" + letter, "ZoneId": "euw1-az" + str(index),
+                    "RegionName": "eu-west-1", "State": "available", "ZoneType": "availability-zone"}
+                    for index, letter in enumerate(("a", "b"), 1)]}
+        return choices, zones
+
+    def test_network_choices_check_real_zones_and_return_only_copied_choices(self):
+        choices, zones = self.proposed_network()
+        original = copy.deepcopy(choices)
+        provider = Mock(return_value=zones)
+        observed = M.private_network_choices(provider, choices, "eu-west-1")
+        self.assertEqual(observed, original)
+        provider.assert_called_once_with("ec2", "describe-availability-zones", ZoneNames=["eu-west-1a", "eu-west-1b"])
+        observed["vpc_cidr"] = "changed"
+        self.assertEqual(choices, original)
+        for vpc, one, two in (("172.16.0.0/16", "172.16.0.0/28", "172.16.0.16/28"),
+                              ("192.168.0.0/16", "192.168.0.0/17", "192.168.128.0/17")):
+            selected = {**choices, "vpc_cidr": vpc, "subnet_one_cidr": one, "subnet_two_cidr": two}
+            self.assertEqual(M.private_network_choices(provider, selected, "eu-west-1"), selected)
+
+    def test_network_choice_rejections_precede_provider_calls_and_exclude_values(self):
+        choices, _ = self.proposed_network()
+        cases = [(None, "choices-invalid"), ([], "choices-invalid"), ({}, "choices-invalid"),
+                 ({**choices, "private-canary": "value"}, "choices-invalid"),
+                 ({**choices, "vpc_cidr": None}, "choices-invalid")]
+        for value, reason in (("private-canary", "cidr-invalid"), ("10.71.0.1/16", "cidr-invalid"),
+                              ("10.71.0.0/255.255.0.0", "cidr-invalid"), ("::/64", "cidr-invalid"),
+                              ("127.0.0.0/16", "cidr-not-private"), ("100.64.0.0/16", "cidr-not-private"),
+                              ("172.15.0.0/16", "cidr-not-private"), ("10.0.0.0/8", "cidr-size-invalid"),
+                              ("10.71.0.0/29", "cidr-size-invalid")):
+            cases.append(({**choices, "vpc_cidr": value}, reason))
+        for changes, reason in (({"subnet_one_cidr": "10.72.0.0/24"}, "subnet-containment-invalid"),
+                                ({"subnet_one_cidr": choices["vpc_cidr"]}, "subnet-containment-invalid"),
+                                ({"subnet_two_cidr": choices["subnet_one_cidr"]}, "subnet-overlap"),
+                                ({"subnet_two_cidr": "10.71.1.0/25"}, "subnet-overlap"),
+                                ({"availability_zone_two": "eu-west-1a"}, "zone-selection-invalid"),
+                                ({"availability_zone_one": "us-west-2a"}, "zone-selection-invalid"),
+                                ({"availability_zone_one": "eu-west-1-dub-1a"}, "zone-selection-invalid")):
+            cases.append(({**choices, **changes}, reason))
+        provider = Mock(side_effect=AssertionError("unchecked choice reached provider"))
+        for selected, reason in cases:
+            with self.subTest(reason=reason), self.assertRaises(M.FoundationFailure) as failure:
+                M.private_network_choices(provider, selected, "eu-west-1")
+            self.assertEqual(str(failure.exception), "foundation-network-" + reason)
+            self.assertNotIn("private-canary", str(failure.exception))
+        for region in (None, "", "private-canary", "eu-west-1a"):
+            with self.assertRaisesRegex(M.FoundationFailure, "^foundation-network-choice-context-invalid$"):
+                M.private_network_choices(provider, choices, region)
+        provider.assert_not_called()
+
+    def test_network_zone_observation_rejections_and_provider_failure_identity(self):
+        choices, zones = self.proposed_network()
+        cases = [(None, "observation-invalid"), ({}, "observation-invalid"),
+                 ({"AvailabilityZones": []}, "selection-mismatch"),
+                 ({"AvailabilityZones": [None]}, "observation-invalid")]
+        for field, value, reason in (("ZoneName", "eu-west-1c", "selection-mismatch"),
+                                    ("ZoneName", None, "observation-invalid"),
+                                    ("RegionName", "us-west-2", "region-mismatch"),
+                                    ("State", "unavailable", "not-available"),
+                                    ("ZoneType", "local-zone", "type-unsupported"),
+                                    ("ZoneId", "private-canary", "ambiguous"),
+                                    ("ZoneId", "euw1-az2", "ambiguous")):
+            observed = copy.deepcopy(zones); observed["AvailabilityZones"][0][field] = value
+            cases.append((observed, reason))
+        observed = copy.deepcopy(zones); observed["AvailabilityZones"].append(observed["AvailabilityZones"][0])
+        cases.append((observed, "selection-mismatch"))
+        for observed, reason in cases:
+            provider = Mock(return_value=observed)
+            with self.subTest(reason=reason), self.assertRaises(M.FoundationFailure) as failure:
+                M.private_network_choices(provider, choices, "eu-west-1")
+            self.assertEqual(str(failure.exception), "foundation-network-zone-" + reason)
+            provider.assert_called_once()
+        cause = RuntimeError("private-canary")
+        provider = Mock(side_effect=cause)
+        with self.assertRaises(RuntimeError) as failure: M.private_network_choices(provider, choices, "eu-west-1")
+        self.assertIs(failure.exception, cause)
+        provider.assert_called_once()
+
     def test_budget_configuration_and_numeric_equivalence(self):
         expected = {'BudgetName':'fixture-monthly', 'BudgetType':'COST', 'TimeUnit':'MONTHLY',
                     'BudgetLimit':{'Amount':100, 'Unit':'USD'}, 'CostFilters':{'TagKeyValue':['user:Target$fixture']}}
@@ -335,6 +415,89 @@ class CloudFormationStringProjectionTests(unittest.TestCase):
         result = self.cf.project_string_parameters(source, ["Prefix", "Suffix"], {"Prefix": "staging"})
         self.assertEqual(result["Outputs"]["Name"]["Value"], "staging-private")
 
+    def complete_parameters(self):
+        declarations = {"Label": {"Type": "String", "Default": "old", "AllowedPattern": "[a-z]+", "MinLength": 1, "MaxLength": 8},
+                        "Count": {"Type": "Number", "Default": 1, "MinValue": 0, "MaxValue": 2, "AllowedValues": [0, 1, 2]},
+                        "Vpc": {"Type": "AWS::EC2::VPC::Id"}, "Group": {"Type": "AWS::EC2::SecurityGroup::Id"},
+                        "Subnets": {"Type": "List<AWS::EC2::Subnet::Id>"},
+                        "Zone": {"Type": "AWS::EC2::AvailabilityZone::Name"}}
+        values = {"Label": "new", "Count": 0, "Vpc": "vpc-0123456789abcdef0", "Group": "sg-01234567",
+                  "Subnets": "subnet-01234567,subnet-0123456789abcdef0", "Zone": "eu-west-1a"}
+        return {"Parameters": declarations, "Resources": {"Kept": {"Properties": {"Value": {"Ref": "Vpc"}}}}}, values
+
+    def test_complete_values_reuse_constraints_without_projecting_and_serialize_numbers(self):
+        source, values = self.complete_parameters()
+        original, supplied = copy.deepcopy(source), copy.deepcopy(values)
+        for raw in (source, json.dumps(source)):
+            for count in (0, "0", 1, "1"):
+                chosen = {**values, "Count": count}
+                result = self.cf.validate_parameter_values(raw, chosen)
+                self.assertEqual(result, {**values, "Count": str(count)})
+                self.assertTrue(all(type(value) is str for value in result.values()))
+                result["Label"] = "changed-copy"
+                self.assertEqual(chosen["Label"], supplied["Label"])
+        self.assertEqual(source, original)
+        self.assertEqual(values, supplied)
+        # A shared constraint counterexample must reach both actual consumers.
+        failure = ValueError("fixture-shared-constraint")
+        with patch.object(self.cf, "_parameter_values", side_effect=failure) as shared:
+            for consumer in (lambda: self.cf.validate_parameter_values(source, values),
+                             lambda: self.cf.project_parameters(source, ("Label",), {"Label": "new"})):
+                with self.assertRaises(ValueError) as caught: consumer()
+                self.assertIs(caught.exception, failure)
+            self.assertEqual(shared.call_count, 2)
+
+    def test_complete_values_reject_missing_extra_secret_dynamic_and_invalid_constraints(self):
+        source, values = self.complete_parameters()
+        for malformed in ("Parameters: [private-canary", {"Parameters": float("nan")}):
+            with self.assertRaisesRegex(ValueError, "^cloudformation-template-body-invalid$") as caught:
+                self.cf.validate_parameter_values(malformed, values)
+            self.assertIsNone(caught.exception.__cause__)
+            self.assertTrue(caught.exception.__suppress_context__)
+        for chosen in (None, [], {}, {key: value for key, value in values.items() if key != "Label"},
+                       {**values, "Extra": "private-canary"}):
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-values-invalid$"):
+                self.cf.validate_parameter_values(source, chosen)
+        changes = [("Label", "private-canary", "string"), ("Label", "${value}", "string"),
+                   ("Label", "{{resolve:ssm:private-canary}}", "string"), ("Label", None, "string"),
+                   ("Count", True, "number"), ("Count", 1.0, "number"), ("Count", "01", "number"),
+                   ("Count", "-0", "number"), ("Count", "1.0", "number"), ("Count", "1e0", "number"),
+                   ("Count", "private-canary", "number"), ("Count", 3, "number")]
+        for name, value, kind in changes:
+            with self.subTest(name=name, value_type=type(value).__name__), self.assertRaisesRegex(ValueError, "^cloudformation-" + kind + "-parameter-invalid$"):
+                self.cf.validate_parameter_values(source, {**values, name: value})
+        for name, change, kind in (("Label", {"NoEcho": True}, "string"),
+                                   ("Label", {"Default": "private-canary"}, "string"),
+                                   ("Label", {"AllowedPattern": "["}, "string"),
+                                   ("Label", {"MinLength": True}, "string"),
+                                   ("Label", {"UnknownConstraint": "private-canary"}, "string"),
+                                   ("Count", {"Default": "1"}, "number"),
+                                   ("Count", {"MaxValue": False}, "number"),
+                                   ("Count", {"AllowedValues": [True]}, "number"),
+                                   ("Count", {"NoEcho": True}, "number")):
+            changed = copy.deepcopy(source); changed["Parameters"][name].update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "^cloudformation-" + kind + "-parameter-invalid$"):
+                self.cf.validate_parameter_values(changed, values)
+
+    def test_complete_aws_values_reject_wrong_types_noncanonical_lists_and_unsupported_declarations(self):
+        source, values = self.complete_parameters()
+        changes = [("Vpc", "vpc-private-canary"), ("Vpc", "sg-01234567"), ("Vpc", []),
+                   ("Group", "sg-0123456789"), ("Zone", "eu-west-1-dub-1a"), ("Zone", "${Zone}"),
+                   ("Subnets", ["subnet-01234567"]), ("Subnets", ""), ("Subnets", "subnet-01234567,"),
+                   ("Subnets", "subnet-01234567, subnet-89abcdef"),
+                   ("Subnets", "subnet-01234567,subnet-01234567")]
+        for name, value in changes:
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "^cloudformation-aws-parameter-invalid$"):
+                self.cf.validate_parameter_values(source, {**values, name: value})
+        for change in ({"NoEcho": True}, {"AllowedValues": [values["Vpc"]]}, {"Default": "vpc-private-canary"}):
+            changed = copy.deepcopy(source); changed["Parameters"]["Vpc"].update(change)
+            with self.assertRaisesRegex(ValueError, "^cloudformation-aws-parameter-invalid$"):
+                self.cf.validate_parameter_values(changed, values)
+        for kind in (None, [], "CommaDelimitedList", "List<Number>", "AWS::SSM::Parameter::Value<String>"):
+            changed = copy.deepcopy(source); changed["Parameters"]["Vpc"]["Type"] = kind
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-type-unsupported$"):
+                self.cf.validate_parameter_values(changed, values)
+
     def test_selection_and_declarations_fail_with_value_free_reasons(self):
         source = self.source()
         for names, overrides in (([], None), ("Prefix", None), (["Prefix", "Prefix"], None),
@@ -433,12 +596,234 @@ class CloudFormationStringProjectionTests(unittest.TestCase):
                       {'Fn::Sub': '${Removed}'}, {'Fn::Sub': 'arn:${Removed.Arn}'}, {'DependsOn': 'Removed'}, {'DependsOn': ['Removed']}):
             source = copy.deepcopy(base); source['Resources']['Kept']['Properties'] = value
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, '^cloudformation-removed-resource-reference$'): project(source)
-        for value in ({'Fn::If': ['Selected', 'yes', 'no']}, {'Fn::If': [{'Unexpected': 'Selected'}, 'yes', 'no']},
+        for value in ({'Fn::If': ['Selected', 'yes']}, {'Fn::If': ['Selected', 'yes', 'no', 'extra']},
+                      {'Fn::If': ['Selected', 'yes', 'no'], 'Extra': True},
+                      {'Fn::If': [{'Unexpected': 'Selected'}, 'yes', 'no']},
                       {'Fn::If': {'Malformed': 'Selected'}}, {'Condition': 'Selected'}, {'Condition': {'Malformed': 'Selected'}}):
             source = copy.deepcopy(base); source['Outputs'] = {'StillPresent': {'Value': value}}
             with self.assertRaisesRegex(ValueError, '^cloudformation-condition-unsupported$'): project(source)
         source = copy.deepcopy(base); source['Resources']['Kept']['Condition'] = None
         with self.assertRaisesRegex(ValueError, '^cloudformation-condition-unsupported$'): project(source)
+
+    def test_selected_if_branches_preserve_unknown_conditions_and_check_surviving_lineage(self):
+        source = self.omission_source()
+        source["Resources"]["Kept"]["Properties"]["Decision"] = {
+            "Fn::If": ["Selected", [{"Ref": "OptionalInput"}, {"Ref": "Removed"}], ["kept"]]}
+        original = copy.deepcopy(source)
+        result = self.omit(source)
+        self.assertEqual(result["Resources"]["Kept"]["Properties"]["Decision"], ["kept"])
+        self.assertEqual(result["Resources"]["Kept"]["Properties"]["Symbolic"],
+                         original["Resources"]["Kept"]["Properties"]["Symbolic"])
+        self.assertEqual(source, original)
+        ordinary = self.cf.project_parameters(source, ("Enabled",))
+        self.assertEqual(ordinary["Resources"]["Kept"]["Properties"]["Decision"],
+                         original["Resources"]["Kept"]["Properties"]["Decision"])
+        enabled = self.cf.project_parameters(source, ("Enabled",), {"Enabled": "true"}, condition_names=("Selected",))
+        self.assertEqual(enabled["Resources"]["Kept"]["Properties"]["Decision"],
+                         [{"Ref": "OptionalInput"}, {"Ref": "Removed"}])
+        with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-still-mentioned$"):
+            self.cf.project_parameters(source, ("Enabled",), {"Enabled": "true"},
+                                       condition_names=("Selected",), omit_if_unused=("OptionalInput",))
+        for reference in ({"Ref": "Removed"}, {"Fn::Sub": "${Removed.Arn}"}):
+            source["Resources"]["Kept"]["Properties"]["Decision"]["Fn::If"][2] = reference
+            with self.assertRaisesRegex(ValueError, "^cloudformation-removed-resource-reference$"):
+                self.omit(source)
+        # A malformed selected expression in a discarded arm is still rejected.
+        source["Resources"]["Kept"]["Properties"]["Decision"] = {
+            "Fn::If": ["Selected", {"Fn::If": ["Selected", "missing-arm"]}, "kept"]}
+        with self.assertRaisesRegex(ValueError, "^cloudformation-condition-unsupported$"):
+            self.omit(source)
+
+    def omission_source(self, name="OptionalInput"):
+        return {"Parameters": {"Enabled": {"Type": "String", "Default": "false"},
+                    name: {"Type": "String", "Description": name + " is explicitly selected"},
+                    "UnselectedInput": {"Type": "String"}, "Defaulted": {"Type": "String", "Default": "preserved"}},
+                "Conditions": {"Selected": {"Fn::Equals": [{"Ref": "Enabled"}, "true"]},
+                               "Other": {"Fn::Not": [{"Fn::Equals": [{"Ref": "AWS::Region"}, "elsewhere"]}]}},
+                "Resources": {"Removed": {"Type": "AWS::Example::Resource", "Condition": "Selected",
+                                          "Properties": {"Input": {"Ref": name}}},
+                              "Kept": {"Type": "AWS::Example::Resource", "Properties": {
+                                  "Symbolic": {"Fn::If": ["Other", {"Fn::GetAtt": ["External", "Arn"]},
+                                      {"Fn::Join": ["-", [{"Ref": "UnselectedInput"}, {"Fn::Sub": ["${Local}-${AWS::Region}", {"Local": "literal"}]}]]}]}}}},
+                "Outputs": {"RemovedOutput": {"Condition": "Selected", "Value": {"Fn::Sub": "${" + name + "}"}}}}
+
+    def omit(self, source, names=("OptionalInput",)):
+        return self.cf.project_parameters(source, ("Enabled",), condition_names=("Selected",), omit_if_unused=names)
+
+    def test_explicit_unused_omission_copies_renamed_source_and_preserves_everything_else(self):
+        for name in ("OptionalInput", "RenamedIdentity"):
+            source = self.omission_source(name); original = copy.deepcopy(source)
+            ordinary = self.cf.project_parameters(source, ("Enabled",), condition_names=("Selected",))
+            expected = copy.deepcopy(ordinary); del expected["Parameters"][name]
+            for raw in (source, json.dumps(source)):
+                result = self.omit(raw, (name,))
+                self.assertTrue(self.cf.templates_equal(result, expected))
+                self.assertEqual(set(result["Parameters"]), {"Enabled", "UnselectedInput", "Defaulted"})
+                self.assertEqual(result["Conditions"], {"Other": source["Conditions"]["Other"]})
+                result["Resources"]["Kept"]["Properties"]["Symbolic"]["Fn::If"][0] = "changed"
+                self.assertTrue(self.cf.templates_equal(source, original))
+            self.assertIn(name, ordinary["Parameters"])
+            self.assertIn(name, self.cf.project_string_parameters(source, ("Enabled",))["Parameters"])
+            self.assertEqual(self.omit(source, ()), ordinary)
+            self.assertEqual(self.omit(source, []), ordinary)
+
+    def test_omission_selection_rejects_duplicate_missing_and_control_collisions(self):
+        source = self.omission_source()
+        for names in (None, "OptionalInput", {}, (None,), ([],), ("private-canary-invalid",),
+                      ("Missing",), ("OptionalInput", "OptionalInput"), ("Enabled",)):
+            with self.subTest(names=names), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-selection-invalid$"):
+                self.omit(source, names)
+        for declaration in (None, []):
+            changed = copy.deepcopy(source); changed["Parameters"]["OptionalInput"] = declaration
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-selection-invalid$"):
+                self.omit(changed)
+        # A projected declaration without a default still cannot also be omitted.
+        source["Parameters"]["Enabled"].pop("Default")
+        with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-selection-invalid$"):
+            self.cf.project_parameters(source, ("Enabled",), {"Enabled": "false"}, omit_if_unused=("Enabled",))
+
+    def test_unused_defaulted_noecho_omission_never_retains_or_resolves_secret_values(self):
+        source = self.omission_source()
+        source["Parameters"]["OptionalInput"].update(Default="", NoEcho=True)
+        original = copy.deepcopy(source)
+        ordinary = self.cf.project_parameters(source, ("Enabled",), condition_names=("Selected",))
+        self.assertEqual(ordinary["Parameters"]["OptionalInput"], original["Parameters"]["OptionalInput"])
+        result = self.omit(source)
+        self.assertNotIn("OptionalInput", result["Parameters"])
+        self.assertEqual(result["Parameters"]["Defaulted"], original["Parameters"]["Defaulted"])
+        self.assertNotIn("Defaulted", self.omit(source, ("OptionalInput", "Defaulted"))["Parameters"])
+        source["Resources"]["Kept"]["Properties"]["StillNeeded"] = {"Ref": "OptionalInput"}
+        with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-still-mentioned$"):
+            self.omit(source)
+        self.assertEqual(source["Parameters"], original["Parameters"])
+
+    def test_omission_rejects_surviving_nested_references_substitutions_and_plain_mentions(self):
+        expressions = [{"Ref": "OptionalInput"}, {"Fn::Sub": "${OptionalInput}"},
+                       {"Fn::Sub": "${!OptionalInput}"},
+                       {"Fn::Sub": ["${Local}", {"Local": {"Ref": "OptionalInput"}}]},
+                       {"Fn::Sub": ["${OptionalInput}", {"OptionalInput": "local-shadow"}]},
+                       {"Fn::Sub": ["literal", {"OptionalInput": "unused-map-entry"}]},
+                       {"Fn::GetAtt": ["External", "OptionalInput"]},
+                       {"Fn::Join": ["-", ["literal", {"Ref": "OptionalInput"}]]},
+                       ["nested", ({"NestedOptionalInputKey": "literal"},)],
+                       "prefix-OptionalInput-suffix", "${!OptionalInput}"]
+        for expression in expressions:
+            source = self.omission_source(); source["Resources"]["Kept"]["Properties"]["Mention"] = expression
+            original = copy.deepcopy(source)
+            with self.subTest(expression=expression), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-still-mentioned$"):
+                self.omit(source)
+            self.assertEqual(source, original)
+
+    def test_omission_inspects_metadata_keys_other_parameters_conditions_and_outputs(self):
+        changes = [lambda d: d.update(Description="OptionalInput is still described"),
+                   lambda d: d.update(Metadata={"Nested": {"OptionalInputMetadata": "literal"}}),
+                   lambda d: d["Parameters"]["UnselectedInput"].update(Description="OptionalInput"),
+                   lambda d: d["Parameters"].update(PrefixedOptionalInput={"Type": "String"}),
+                   lambda d: d["Conditions"].update(Mention={"Fn::Equals": ["OptionalInput", "literal"]}),
+                   lambda d: d["Outputs"].update(Mention={"Value": "OptionalInput"}),
+                   lambda d: d["Outputs"].update(OptionalInputKey={"Value": "literal"})]
+        for change in changes:
+            source = self.omission_source(); change(source)
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-still-mentioned$"):
+                self.omit(source)
+
+    def test_omission_validates_all_candidates_before_deleting_any_declaration(self):
+        source = self.omission_source()
+        source["Parameters"]["SecondInput"] = {"Type": "String", "Description": "OptionalInput"}
+        original = copy.deepcopy(source)
+        for names in (("OptionalInput", "SecondInput"), ("SecondInput", "OptionalInput")):
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-still-mentioned$"):
+                self.omit(source, names)
+            self.assertEqual(source, original)
+        source["Parameters"]["SecondInput"].pop("Description")
+        result = self.omit(source, ("OptionalInput", "SecondInput"))
+        self.assertEqual(set(result["Parameters"]), {"Enabled", "UnselectedInput", "Defaulted"})
+
+    def test_omission_rejects_original_macros_and_unknown_intrinsics_even_in_removed_resources(self):
+        expressions = [{"Transform": "private-canary"}, {"Fn::Transform": {"Name": "private-canary"}},
+                       {"Fn::ForEach": ["Item", [], {}]}, {"Fn::ForEach::Loop": ["Item", [], {}]},
+                       {"Fn::ImportValue": "private-canary"}, {"Fn::UnknownFuture": "private-canary"},
+                       {"Fn::FindInMap": ["Map", "Key", "Value"]}, {"Fn::Select": [0, ["literal"]]}]
+        for expression in expressions:
+            for section in ("top", "removed", "kept"):
+                source = self.omission_source()
+                if section == "top": source.update(expression)
+                else: source["Resources"]["Removed" if section == "removed" else "Kept"]["Properties"]["Hidden"] = expression
+                with self.subTest(expression=expression, section=section), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+                    self.omit(source)
+                self.cf.project_parameters(source, ("Enabled",), condition_names=("Selected",))
+        for tag in ("!Transform", "!ForEach", "!ForEach::Loop", "!UnknownFuture"):
+            raw = "Parameters:\n  Enabled: {Type: String, Default: 'false'}\n  OptionalInput: {Type: String}\nMetadata: " + tag + " private-canary\n"
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+                self.cf.project_parameters(raw, ("Enabled",), omit_if_unused=("OptionalInput",))
+
+    def test_omission_rejects_dynamic_and_malformed_refs_and_subs_before_removing_guards(self):
+        expressions = ["{{resolve:ssm:private-canary}}", {"Ref": {"Fn::Sub": "${Other}"}},
+                       {"Ref": ["Other"]}, {"Ref": "${Other}"}, {"Ref": "Other", "Extra": True},
+                       {"Ref": "private-canary"}, {"Ref": ""}, {"Fn::Sub": None}, {"Fn::Sub": {}},
+                       {"Fn::Sub": ["literal"]}, {"Fn::Sub": ["literal", {}, "extra"]},
+                       {"Fn::Sub": ["literal", []]}, {"Fn::Sub": [None, {}]},
+                       {"Fn::Sub": ["literal", {"bad-key": "private-canary"}]},
+                       *({"Fn::Sub": ["${Local}", {"Local": value}]} for value in
+                         (None, True, 1, [], {}, {"Unknown": "private-canary"}, {"Fn::Equals": [1, 1]})),
+                       {"Fn::Sub": "${Other", "Extra": True}, {"Fn::Sub": "${}"},
+                       {"Fn::Sub": "${bad-key}"}, {"Fn::Sub": "${Nested${Other}}"},
+                       {"Fn::Sub": "{{resolve:secretsmanager:private-canary}}"}]
+        for expression in expressions:
+            source = self.omission_source(); source["Resources"]["Removed"]["Properties"]["Hidden"] = expression
+            with self.subTest(expression=expression), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+                self.omit(source)
+        source = self.omission_source(); source["Metadata"] = {"{{resolve:ssm:private-canary}}": "literal"}
+        with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+            self.omit(source)
+
+    def owned_secret_source(self):
+        source = self.omission_source()
+        source["Resources"]["OwnedSecret"] = {"Type": "AWS::SecretsManager::Secret",
+                                               "Properties": {"GenerateSecretString": {"GenerateStringKey": "password"}}}
+        source["Resources"]["Kept"]["Properties"]["Password"] = {
+            "Fn::Sub": "{{resolve:secretsmanager:${OwnedSecret}:SecretString:password}}"}
+        return source
+
+    def test_omission_preserves_only_opaque_owned_secret_and_rejects_removed_secret(self):
+        source = self.owned_secret_source(); original = copy.deepcopy(source)
+        result = self.omit(source)
+        self.assertEqual(result["Resources"]["Kept"]["Properties"]["Password"],
+                         original["Resources"]["Kept"]["Properties"]["Password"])
+        self.assertNotIn("OptionalInput", result["Parameters"])
+        self.assertEqual(source, original)
+        self.assertEqual(self.cf.project_parameters(source, ("Enabled",))["Resources"], original["Resources"])
+        source["Resources"]["OwnedSecret"]["Condition"] = "Selected"
+        with self.assertRaisesRegex(ValueError, "^cloudformation-removed-resource-reference$"):
+            self.omit(source)
+
+    def test_omission_rejects_external_constructed_misplaced_or_parameter_dependent_secrets(self):
+        source = self.owned_secret_source()
+        expression = source["Resources"]["Kept"]["Properties"]["Password"]["Fn::Sub"]
+        malformed = [expression.replace("OwnedSecret", "UnknownSecret"),
+                     expression.replace("${OwnedSecret}", "external-secret"),
+                     expression.replace("secretsmanager:", "ssm:"),
+                     expression.replace("password}}", "password:AWSCURRENT}}"),
+                     expression.replace("password}}", "password::version}}"),
+                     expression.replace("password", "${UnselectedInput}"),
+                     expression.replace("password", "OptionalInput"), expression.replace("password", "Enabled"),
+                     expression + "suffix", "prefix" + expression, expression[:-1]]
+        for value in malformed:
+            for location in ("Kept", "Removed"):
+                changed = copy.deepcopy(source)
+                changed["Resources"][location]["Properties"]["Password"] = {"Fn::Sub": value}
+                with self.subTest(value=value, location=location), self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+                    self.omit(changed)
+        for change in (
+                lambda d: d["Resources"]["OwnedSecret"].update(Type="AWS::Example::Resource"),
+                lambda d: d.update(Metadata={"Password": {"Fn::Sub": expression}}),
+                lambda d: d["Outputs"].update(Secret={"Value": {"Fn::Sub": expression}}),
+                lambda d: d["Resources"]["Kept"]["Properties"].update(Password=expression),
+                lambda d: d["Resources"]["Kept"]["Properties"].update(Password={"Fn::Sub": [expression, {}]}),
+                lambda d: d["Resources"]["Kept"]["Properties"].update(Password={"Fn::Sub": ["${Local}", {"Local": {"Fn::Sub": expression}}]})):
+            changed = copy.deepcopy(source); change(changed)
+            with self.assertRaisesRegex(ValueError, "^cloudformation-parameter-omission-unsupported$"):
+                self.omit(changed)
 
 
 class PrivateNetworkTemplateTests(unittest.TestCase):

@@ -1,0 +1,39 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.image.environment-session-controller.contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-28"
+#   updated_on: "2026-11-28"
+#   layer: 04.deploy
+#   domain: deployment.environment-lifecycle
+#   disciplines: [architecture, security, sre]
+#   kind: manifest
+#   purpose: Declare the isolated Python controller image and its committed source payload.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: github.workflow.publish-kanbien-core-platform-environment-session-controller
+#     path: .github/workflows/publish-kanbien-core-platform-environment-session-controller.yml
+schema: deploy/controller-image-contract/v1
+id: environment-session-controller-image
+program_id: environment-session-controller
+candidate_id: environment-session-cleanup-controller
+platform: linux/amd64
+entrypoint: scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions/script.py
+source_root: /opt/controller
+runtime_user: "65532:65532"
+python_base: python:3.13-slim-bookworm@sha256:1284ed9f6807edb3fb05db99bce501971395b964ea445bc6d19d4eb5712ffeb6
+aws_cli_base: public.ecr.aws/aws-cli/aws-cli:2.36.50@sha256:ff70588020463219cee72a7b44396c19ed73bcb10eabc62c4468e8df0f2ae241
+source_paths:
+  - scripts/04.deploy
+  - scripts/repo/diagnostic-coverage/runtime_contract.py
+  - infra/04.deploy
+  - .github/workflows
+  - platform/*/contracts
+  - packages/core/contracts
+  - apps/platform-smoke/contracts
+qualification:
+  source: clean-committed-git-archive
+  image: network-disabled-read-only-native-controller-tests
+  publication: qualified-image-id-and-full-payload-hashes
+  blocked_scan_severities: [CRITICAL, HIGH]

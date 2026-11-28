@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.aws.runtime-alignment
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -20,7 +20,11 @@ set -euo pipefail
 #   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
+if [[ "$#" -eq 1 && "$1" == "--environment-controller-only" ]]; then
+  exec python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions/integration-test.py" ControllerTests CommandTests StartupTests NativeControlTests NativeRoleBoundaryTests CleanupObservationTests ConnectedRecordsTests.test_sealed_unadmitted_intent_closes_without_inventing_a_task_or_sending_stop ConnectedRecordsTests.test_hung_task_stop_is_owned_sealed_and_never_replayed_after_uncertainty ConnectedRecordsTests.test_completed_predecessor_requires_native_admission_and_is_replaced_only_by_cas ConnectedRecordsTests.test_native_successor_rejects_live_or_unknown_previous_authority ConnectedRecordsTests.test_network_role_binding_uses_original_output_and_never_replays_retained_intent
+fi
 if [[ "$#" -eq 1 && "$1" == "--environment-sessions-only" ]]; then
+  python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py" RecoveryCli.test_native_cleanup_absence_is_operation_specific
   exec python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py"
 fi
 if [[ "$#" -eq 1 && "$1" == "--postgresql-version-only" ]]; then

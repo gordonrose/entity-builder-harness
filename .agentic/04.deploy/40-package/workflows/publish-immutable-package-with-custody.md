@@ -22,7 +22,7 @@ used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-11-19"
+updated_on: "2026-11-27"
 -->
 # Publish Immutable Package With Custody
 
@@ -32,7 +32,8 @@ The [deployment proof standard](../../standards/operational-realization-gate.md)
 ## Use when
 
 Use this workflow when a repository adds or changes the controlled route that
-publishes an immutable package or records package evidence.
+publishes an immutable package, records package evidence, or acquires hosted
+custody for a separately governed deployment capability.
 
 ## Procedure
 
@@ -68,6 +69,14 @@ qualified package; package-only approval still grants no workload mutation.
    package receipt or exposing raw command/provider output.
 
 ## Stop conditions
+
+For hosted acquisition, follow the
+[custody acquisition boundary](../standards/require-immutable-package-custody.md#acquiring-hosted-custody-for-a-new-execution)
+before the consuming operation retains qualified inputs. Reuse the receipt
+validator, signature verifier and provider image checks through the package
+acquisition owner. Acquisition does not rerun publication or widen its permitted
+source ref, and it cannot itself admit a target mutation. Record local controlled
+proof separately from actual authenticated provider/tool verification.
 
 Stop if the source ref, publisher identity, destination, digest, receipt, or a
 required qualification proof is missing or mismatched. Stop if a publication

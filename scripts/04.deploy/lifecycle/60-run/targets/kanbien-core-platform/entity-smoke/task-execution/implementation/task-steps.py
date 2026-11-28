@@ -2,20 +2,22 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.task-steps
-#   version: 3
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Bind the initial database preparation sequence to actual immutable task receipts and produce its existing activation manifest.
+#   purpose: Select the finite initial task workflow and bind its preparation sequence to actual immutable receipts and the existing activation manifest.
 #   portability: {class: internal, targets: [kanbien-core-platform]}
 #   effects: [network, writes-files]
 #   used_by:
 #   - id: deploy.plan.entity-smoke-core-platform
 #     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
+#   - id: deploy.compiler.acceptance-route
+#     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
 """Own-scope preparation steps, not a generic scheduler or AWS authority.
 
 The owning route supplies its checked context and already gated provider.
@@ -24,12 +26,15 @@ Recovery/record operations remain unavailable until their predecessors are wired
 import hashlib
 import importlib.util
 from pathlib import Path
+import re
 from types import SimpleNamespace
 
 _spec = importlib.util.spec_from_file_location("entity_smoke_step_recovery_selection", (Path(__file__).resolve().parents[2] / "recovery-and-replacement/source-transition/source-transition.py"))
 TRANSITION = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(TRANSITION)
 _policy = importlib.util.spec_from_file_location("entity_smoke_step_proof_policy", Path(__file__).resolve().parents[5] / "release-succession/proof-policy.py")
 POLICY = importlib.util.module_from_spec(_policy); _policy.loader.exec_module(POLICY)
+_feature = importlib.util.spec_from_file_location("entity_smoke_initial_feature_selection", Path(__file__).resolve().parents[2] / "orchestration/implementation/feature-steps.py")
+FEATURE = importlib.util.module_from_spec(_feature); _feature.loader.exec_module(FEATURE)
 
 STEPS = (
     ("bootstrap", "administration", "bootstrap", "AdministrationTaskDefinition"),
@@ -57,6 +62,49 @@ def require(value, code):
 
 def selected(args):
     return next((index for index, (_, workload, operation, _) in enumerate(STEPS) if (args.workload, args.operation) == (workload, operation)), None)
+
+
+def baseline_tasks():
+    """Copied baseline acceptance names, shared with the native collector."""
+    preparation = {"baseline-permissions" if name == "permissions" else name: ("baseline", workload, (operation,))
+                   for name, workload, operation, _ in STEPS}
+    return {**preparation, **{name: ("baseline", workload, operations) for name, workload, operations, _ in FEATURE.INITIAL_TASKS}}
+
+
+def preflight_label(proof_label, workload, operation, *, stage="baseline", activation_generation=None):
+    """Native base label; callers retain their existing recovery overlays."""
+    suffix = "" if stage == "baseline" else ":" + stage
+    if activation_generation is not None: suffix += ":" + activation_generation
+    return "entity-smoke-" + hashlib.sha256((proof_label + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+
+
+def initial_tasks(*, proof_label, workload_binding):
+    """Select finite source tasks only; no runtime evidence or launch authority."""
+    code = "initial-task-selection-invalid"
+    require(isinstance(proof_label, str) and re.fullmatch(r"entity-smoke-[a-f0-9]{24}", proof_label) is not None
+            and isinstance(workload_binding, dict) and isinstance(workload_binding.get("workloads"), list), code)
+    workloads = workload_binding["workloads"]
+    require(all(isinstance(row, dict) for row in workloads), code)
+    preparation = tuple(("baseline-permissions" if name == "permissions" else name, workload, (operation,), logical)
+                        for name, workload, operation, logical in STEPS)
+    result = []
+    for activation, selections in (("before-activation", preparation), ("after-activation", FEATURE.INITIAL_TASKS)):
+        for proof, workload, operations, logical in selections:
+            identifier = "entity-smoke-" + workload + "-task"
+            matches = [row for row in workloads if row.get("id") == identifier]
+            require(len(matches) == 1, code)
+            declaration = matches[0]
+            require(declaration.get("workload_type") == "run-to-completion-task" and declaration.get("runtime_class") == "task"
+                    and declaration.get("provider_reference") == logical and "provider_template" not in declaration, code)
+            for operation in operations:
+                for phase in ("preflight", "operation"):
+                    args = SimpleNamespace(proof_label=proof_label, workload=workload, operation=operation, phase=phase, proof_stage="baseline")
+                    result.append({"proof": proof, "workload": workload, "workload_id": identifier,
+                                   "task_definition_ref": declaration["provider_reference"], "operation": operation,
+                                   "stage": stage(args), "phase": phase, "activation": activation, "key": key(args),
+                                   "label": preflight_label(proof_label, workload, operation) if phase == "preflight" else proof_label,
+                                   "condition": FEATURE.CONDITIONAL_OBSERVERS.get((workload, operation), "always")})
+    return tuple(result)
 
 
 def stage(args):
@@ -187,6 +235,7 @@ def validate_renewal(route, plan, binding, delivery, args):
 
 def request(route, context, args):
     binding, checked = context["binding"], context["checked"]
+    require("runtime" not in binding, "runtime-binding-invalid")
     probe = args.phase == "preflight"
     operation = ("ready" if args.workload == "verifier" else "preflight") if probe else args.operation
     label = context["report"]["plan"]["preflight_label"] if probe else args.proof_label
@@ -202,9 +251,11 @@ def request(route, context, args):
         environment["ENTITY_SMOKE_EXPECTED_DIGEST"] = args.expected_digest
     deadline = 90 if probe else context["completion_deadlines"][args.workload]
     if stage(args) == "credential-recovery" and operation == "unready": deadline = 90
-    return route.RUNNER.CONTROL.validate_request({**binding, "workload": args.workload, "definition": checked["definition"],
+    request = route.RUNNER.CONTROL.validate_request({**binding, **({"runtime": checked["runtime"]} if "runtime" in checked else {}), "workload": args.workload, "definition": checked["definition"],
            "security_group": checked["security_group"], "subnets": checked["subnets"], "environment": environment,
            "deadline_seconds": deadline, "proof_label": label})
+    if "runtime" in request: request["runtime"] = dict(request["runtime"])
+    return request
 
 
 def prerequisite_custody(C, value):

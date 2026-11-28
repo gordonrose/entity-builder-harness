@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.change-set-execution
-#   version: 4
+#   version: 5
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -14,13 +14,15 @@
 #   portability: {class: reusable, targets: [entity-builder]}
 #   effects: [network, writes-files]
 #   used_by:
+#   - id: deploy.library.aws.environment-sessions
+#     path: scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
 #   - id: deploy.library.entity-smoke.deployment-control
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/deployment-control.py
 #   - id: deploy.library.core-persistence.change-set-operations
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/change-set-operations.py
 #   - id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py
-"""Single-submission change-set protocol; callbacks retain workload proof rules.
+"""Single-submission CloudFormation protocol; callers retain operation proof rules.
 
 The provider must already be gated by its owning command. A retained reservation
 always selects observation, never another submission. No retries, wait loops,
@@ -132,5 +134,11 @@ def prepare(provider, store, *, phase, request, arguments, precondition, observe
 
 def execute(provider, store, *, phase, request, arguments, precondition, observe, passthrough=()):
     return _run(provider, store, phase=phase, request=request, operation="execute-change-set",
+                token_field="ClientRequestToken", arguments=arguments, precondition=precondition,
+                observe=observe, passthrough=passthrough)
+
+
+def delete(provider, store, *, phase, request, arguments, precondition, observe, passthrough=()):
+    return _run(provider, store, phase=phase, request=request, operation="delete-stack",
                 token_field="ClientRequestToken", arguments=arguments, precondition=precondition,
                 observe=observe, passthrough=passthrough)

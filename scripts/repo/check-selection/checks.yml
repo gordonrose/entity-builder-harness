@@ -4,7 +4,7 @@
 #   version: 46
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -829,6 +829,7 @@ checks:
     # Catalog compilation consumes target configuration and its package imports.
     inputs:
     - scripts/repo/workspace-build
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
@@ -1169,9 +1170,49 @@ checks:
       isolation: disposable-fixture
       rationale: Prove checked session admission and shared change-set handoffs using isolated fake AWS, without live access or unrelated preparation fixtures.
     inputs: &environment_session_inputs
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-sessions.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-records.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/deployment-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-evidence.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/source-transition/source-transition.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/acquire.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
     - scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
     - scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_cli.py
     - scripts/04.deploy/shared/provider-adapters/aws/session_records.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
@@ -1200,6 +1241,133 @@ checks:
       tools: [bash, git, python3]
       environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  environment-session-controller:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh, --environment-controller-only]
+    stage: local
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.aws.runtime-alignment
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 30
+      isolation: disposable-fixture
+      rationale: Prove controller ordering, source-bound setup, native control, interrupted task admission, stop-once cleanup and successor CAS without AWS or the broad session regression.
+    inputs: &environment_controller_inputs
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-sessions.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-records.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-binding.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/deployment-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-evidence.py
+    - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
+    - scripts/repo/diagnostic-coverage/runtime_contract.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
+    - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/source-transition/source-transition.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/00-declaration/acceptance-route-contract.yml
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/acquire.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+    - scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_records.py
+    - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/change_sets.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/response.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/shared/provider-adapters/aws/foundation-checks.py
+    - scripts/04.deploy/shared/postgresql-version.py
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
+    - infra/04.deploy/03.product/image/entity-smoke/image-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/entity-smoke.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/private-network.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+    - scripts/04.deploy/lifecycle/60-run/capabilities/environment-sessions
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py
+    - infra/04.deploy/03.product/image/environment-session-controller/image-contract.yml
+    - .github/workflows/publish-kanbien-core-platform-environment-session-controller.yml
+    - platform/config/contracts
+    - platform/persistence/contracts
+    - platform/security/contracts
+    - platform/server/contracts
+    - platform/workers/contracts
+    - packages/core/contracts
+    - apps/platform-smoke/contracts
+    runtime: &controller_fixture_runtime
+      tools: [bash, git, python3]
+      environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED, PYTHONOPTIMIZE]
+      config_inputs: [.python-version, pyproject.toml, requirements.txt]
+  environment-session-controller-package:
+    boundary: integration
+    argv: [bash, scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/smoke-test.sh]
+    stage: local
+    evidence_class: local-runtime
+    effects: [writes-files]
+    owner: deploy.test.environment-session-controller.package-wrapper
+    scope_inputs: false
+    feedback:
+      development: true
+      expected_seconds: 2
+      isolation: disposable-fixture
+      rationale: Prove fixed controller publication, registry-only permissions and committed build/smoke handoff with isolated git and fake Docker, without AWS or a Docker engine.
+    inputs: &session_controller_package_inputs
+    - scripts/04.deploy/lifecycle/40-package/build-environment-session-controller-image
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody
+    - scripts/04.deploy/lifecycle/40-package/build-candidate-image/operations.sh
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+    - infra/04.deploy/03.product/image/environment-session-controller
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-controller-publication.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-sessions.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-records.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/environment-session-controller-package-custody.delivery-access.yml
+    - .github/workflows/publish-kanbien-core-platform-environment-session-controller.yml
+    runtime: *controller_fixture_runtime
   aws-runtime-alignment-regression:
     boundary: integration
     argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh]
@@ -1249,6 +1417,8 @@ checks:
     owner: deploy.test.core-platform-target-declaration
     scope_inputs: false
     inputs:
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - scripts/04.deploy/shared/provider-adapters/aws/cli.py
     - scripts/04.deploy/shared/provider-adapters/aws/tasks.py
     - scripts/04.deploy/shared/provider-adapters/aws/response.py
@@ -2377,6 +2547,26 @@ checks:
       isolation: disposable-fixture
       rationale: Prove checked preparation and lifecycle inputs reach their real callers and reject unsafe alternatives before provider work without compilation or AWS.
     inputs: &preparation_inputs
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-sessions.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/environment-session-records.yml
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+    - scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-route.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/commands/task-execute.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/orchestration/implementation/feature-steps.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/recovery-and-replacement/source-transition/source-transition.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
     - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
     - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy
@@ -2501,7 +2691,12 @@ checks:
   persistence-provider-regression:
     boundary: integration
     inputs:
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
     - scripts/04.deploy/shared/postgresql-version.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
     - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
@@ -2613,6 +2808,7 @@ checks:
     - scripts/repo/diagnostic-coverage/runtime_contract.py
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py
     - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
     - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
     - infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
@@ -3567,6 +3763,7 @@ checks:
     inputs:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/replacement-operations.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/snapshot-operations.py
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
     - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
     - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
@@ -3748,6 +3945,15 @@ checks:
     inputs:
     - scripts/04.deploy/inventory-deploy-control
     - scripts/repo/check-selection
+    - scripts/04.deploy/shared/provider-adapters/aws/environment-sessions-test.py
+    - scripts/04.deploy/shared/provider-adapters/aws/environment_sessions.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_records.py
+    - scripts/04.deploy/shared/provider-adapters/aws/session_cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cli.py
+    - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/entity-smoke-package-custody/publication.py
     - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
     - scripts/04.deploy/shared/safe-command-diagnostics.sh
     - .github/workflows/delivery-coverage.yml
@@ -4967,6 +5173,7 @@ checks:
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
     - scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py
     - scripts/04.deploy/lifecycle/40-package
+    - scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py
     - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary
     - scripts/04.deploy/lifecycle/20-build/runnable-program-contract
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
@@ -5934,6 +6141,19 @@ repository_inputs:
   checks: [preparation-inputs-regression]
 - inputs: *environment_session_inputs
   checks: [aws-environment-sessions]
+- inputs: *session_controller_package_inputs
+  checks: [environment-session-controller-package]
+- inputs: *environment_controller_inputs
+  checks: [environment-session-controller]
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py
+  checks: [entity-smoke-publication-contract]
+- inputs:
+  - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+  - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py
+  - scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/session-binding/implementation.py
+  - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+  checks: [persistence-provider-regression]
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
   checks: [entity-smoke-composition, persistence-provider-regression]
@@ -5973,6 +6193,9 @@ repository_inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/task_journal.py
   - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/task-operations.py
   checks: [diagnostic-catalog-readers, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression]
+- inputs:
+  - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
+  checks: [diagnostic-catalog-readers, persistence-composition, persistence-provider-regression, acceptance-route-regression, deployment-operation-diagnostics-regression, entity-smoke-composition-base, entity-smoke-task-route, entity-smoke-restart-route, entity-smoke-credential-route]
 - inputs:
   - scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py
   - scripts/04.deploy/shared/provider-adapters/aws/snapshots.py

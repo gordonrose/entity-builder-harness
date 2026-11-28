@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "package-custody-re
 from workflow_guard import job_steps, protected_step, reserved_publication_binding, record_command, custody_tail, scan_step, CANDIDATE_BUILD_OPERATIONS, protected_candidate_build
 
 EXPECTED = ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"
-REQUIRED = ("workflow_dispatch:", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", "package-custody-receipt/script.sh", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "targets/kanbien-core-platform/verify-delivery-role-access/script.sh", "smoke-test-core-server-persistence-image/script.sh")
+REQUIRED = ("workflow_dispatch:", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", "package-custody-receipt/script.sh", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "targets/kanbien-core-platform/verify-delivery-role-access/script.sh", "smoke-test-core-server-persistence-image/script.sh")
 FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "aws apprunner", "aws elasticbeanstalk", "aws route53", "terraform apply")
 
 BUILD = "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh"
@@ -55,6 +55,11 @@ def qualification_route_valid(text):
   selected=[(i,step) for i,step in enumerate(steps) if step.get("name")=="Qualify declarations and actual candidate payload"]
   if len(selected)!=1: return False
   index,step=selected[0]
+  script_index,_=protected_step(steps,"Install script dependencies",[["python3","-m","pip","install","PyYAML==6.0.2"]])
+  gate_index,_=protected_step(steps,"Enforce approved source",[["python3","-B","scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py","--operation","validate-source"]])
+  dependency_index,_=protected_step(steps,"Install dependencies",[["npm","ci","--ignore-scripts"]])
+  if not script_index < gate_index < dependency_index < index:return False
+  if job.get("environment")!="kanbien-core-platform":return False
   if any(key in step for key in ("if","continue-on-error","shell","working-directory")): return False
   commands=[shlex.split(line) for line in step["run"].splitlines() if line.strip() and not line.lstrip().startswith("#")]
   if commands!=QUALIFICATION: return False

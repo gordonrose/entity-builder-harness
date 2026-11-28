@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-15"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -30,6 +30,7 @@ CONFIGURATION = (
 PUBLISHER = Publisher(ROOT, Binding(
     source_repository="gordonrose/entity-builder-harness",
     workflow="publish-kanbien-core-platform-core-server-persistence.yml",
+    pipeline="core-server-persistence-package-custody",
     target="kanbien-core-platform", scope="core-server-persistence",
     account="337159794548", region="eu-west-1",
     repository="kanbien-core-platform/core-server", role="github-kanbien-core-platform-delivery",

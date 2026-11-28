@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.aws.resource-reservation
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-15"
 #   updated_on: "2026-11-27"
@@ -18,6 +18,8 @@
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/controls-and-readiness/implementation/resource-control.py
 #   - id: deploy.library.aws.session-records
 #     path: scripts/04.deploy/shared/provider-adapters/aws/session_records.py
+#   - id: deploy.library.entity-smoke.task-control
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/task-execution/implementation/task-control.py
 """Extracted resource reservation mechanics, not approval or completion evidence.
 
 Bindings supply a closed request/path validator, timestamp reader and historical
@@ -112,12 +114,16 @@ class ImmutableReservationStore:
         validate_time(previous.get("reserved_at"))
         return previous
 
+    def make_record(self, phase, request):
+        """Bindings may preserve a historical shape without copying retention."""
+        return {"schema": self.schema, "phase": phase,
+                "operation_id": self.operation_prefix + uuid.uuid4().hex, "request": request,
+                "request_sha256": hashlib.sha256(canonical(request)).hexdigest(),
+                "reserved_at": datetime.now(timezone.utc).isoformat()}
+
     def reserve(self, phase, request):
         path = self.path_for(phase, request)
-        value = {"schema": self.schema, "phase": phase,
-                 "operation_id": self.operation_prefix + uuid.uuid4().hex, "request": request,
-                 "request_sha256": hashlib.sha256(canonical(request)).hexdigest(),
-                 "reserved_at": datetime.now(timezone.utc).isoformat()}
+        value = self.make_record(phase, request)
         try: fresh = write_exclusive(path, value) if self._storage is None else self._storage.create(path, value)
         except ReservationFailure as failure: raise self.failure(failure.code) from None
         if type(fresh) is not bool: raise self.failure("retention-not-confirmed")

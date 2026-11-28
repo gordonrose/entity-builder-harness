@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import copy
 import hashlib
 import importlib.util
 import json
@@ -34,6 +35,29 @@ AWS_CONNECT_TIMEOUT_SECONDS = 5
 AWS_READ_TIMEOUT_SECONDS = 20
 AWS_PROCESS_TIMEOUT_SECONDS = 30
 _AWS_CLI = None
+_MIGRATION_HELPERS = None
+
+
+def migration_helpers():
+    global _MIGRATION_HELPERS
+    if _MIGRATION_HELPERS is None:
+        path = Path(__file__).resolve().parents[1] / "run-migration/script.py"
+        spec = importlib.util.spec_from_file_location("verifier_migration_helpers", path)
+        _MIGRATION_HELPERS = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_MIGRATION_HELPERS)
+    return _MIGRATION_HELPERS
+
+
+def runtime_context(runtime):
+    if runtime is None:
+        return {"cluster_arn": CLUSTER, "family": "kanbien-core-platform-persistence-verifier",
+                "container_name": "private-persistence-verifier", "log_group": LOG_GROUP,
+                "log_stream_prefix": "persistence-verifier"}
+    return migration_helpers().runtime_context(runtime, "private-persistence-verifier")
+
+
+def task_prefix(context):
+    return migration_helpers().runtime_task_prefix(context)
 
 
 def aws_cli():
@@ -73,13 +97,15 @@ def proof_receipts():
     return module
 
 
-def failed_task_log(arn: object) -> dict[str, object]:
+def failed_task_log(arn: object, *, runtime=None, provider=None) -> dict[str, object]:
     """One approved read of a positively identified failed verifier stream."""
-    if not isinstance(arn, str) or re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", arn) is None:
+    context = runtime_context(runtime)
+    if context is None or runtime is not None and not callable(provider): return {"task_log_observation": "unavailable"}
+    if not isinstance(arn, str) or re.fullmatch(re.escape(task_prefix(context)) + r"[0-9a-f]{32}", arn) is None:
         return {"task_log_observation": "unavailable"}
-    stream = "persistence-verifier/private-persistence-verifier/" + arn.rsplit("/", 1)[-1]
+    stream = context["log_stream_prefix"] + "/" + context["container_name"] + "/" + arn.rsplit("/", 1)[-1]
     try:
-        ok, value, _ = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head", "--limit", "100")
+        ok, value, _ = (aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", stream, "--start-from-head", "--limit", "100")
     except Exception:
         return {"task_log_observation": "failed"}
     if not ok:
@@ -148,25 +174,31 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
     return "ok"
 
 
-def log_accepted(task: dict[str, object], expected: str) -> tuple[bool, str]:
+def log_accepted(task: dict[str, object], expected: str, *, runtime=None, provider=None) -> tuple[bool, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return False, "private-persistence-verifier-evidence-unavailable"
-    stream = f"persistence-verifier/private-persistence-verifier/{arn.rsplit('/', 1)[-1]}"
-    ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    context = runtime_context(runtime)
+    if context is None or runtime is not None and (not callable(provider) or not migration_helpers().runtime_task_matches(task, context)):
+        return False, "private-persistence-verifier-evidence-unavailable"
+    stream = f"{context['log_stream_prefix']}/{context['container_name']}/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = (aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", stream, "--start-from-head")
     if not ok:
         return False, code
     messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)] if isinstance(events, dict) else []
     return (True, "ok") if any(accepted_message(message, expected) for message in messages) else (False, "private-persistence-verifier-evidence-mismatch")
 
 
-def no_direct_database_credential(task_definition: str) -> bool:
-    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
+def no_direct_database_credential(task_definition: str, *, runtime=None, provider=None) -> bool:
+    context = runtime_context(runtime)
+    if context is None or runtime is not None and not callable(provider): return False
+    ok, definition, _ = (aws if provider is None else provider)("ecs", "describe-task-definition", "--task-definition", task_definition)
     value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
     containers = value.get("containerDefinitions") if isinstance(value, dict) else None
     if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict):
         return False
     container = containers[0]
+    if runtime is not None and (value.get("taskDefinitionArn") != task_definition or container.get("name") != context["container_name"]): return False
     # ECS describes environment fields as lower-case ``name``.  A
     # credential-bearing verifier definition must never pass this check just
     # because the controller read the provider response with the wrong case.
@@ -192,10 +224,12 @@ def task_execution():
     return module
 
 
-def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
+def reconciliation_operation(operation: str, definition: str, *, runtime=None, provider=None) -> tuple[str | None, str]:
+    context = runtime_context(runtime)
+    if context is None or runtime is not None and not callable(provider): return None, "private-persistence-verifier-observation-uncertain"
     tasks = task_execution()
     try:
-        found = tasks.reconcile_task(tasks.cli_provider(aws), cluster=CLUSTER, definition=definition, operation_id=operation, validate_task=lambda task: task)
+        found = tasks.reconcile_task(tasks.cli_provider(aws if provider is None else provider), cluster=context["cluster_arn"], definition=definition, operation_id=operation, validate_task=lambda task: task)
         return found["taskArn"], "ok"
     except tasks.TaskFailure as failure:
         return None, "private-persistence-verifier-task-identity-unresolved" if failure.code == "reconciliation-unresolved" else "private-persistence-verifier-observation-uncertain"
@@ -210,15 +244,20 @@ def task_evidence():
     return module
 
 
-def task_operation_bound(task: dict, mode: str) -> bool:
-    return task_evidence().task_overrides_match(task, "private-persistence-verifier", {"PERSISTENCE_VERIFIER_MODE": mode, "PERSISTENCE_ACCEPTANCE_RECORD_ID": RECORD_ID, "PERSISTENCE_ACCEPTANCE_FACT": FACT})
+def task_operation_bound(task: dict, mode: str, *, runtime=None) -> bool:
+    context = runtime_context(runtime)
+    return context is not None and task_evidence().task_overrides_match(task, context["container_name"], {"PERSISTENCE_VERIFIER_MODE": mode, "PERSISTENCE_ACCEPTANCE_RECORD_ID": RECORD_ID, "PERSISTENCE_ACCEPTANCE_FACT": FACT})
 
-def image_digest(task_definition: object) -> str | None:
+def image_digest(task_definition: object, *, runtime=None, provider=None) -> str | None:
     if not isinstance(task_definition, str):
         return None
-    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
+    context = runtime_context(runtime)
+    if context is None or runtime is not None and not callable(provider): return None
+    ok, definition, _ = (aws if provider is None else provider)("ecs", "describe-task-definition", "--task-definition", task_definition)
     value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
+    if runtime is not None and (not isinstance(value, dict) or value.get("taskDefinitionArn") != task_definition): return None
     containers = value.get("containerDefinitions") if isinstance(value, dict) else None
+    if runtime is not None and (not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != context["container_name"]): return None
     image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
     return image.rsplit("@", 1)[1] if isinstance(image, str) and image.count("@") == 1 and image.rsplit("@", 1)[1].startswith("sha256:") else None
 
@@ -242,9 +281,17 @@ def historical_task_identity(task: dict[str, object], expected_digest: str) -> b
     return isinstance(value, dict) and value.get("family") == "kanbien-core-platform-persistence-verifier" and image_digest(definition_arn) == expected_digest and no_direct_database_credential(definition_arn)
 
 
-def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_receipt=None) -> int:
+def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_receipt=None, *, runtime=None, provider=None, receipt_storage=None) -> int:
+    context = runtime_context(runtime)
+    if context is None: return report("blocked", "private-persistence-verifier-operation-runtime-invalid")
+    if runtime is not None and (not callable(provider) or receipt_storage is None or not callable(on_receipt)):
+        return report("blocked", "private-persistence-verifier-operation-storage-invalid")
+    if runtime is not None and (not migration_helpers().runtime_task_matches(task, context) or not task_operation_bound(task, mode, runtime=runtime)):
+        return report("uncertain", "private-persistence-verifier-controller-task-identity-mismatch")
+    prefix = task_prefix(context)
+    selected = {"runtime": runtime, "provider": provider} if runtime is not None or provider is not None else {}
     facts = {}
-    for key, item, pattern in (("verifier_task", task.get("taskArn"), r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}"),
+    for key, item, pattern in (("verifier_task", task.get("taskArn"), re.escape(prefix) + r"[0-9a-f]{32}"),
                                ("operation_id", task.get("startedBy"), r"kp-[0-9a-f]{32}")):
         if isinstance(item, str) and re.fullmatch(pattern, item):
             facts[key] = item
@@ -259,41 +306,41 @@ def accepted_completion(task: dict[str, object], seconds: int, mode: str, on_rec
     failure = "private-persistence-verifier-completion-deadline-exceeded" if observed_duration > seconds else "private-persistence-verifier-unsuccessful-completion" if not exited_zero(task) else None
     if failure is not None:
         if not exited_zero(task):
-            facts.update(failed_task_log(task.get("taskArn")))
+            facts.update(failed_task_log(task.get("taskArn"), **selected))
         if on_receipt is not None:
             try:
-                digest = image_digest(task.get("taskDefinitionArn"))
+                digest = image_digest(task.get("taskDefinitionArn"), **selected)
                 if digest is None: raise ValueError()
-                receipt = proof_receipts().make(proof_type="verifier", operation=mode, task=task, image_digest=digest, result_code=failure, context={"record_id": RECORD_ID, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-                path = proof_receipts().persist(receipt)
-                on_receipt(path)
+                receipt = proof_receipts().make(proof_type="verifier", operation=mode, task=task, image_digest=digest, result_code=failure, context={"record_id": RECORD_ID, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration}, controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix)
+                reference = migration_helpers().retain_completion(proof_receipts(), receipt, root=ROOT, storage=receipt_storage,
+                    task_arn_prefix=prefix, on_receipt=on_receipt)
                 # Publish a usable failure reference only after both immutable
                 # receipt and the original operation journal retain it. A mere
                 # failed verdict (including persistence failure) is not proof.
-                facts.update(mode=mode, proof_receipt=path.relative_to(ROOT).as_posix(),
-                             proof_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                facts.update(mode=mode, proof_receipt=reference["path"],
+                             proof_sha256=reference["sha256"],
                              evidence_reuse="fresh-terminal-observation")
             except Exception:
-                return report("failed", failure, "private-persistence-verifier-receipt-persistence-failed", facts=facts)
+                return report("uncertain" if receipt_storage is not None else "failed", failure, "private-persistence-verifier-receipt-persistence-failed", facts=facts)
         return report("failed", failure, facts=facts)
-    accepted, code = log_accepted(task, SUCCESS[mode])
+    accepted, code = log_accepted(task, SUCCESS[mode], **selected)
     if not accepted:
         return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
     arn = task.get("taskArn")
-    digest = image_digest(task.get("taskDefinitionArn"))
+    digest = image_digest(task.get("taskDefinitionArn"), **selected)
     if not isinstance(arn, str) or digest is None:
         return report("blocked", "private-persistence-verifier-receipt-identity-unavailable")
     try:
         receipt = proof_receipts().make(
             proof_type="verifier", operation=mode, task=task, image_digest=digest,
             result_code=SUCCESS[mode], context={"record_id": RECORD_ID, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration},
-            controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix,
         )
-        path = proof_receipts().persist(receipt)
-        if on_receipt is not None: on_receipt(path)
+        reference = migration_helpers().retain_completion(proof_receipts(), receipt, root=ROOT, storage=receipt_storage,
+            task_arn_prefix=prefix, on_receipt=on_receipt)
     except Exception:
-        return report("blocked", "private-persistence-verifier-receipt-persistence-failed")
-    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT)), "operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"})
+        return report("uncertain" if receipt_storage is not None else "blocked", "private-persistence-verifier-receipt-persistence-failed")
+    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": reference["path"], "operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"})
 
 
 
@@ -327,24 +374,37 @@ def save_operation(path: Path, value: dict) -> None:
 
 def load_operation(path: Path, mode: str) -> dict:
     try:
-        value = task_journal().read(path)
+        return validate_operation(task_journal().read(path), mode)
+    except (OSError, ValueError, TypeError):
+        raise OperationError("private-persistence-verifier-operation-metadata-invalid") from None
+
+
+def validate_request(request, mode):
+    required = {"task_definition", "network", "overrides", "deadline_seconds"}
+    if mode not in SUCCESS or not isinstance(request, dict) or set(request) not in (required, required | {"runtime"}): raise ValueError()
+    if "runtime" in request and request["runtime"] is None: raise ValueError()
+    context = runtime_context(request.get("runtime"))
+    if context is None: raise ValueError()
+    definition_prefix = f"arn:aws:ecs:{REGION}:{ACCOUNT}:task-definition/{context['family']}:"
+    expected_overrides = {"containerOverrides": [{"name": context["container_name"], "environment": [
+        {"name": "PERSISTENCE_VERIFIER_MODE", "value": mode},
+        {"name": "PERSISTENCE_ACCEPTANCE_RECORD_ID", "value": RECORD_ID},
+        {"name": "PERSISTENCE_ACCEPTANCE_FACT", "value": FACT},
+    ]}]}
+    if not isinstance(request["task_definition"], str) or re.fullmatch(re.escape(definition_prefix) + r"[1-9][0-9]*", request["task_definition"]) is None or not isinstance(request["network"], str) or not request["network"] or request["overrides"] != expected_overrides or type(request["deadline_seconds"]) is not int or request["deadline_seconds"] <= 0: raise ValueError()
+    return context
+
+
+def validate_operation(value: dict, mode: str) -> dict:
+    try:
         fields = {"schema", "mode", "operation_id", "predecessor", "request", "task_arn", "proof_receipt", "proof_sha256", "integrity"}
-        if not isinstance(value, dict) or set(value) != fields or value["schema"] != "deploy/private-persistence-verifier-operation/v1" or value["mode"] != mode:
+        if mode not in SUCCESS or not isinstance(value, dict) or set(value) != fields or value["schema"] != "deploy/private-persistence-verifier-operation/v1" or value["mode"] != mode:
             raise ValueError()
         if re.fullmatch(r"kp-[a-f0-9]{32}", value["operation_id"]) is None or (value["predecessor"] is not None and re.fullmatch(r"kp-[a-f0-9]{32}", value["predecessor"]) is None):
             raise ValueError()
-        if not isinstance(value["request"], dict) or set(value["request"]) != {"task_definition", "network", "overrides", "deadline_seconds"}:
-            raise ValueError()
         request = value["request"]
-        definition_prefix = f"arn:aws:ecs:{REGION}:{ACCOUNT}:task-definition/kanbien-core-platform-persistence-verifier:"
-        expected_overrides = {"containerOverrides": [{"name": "private-persistence-verifier", "environment": [
-            {"name": "PERSISTENCE_VERIFIER_MODE", "value": mode},
-            {"name": "PERSISTENCE_ACCEPTANCE_RECORD_ID", "value": RECORD_ID},
-            {"name": "PERSISTENCE_ACCEPTANCE_FACT", "value": FACT},
-        ]}]}
-        if not isinstance(request["task_definition"], str) or re.fullmatch(re.escape(definition_prefix) + r"[1-9][0-9]*", request["task_definition"]) is None or not isinstance(request["network"], str) or not request["network"] or request["overrides"] != expected_overrides or type(request["deadline_seconds"]) is not int or request["deadline_seconds"] <= 0:
-            raise ValueError()
-        if value["task_arn"] is not None and (not isinstance(value["task_arn"], str) or re.fullmatch(re.escape(f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/") + r"[a-f0-9]{32}", value["task_arn"]) is None):
+        context = validate_request(request, mode)
+        if value["task_arn"] is not None and (not isinstance(value["task_arn"], str) or re.fullmatch(re.escape(task_prefix(context)) + r"[a-f0-9]{32}", value["task_arn"]) is None):
             raise ValueError()
         if (value["proof_receipt"] is None) != (value["proof_sha256"] is None):
             raise ValueError()
@@ -353,7 +413,7 @@ def load_operation(path: Path, mode: str) -> dict:
         body = {key: item for key, item in value.items() if key != "integrity"}
         if value["integrity"] != hashlib.sha256(canonical(body)).hexdigest(): raise ValueError()
         return value
-    except (OSError, ValueError, TypeError):
+    except (OSError, ValueError, TypeError, KeyError):
         raise OperationError("private-persistence-verifier-operation-metadata-invalid") from None
 
 
@@ -367,43 +427,54 @@ def locked_operation(mode: str):
     except journal.JournalFailure as error: raise OperationError("private-persistence-verifier-" + str(error)) from None
 
 
-def retained_completion(value: dict) -> dict | None:
+def retained_completion(value: dict, *, storage=None) -> dict | None:
     if value["proof_receipt"] is None: return None
     try:
-        path = (ROOT / value["proof_receipt"]).resolve()
-        if not path.is_relative_to(ROOT) or path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != value["proof_sha256"]:
-            raise ValueError()
-        proof = proof_receipts().validate(json.loads(path.read_text()))
+        context = runtime_context(value["request"].get("runtime"))
+        proof = proof_receipts().read({"path": value["proof_receipt"], "sha256": value["proof_sha256"]},
+            root=ROOT, storage=storage, task_arn_prefix=task_prefix(context))
         task = proof["task"]
         if proof["proof_type"] != "verifier" or proof["operation"] != value["mode"] or task["arn"] != value["task_arn"] or task["definition"] != value["request"]["task_definition"]:
             raise ValueError()
         allowed = {"private-persistence-verifier-completion-deadline-exceeded", SUCCESS[value["mode"]] if task["exit_code"] == 0 else "private-persistence-verifier-unsuccessful-completion"}
         if task["result_code"] not in allowed: raise ValueError()
+        if storage is not None and (proof["context"].get("record_id") != RECORD_ID or proof["context"].get("completion_deadline_seconds") != value["request"]["deadline_seconds"]): raise ValueError()
         return proof
-    except (OSError, ValueError, KeyError, TypeError):
+    except Exception:
         raise OperationError("private-persistence-verifier-terminal-proof-unavailable") from None
 
 
-def observe_reserved(value: dict, path: Path, seconds: int, mode: str, *, wait: bool = False) -> int:
-    proof = retained_completion(value)
+def observe_reserved(value: dict, path: Path, seconds: int, mode: str, *, wait: bool = False, provider=None, storage=None, step_id=None) -> int:
+    runtime = value["request"].get("runtime")
+    context = runtime_context(runtime)
+    if context is None: raise OperationError("private-persistence-verifier-operation-runtime-invalid")
+    if runtime is not None and (storage is None or not callable(provider)):
+        raise OperationError("private-persistence-verifier-operation-storage-invalid")
+    selected = {"runtime": runtime, "provider": provider} if runtime is not None or provider is not None else {}
+    proof = retained_completion(value, storage=storage)
     if proof is not None:
         accepted = proof["task"]["exit_code"] == 0 and proof["task"]["result_code"] == SUCCESS[mode]
         facts = {"operation_id": value["operation_id"], "mode": mode, "proof_receipt": value["proof_receipt"], "proof_sha256": value["proof_sha256"], "evidence_reuse": "historical-completion", "completed_at": proof["task"]["stopped_at"], "verifier_task": proof["task"]["arn"]}
         if proof["task"]["exit_code"] != 0:
-            facts.update(failed_task_log(proof["task"]["arn"]))
+            facts.update(failed_task_log(proof["task"]["arn"], **selected))
         return report("accepted" if accepted else "failed", proof["task"]["result_code"], facts=facts)
     arn = value["task_arn"]
+    if runtime is not None and not no_direct_database_credential(value["request"]["task_definition"], **selected):
+        return report("uncertain", "private-persistence-verifier-isolation-not-proven", facts={"operation_id": value["operation_id"]})
     if arn is None:
-        arn, code = reconciliation_operation(value["operation_id"], value["request"]["task_definition"])
+        arn, code = reconciliation_operation(value["operation_id"], value["request"]["task_definition"], **selected)
         if arn is None: return report("uncertain", code, facts={"operation_id": value["operation_id"]})
     execution = task_execution()
     def exact(task):
-        if task.get("taskArn") != arn or task.get("taskDefinitionArn") != value["request"]["task_definition"] or task.get("startedBy") != value["operation_id"] or not task_operation_bound(task, mode):
+        if task.get("taskArn") != arn or not isinstance(arn, str) or re.fullmatch(re.escape(task_prefix(context)) + r"[a-f0-9]{32}", arn) is None or task.get("taskDefinitionArn") != value["request"]["task_definition"] or task.get("startedBy") != value["operation_id"] or not task_operation_bound(task, mode, runtime=runtime):
             raise execution.TaskFailure("observation-identity-mismatch")
         return task
     def read(_previous):
-        task = execution.describe_task(execution.cli_provider(aws), cluster=CLUSTER, arn=arn, validate_task=exact)
-        value["task_arn"] = arn; save_operation(path, value)
+        task = execution.describe_task(execution.cli_provider(aws if provider is None else provider), cluster=context["cluster_arn"], arn=arn, validate_task=exact)
+        if storage is None:
+            value["task_arn"] = arn; save_operation(path, value)
+        elif value["task_arn"] is None:
+            attach_operation(value, storage, step_id, "retain_task", arn)
         return task
     try:
         task, terminal = execution.observe_until_terminal(read, seconds=seconds, interval=5, wait=wait,
@@ -414,47 +485,96 @@ def observe_reserved(value: dict, path: Path, seconds: int, mode: str, *, wait: 
             return report("uncertain", "private-persistence-verifier-controller-task-identity-mismatch", facts={"operation_id": value["operation_id"]})
         return report("uncertain", error.provider_code or "private-persistence-verifier-controller-observation-uncertain", facts={"operation_id": value["operation_id"], "verifier_task": arn})
     if terminal:
-        return accepted_completion(task, seconds, mode, on_receipt=lambda receipt: remember_completion(value, path, receipt))
+        retention = {"runtime": runtime, "provider": provider, "receipt_storage": storage} if storage is not None else {}
+        return accepted_completion(task, seconds, mode, on_receipt=lambda receipt: remember_completion(value, path, receipt, storage=storage, step_id=step_id), **retention)
     pending = task.get("lastStatus") in {"PROVISIONING", "PENDING", "ACTIVATING", "RUNNING", "DEACTIVATING", "STOPPING", "DEPROVISIONING"}
     return report("pending" if pending else "uncertain", "private-persistence-verifier-reconciliation-task-not-terminal", facts={"operation_id": value["operation_id"], "verifier_task": arn})
 
 
-def remember_completion(value: dict, path: Path, receipt: Path) -> None:
+def attach_operation(value, storage, step_id, method, argument):
+    journal = task_journal()
+    try:
+        journal.attach_retained(storage, step_id, value, method=method, argument=argument,
+            validate_record=lambda item: validate_operation(item, value["mode"]))
+    except journal.JournalFailure as failure:
+        raise OperationError("private-persistence-verifier-" + str(failure)) from None
+
+
+def remember_completion(value: dict, path: Path, receipt, *, storage=None, step_id=None) -> None:
+    if storage is not None: return attach_operation(value, storage, step_id, "retain_proof", receipt)
     value["proof_receipt"] = receipt.relative_to(ROOT).as_posix()
     value["proof_sha256"] = hashlib.sha256(receipt.read_bytes()).hexdigest()
     save_operation(path, value)
 
 
-def execute_reserved(args, seconds: int, task_definition: str, network: str, overrides: str) -> int:
-    request = {"task_definition": task_definition, "network": network, "overrides": json.loads(overrides), "deadline_seconds": seconds}
-    expected = None if args.expected_operation == "none" else args.expected_operation
+def execute_reserved(args, seconds: int, task_definition: str, network: str, overrides: str, *, runtime=None, provider=None, storage=None, step_id=None) -> int:
+    retained = runtime is not None or storage is not None or step_id is not None
+    value, remote_possible = None, False
     journal, tasks = task_journal(), task_execution()
-    with locked_operation(args.mode) as (path, descriptor, value):
+    try:
         try:
-            reserved, fresh = journal.reserve(path, descriptor, value, schema="deploy/private-persistence-verifier-operation/v1",
-                marker=b"private-persistence-verifier-operation/v1\n", mode=args.mode, request=request,
-                new_operation=args.new_operation, expected=expected, completed=retained_completion)
-        except journal.JournalFailure as error:
-            return report("blocked", "private-persistence-verifier-" + str(error), facts={"operation_id": value["operation_id"]} if value is not None else None)
-        value = reserved
-        if not fresh: return observe_reserved(value, path, seconds, args.mode)
-        operation_id = value["operation_id"]
-        report("pending", "private-persistence-verifier-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
-        sys.stderr.flush()
-        def submitted(task):
-            arn = task.get("taskArn")
-            if not isinstance(arn, str) or re.fullmatch(re.escape(f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/") + r"[a-f0-9]{32}", arn) is None:
-                raise tasks.TaskFailure("observation-identity-mismatch")
-            return task
-        try:
-            task = tasks.submit_task(tasks.cli_provider(aws), cluster=CLUSTER, definition=task_definition, operation_id=operation_id,
-                network=network, overrides=request["overrides"], validate_task=submitted)
-        except tasks.TaskFailure as error:
-            code = "private-persistence-verifier-controller-task-identity-mismatch" if error.code == "observation-identity-mismatch" else error.provider_code or "private-persistence-verifier-not-started"
-            return report("failed" if error.rejected else "uncertain", code, facts={"operation_id": operation_id})
-        value["task_arn"] = task["taskArn"]
-        save_operation(path, value)
-        return observe_reserved(value, path, seconds, args.mode, wait=True)
+            request = {"task_definition": task_definition, "network": network, "overrides": json.loads(overrides), "deadline_seconds": seconds}
+            if runtime is not None: request["runtime"] = copy.deepcopy(runtime)
+            context = validate_request(request, args.mode)
+        except (ValueError, TypeError):
+            raise OperationError("private-persistence-verifier-operation-request-invalid") from None
+        if retained and (runtime is None or not callable(provider) or not isinstance(step_id, str)
+                or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", step_id) is None
+                or not all(callable(getattr(storage, name, None)) for name in ("read", "compare_and_reserve", "retain_task", "retain_proof", "before_submit", "read_receipt", "retain_receipt"))):
+            raise OperationError("private-persistence-verifier-operation-storage-invalid")
+        expected = None if args.expected_operation == "none" else args.expected_operation
+        selected = {"runtime": runtime, "provider": provider} if runtime is not None or provider is not None else {}
+        observation = {"provider": provider, "storage": storage, "step_id": step_id} if retained or provider is not None else {}
+        manager = contextlib.nullcontext((None, None, None)) if retained else locked_operation(args.mode)
+        with manager as (path, descriptor, value):
+            if retained:
+                value, fresh = journal.reserve_retained(storage, step_id, schema="deploy/private-persistence-verifier-operation/v1", mode=args.mode,
+                    request=request, new_operation=args.new_operation, expected=expected,
+                    completed=lambda previous: retained_completion(previous, storage=storage), validate_record=lambda item: validate_operation(item, args.mode))
+            else:
+                value, fresh = journal.reserve(path, descriptor, value, schema="deploy/private-persistence-verifier-operation/v1",
+                    marker=b"private-persistence-verifier-operation/v1\n", mode=args.mode, request=request,
+                    new_operation=args.new_operation, expected=expected, completed=retained_completion)
+            if not fresh:
+                remote_possible = True
+                return observe_reserved(value, path, seconds, args.mode, **observation)
+            operation_id = value["operation_id"]
+            report("pending", "private-persistence-verifier-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
+            sys.stderr.flush()
+            if retained and not no_direct_database_credential(task_definition, **selected):
+                raise OperationError("private-persistence-verifier-isolation-not-proven")
+            def before_submit():
+                nonlocal remote_possible
+                if retained:
+                    try: admitted = storage.before_submit(step_id, copy.deepcopy(value))
+                    except Exception: raise OperationError("private-persistence-verifier-operation-admission-not-confirmed") from None
+                    if admitted is not True: raise OperationError("private-persistence-verifier-operation-admission-not-confirmed")
+                remote_possible = True
+            def submitted(task):
+                arn = task.get("taskArn")
+                if not isinstance(arn, str) or re.fullmatch(re.escape(task_prefix(context)) + r"[a-f0-9]{32}", arn) is None:
+                    raise tasks.TaskFailure("observation-identity-mismatch")
+                if retained and (task.get("taskDefinitionArn") != task_definition or task.get("startedBy") != operation_id or not task_operation_bound(task, args.mode, runtime=runtime)):
+                    raise tasks.TaskFailure("observation-identity-mismatch")
+                return task
+            task = tasks.submit_task(tasks.cli_provider(aws if provider is None else provider), cluster=context["cluster_arn"], definition=task_definition, operation_id=operation_id,
+                network=network, overrides=request["overrides"], validate_task=submitted, before_submit=before_submit)
+            if retained: attach_operation(value, storage, step_id, "retain_task", task["taskArn"])
+            else:
+                value["task_arn"] = task["taskArn"]
+                save_operation(path, value)
+            return observe_reserved(value, path, seconds, args.mode, wait=True, **observation)
+    except journal.JournalFailure as error:
+        return report("uncertain" if retained and remote_possible else "blocked", "private-persistence-verifier-" + str(error), facts={"operation_id": value["operation_id"]} if value is not None else None)
+    except tasks.TaskFailure as error:
+        code = "private-persistence-verifier-controller-task-identity-mismatch" if error.code == "observation-identity-mismatch" else error.provider_code or "private-persistence-verifier-not-started"
+        return report("failed" if error.rejected else "uncertain", code, facts={"operation_id": value["operation_id"]} if value is not None else None)
+    except OperationError as error:
+        if not retained: raise
+        return report("uncertain" if remote_possible else "blocked", str(error), facts={"operation_id": value["operation_id"]} if value is not None else None)
+    except (OSError, subprocess.SubprocessError):
+        if not retained: raise
+        return report("uncertain" if remote_possible else "blocked", "private-persistence-verifier-operation-store-unavailable", facts={"operation_id": value["operation_id"]} if value is not None else None)
 
 
 def main() -> int:

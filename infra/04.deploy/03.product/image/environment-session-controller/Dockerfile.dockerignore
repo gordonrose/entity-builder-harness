@@ -1,0 +1,9 @@
+# Only the declared committed git-archive reaches this context.
+.git
+.aws
+.cache
+**/__pycache__
+**/*.pyc
+**/.env
+**/.env.*
+**/node_modules

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.acceptance-controls
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-09"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -52,6 +52,28 @@ def fails(call, owner, code):
     except owner as failure:
         assert failure.code == code, (failure.code, code)
     else: raise AssertionError("Expected acceptance control rejection")
+
+
+def initial_selection_protocols():
+    evidence = K.A
+    baseline = evidence.T.STEPS.baseline_tasks()
+    assert {name: value for name, value in evidence.TASKS.items() if value[0] == "baseline"} == baseline
+    assert list(baseline) == ["bootstrap", "migration", "grant-runtime", "baseline-permissions", "original-record", "lifecycle", "collision", "baseline-read"]
+    assert len(evidence.TASKS) == 19 and baseline["original-record"] == ("baseline", "verifier", ("create", "observe-create"))
+    baseline["bootstrap"] = ("changed",)
+    assert evidence.TASKS["bootstrap"] == ("baseline", "administration", ("bootstrap",))
+    # Existing recovery overlays still act on the exact historical base label.
+    for label in ("entity-smoke-" + "a" * 24, evidence.T.IMAGE_REPAIR.LABEL):
+        for stage, workload, operation in (("baseline", "administration", "bootstrap"), ("baseline", "verifier", "create"),
+                                           ("server-replacement", "verifier", "read"), ("acceptance", "verifier", "read")):
+            suffix = "" if stage == "baseline" else ":" + stage
+            original = "entity-smoke-" + hashlib.sha256((label + ":" + workload + ":" + operation + ":preflight" + suffix).encode()).hexdigest()[:24]
+            if (label, workload, operation, stage) == (evidence.T.IMAGE_REPAIR.LABEL, "administration", "bootstrap", "baseline"):
+                expected = "entity-smoke-" + hashlib.sha256((original + ":" + evidence.T.IMAGE_REPAIR.FAILURE_ID + ":image-delivery-recovery-1").encode()).hexdigest()[:24]
+            else:
+                expected = evidence.C.TRANSITION.replacement_label(None, SimpleNamespace(proof_label=label, workload=workload, operation=operation, proof_stage=stage), original)
+            assert evidence.preflight_label({"proof_label": label}, stage, workload, operation) == expected
+    print("ENTITY_SMOKE_INITIAL_ACCEPTANCE_SELECTION_PARITY_PASSED")
 
 
 def collection_protocols():
@@ -514,6 +536,7 @@ def control_custody_protocols():
 
 
 def run():
+    initial_selection_protocols()
     collection_protocols()
     archive_protocols()
     archive_protocols(bootstrap=True)

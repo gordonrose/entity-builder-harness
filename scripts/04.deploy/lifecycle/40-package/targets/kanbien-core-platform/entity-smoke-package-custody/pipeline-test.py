@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -44,10 +44,31 @@ M.mapping = supplied
 def feature(): return next(item for item in current["pipelines"] if item["id"] == "entity-smoke-package-custody")
 feature()["state"] = "active"
 M.check_pipeline(TARGET)
+# Omitted acquisition selection still means the unchanged main default.
+feature()["custody_acquisition"].pop("source_ref")
+feature().pop("additional_permitted_source_refs")
+M.check_pipeline(TARGET)
+current = copy.deepcopy(catalogue)
+with patch.object(M.PUBLICATION, "source_policy", side_effect=M.PUBLICATION.PublicationFailure("publication-source-policy-invalid")) as shared:
+    try: M.check_pipeline(TARGET)
+    except M.DeclarationFailure as failure: assert failure.codes == ("pipeline-record-invalid",)
+    else: raise AssertionError("shared source selection was bypassed")
+    assert shared.call_count == 1
+with patch.object(M, "PUBLICATION", None), patch.object(M.subprocess, "run", side_effect=AssertionError("child-started")):
+    try: M.check_pipeline(TARGET)
+    except M.DeclarationFailure as failure:
+        assert failure.codes == ("pipeline-source-policy-unavailable",)
+        assert "private-provider-canary" not in str(failure)
+    else: raise AssertionError("missing source-policy helper was accepted")
 negatives = [
     (lambda: feature().update(provider_identity="github-kanbien-core-platform-delivery"), "pipeline-record-invalid"),
     (lambda: feature().update(package_destination="kanbien-core-platform/core-server"), "pipeline-record-invalid"),
     (lambda: feature().update(permitted_source_ref="refs/heads/chat"), "pipeline-record-invalid"),
+    (lambda: feature().update(additional_permitted_source_refs=["refs/heads/main"]), "pipeline-record-invalid"),
+    (lambda: feature().update(additional_permitted_source_refs=["refs/heads/task", "refs/heads/task"]), "pipeline-record-invalid"),
+    (lambda: feature().update(additional_permitted_source_refs=["refs/heads/*"]), "pipeline-record-invalid"),
+    (lambda: feature()["custody_acquisition"].update(source_ref="refs/heads/unlisted"), "pipeline-record-invalid"),
+    (lambda: next(item for item in current["pipelines"] if item["id"] == "core-server-package-custody").update(additional_permitted_source_refs=["refs/heads/task"]), "pipeline-record-invalid"),
     (lambda: feature().update(approval="none"), "pipeline-record-invalid"),
     (lambda: feature().update(state="accepted"), "pipeline-record-invalid"),
     (lambda: feature().update(state=[]), "pipeline-record-invalid"),
@@ -72,18 +93,22 @@ M.mapping = original
 
 # Exercise the real final reporter too. Earlier declaration stages are explicit
 # controlled protocols; the actual pipeline predicate and main report are real.
-for invalid in ([], {"private-provider-canary": True}, True, None):
+for invalid in ([], {"private-provider-canary": True}, True, None, "missing-policy-helper"):
     current = copy.deepcopy(catalogue); feature()["state"] = invalid
+    missing = invalid == "missing-policy-helper"
+    if missing: current = copy.deepcopy(catalogue)
     output = io.StringIO()
     args = SimpleNamespace(target_root=str(TARGET), rehearsal_root=None, validate_arguments=False)
     with patch.object(M, "parse_args", return_value=args), \
          patch.object(M, "mapping", side_effect=lambda path, code: current if path == INDEX else original(path, code)), \
          patch.object(M, "check_profile"), patch.object(M, "check_foundation"), \
          patch.object(M, "check_scope"), patch.object(M, "check_accepted_release"), \
+         patch.object(M, "PUBLICATION", None if missing else M.PUBLICATION), \
+         patch.object(M.subprocess, "run", side_effect=AssertionError("child-started")), \
          patch.object(M, "check_persistence_provider_identity_bindings") as later, redirect_stdout(output):
         assert M.main() == 1
         assert later.call_count == 0
     report = json.loads(output.getvalue())
-    assert report["verdict"] == "failed" and report["findings"] == [{"code": "pipeline-record-invalid"}]
+    assert report["verdict"] == "failed" and report["findings"] == [{"code": "pipeline-source-policy-unavailable" if missing else "pipeline-record-invalid"}]
     assert "private-provider-canary" not in output.getvalue()
 print(json.dumps({"schema": "deploy/entity-smoke-pipeline-fixture/v1", "verdict": "passed", "provider_observation": False, "negative_cases": len(negatives)}))

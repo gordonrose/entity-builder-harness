@@ -117,12 +117,15 @@ def current_task(task: dict[str, object], requested: str, definition: str) -> st
     return "ok" if task.get("lastStatus") == "STOPPED" else "persistence-administration-reconciliation-task-not-terminal"
 
 
-def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, str]:
+def accepted_log(task: dict[str, object], operation: str, *, runtime=None, provider=None) -> tuple[str | None, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return None, "persistence-administration-evidence-unavailable"
-    stream = f"persistence-administration/persistence-administration/{arn.rsplit('/', 1)[-1]}"
-    ok, events, code = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    context = MIGRATION.runtime_context(runtime, "persistence-administration")
+    if context is None or runtime is not None and not callable(provider): return None, "persistence-administration-evidence-unavailable"
+    if runtime is not None and not MIGRATION.runtime_task_matches(task, context): return None, "persistence-administration-evidence-unavailable"
+    stream = f"{context['log_stream_prefix']}/{context['container_name']}/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = (MIGRATION.aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", stream, "--start-from-head")
     messages = [item.get("message") for item in events.get("events", []) if isinstance(item, dict)] if ok and isinstance(events, dict) else []
     expected = SUCCESS[operation]
     allowed = {expected} if isinstance(expected, str) else set(expected)
@@ -136,7 +139,15 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, s
     return None, code if not ok else "persistence-administration-not-confirmed"
 
 
-def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None) -> int:
+def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=None, *, runtime=None, provider=None, receipt_storage=None) -> int:
+    context = MIGRATION.runtime_context(runtime, "persistence-administration")
+    if context is None: return report("blocked", "persistence-administration-operation-runtime-invalid")
+    prefix = MIGRATION.runtime_task_prefix(context)
+    if runtime is not None and (receipt_storage is None or not callable(provider) or not callable(on_receipt)):
+        return report("blocked", "persistence-administration-operation-storage-invalid")
+    if runtime is not None and not MIGRATION.runtime_task_matches(task, context):
+        return report("uncertain", "persistence-administration-controller-task-identity-mismatch")
+    selected = {"runtime": runtime, "provider": provider} if runtime is not None or provider is not None else {}
     terminal = {}
     def unsuccessful(code, *, facts=None):
         return report("failed" if terminal else "blocked", code, facts={**(facts or {}), **terminal})
@@ -145,15 +156,14 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
         return report("blocked", "persistence-administration-duration-unavailable")
     if on_receipt is not None and (observed > seconds or not MIGRATION.task_exit(task)):
         try:
-            digest = MIGRATION.image_digest(task.get("taskDefinitionArn"))
+            digest = MIGRATION.image_digest(task.get("taskDefinitionArn"), **selected)
             if digest is None: raise ValueError()
             failure = "persistence-administration-completion-deadline-exceeded" if observed > seconds else "persistence-administration-unsuccessful-completion"
             receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=failure,
-                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-            path = RECEIPTS.persist(receipt)
-            on_receipt(path)
+                context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix)
+            reference = MIGRATION.retain_completion(RECEIPTS, receipt, root=ROOT, storage=receipt_storage, task_arn_prefix=prefix, on_receipt=on_receipt)
             terminal = {"operation_id": task.get("startedBy"), "operation": operation,
-                        "proof_receipt": path.relative_to(ROOT).as_posix(), "proof_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+                        "proof_receipt": reference["path"], "proof_sha256": reference["sha256"]}
         except Exception: return report("uncertain", "persistence-administration-receipt-persistence-failed", facts={"operation_id": task.get("startedBy")})
     if observed > seconds:
         return unsuccessful("persistence-administration-completion-deadline-exceeded")
@@ -161,10 +171,10 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
         # Use the task's actual log stream and a closed reader; never replay it.
         arn = task.get("taskArn")
         known_facts = {}
-        if isinstance(arn, str) and re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/[0-9a-f]{32}", arn):
+        if isinstance(arn, str) and re.fullmatch(re.escape(prefix) + r"[0-9a-f]{32}", arn):
             known_facts["administration_task"] = arn.rsplit("/", 1)[-1]
         if isinstance(arn, str) and arn.rsplit("/", 1)[-1]:
-            ok, events, _ = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", f"persistence-administration/persistence-administration/{arn.rsplit('/', 1)[-1]}", "--start-from-head")
+            ok, events, _ = (MIGRATION.aws if provider is None else provider)("logs", "get-log-events", "--log-group-name", context["log_group"], "--log-stream-name", f"{context['log_stream_prefix']}/{context['container_name']}/{arn.rsplit('/', 1)[-1]}", "--start-from-head")
             contract = None
             task_evidence = None
             try:
@@ -203,21 +213,20 @@ def accept(task: dict[str, object], seconds: int, operation: str, on_receipt=Non
                 except Exception:
                     continue
         return unsuccessful("persistence-administration-unsuccessful-completion", facts=known_facts)
-    result_code, code = accepted_log(task, operation)
+    result_code, code = accepted_log(task, operation, **selected)
     if result_code is None:
         return report("blocked", code)
-    digest = MIGRATION.image_digest(task.get("taskDefinitionArn"))
+    digest = MIGRATION.image_digest(task.get("taskDefinitionArn"), **selected)
     arn = task.get("taskArn")
     if not isinstance(digest, str) or not isinstance(arn, str):
         return report("blocked", "persistence-administration-receipt-identity-unavailable")
     try:
-        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
-        path = RECEIPTS.persist(receipt)
-        if on_receipt is not None: on_receipt(path)
+        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), task_arn_prefix=prefix)
+        reference = MIGRATION.retain_completion(RECEIPTS, receipt, root=ROOT, storage=receipt_storage, task_arn_prefix=prefix, on_receipt=on_receipt)
     except Exception:
         return report("uncertain" if on_receipt is not None else "blocked", "persistence-administration-receipt-persistence-failed",
             facts={"operation_id": task.get("startedBy")} if on_receipt is not None else None)
-    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT)), **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
+    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": reference["path"], **({"operation_id": task.get("startedBy"), "evidence_reuse": "fresh-terminal-observation"} if on_receipt is not None else {})})
 
 
 def retained_observation(operation: str, definition: str) -> tuple[Path | None, dict[str, object] | None]:

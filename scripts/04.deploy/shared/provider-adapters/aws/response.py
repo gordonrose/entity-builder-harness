@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.provider.aws.response-classification
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -34,13 +34,23 @@ MISSING = {
     ("cloudformation", "describe-change-set"): {"ChangeSetNotFound", "ChangeSetNotFoundException"},
     ("rds", "describe-db-instances"): {"DBInstanceNotFound", "DBInstanceNotFoundFault"},
     ("rds", "describe-db-snapshots"): {"DBSnapshotNotFound", "DBSnapshotNotFoundFault"},
+    ("rds", "describe-db-subnet-groups"): {"DBSubnetGroupNotFoundFault"},
     ("iam", "get-role-policy"): {"NoSuchEntity", "NoSuchEntityException"},
     ("iam", "get-role"): {"NoSuchEntity", "NoSuchEntityException"},
     ("ec2", "describe-security-groups"): {"InvalidGroup.NotFound"},
+    ("ec2", "describe-vpcs"): {"InvalidVpcID.NotFound"},
+    ("ec2", "describe-subnets"): {"InvalidSubnetID.NotFound", "InvalidSubnetId.NotFound"},
+    ("ec2", "describe-route-tables"): {"InvalidRouteTableID.NotFound"},
+    ("ec2", "describe-vpc-endpoints"): {"InvalidVpcEndpoint.NotFound", "InvalidVpcEndpointId.NotFound"},
+    ("secretsmanager", "describe-secret"): {"ResourceNotFoundException"},
+    ("servicediscovery", "get-namespace"): {"NamespaceNotFound"},
+    ("servicediscovery", "get-service"): {"ServiceNotFound"},
+    ("route53", "get-hosted-zone"): {"NoSuchHostedZone"},
     ("budgets", "describe-budget"): {"NotFoundException"},
     ("logs", "filter-log-events"): {"ResourceNotFoundException"},
     ("logs", "get-log-events"): {"ResourceNotFoundException"},
     ("s3api", "get-object"): {"NoSuchKey"},
+    ("stepfunctions", "describe-execution"): {"ExecutionDoesNotExist"},
 }
 
 

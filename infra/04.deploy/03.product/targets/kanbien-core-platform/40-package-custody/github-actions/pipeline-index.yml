@@ -4,7 +4,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-09"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -28,9 +28,15 @@ pipelines:
     owner: feature-platform
     state: candidate-not-live
     executable_workflow: .github/workflows/publish-kanbien-core-platform-entity-smoke.yml
+    custody_acquisition:
+      source_repository: gordonrose/entity-builder-harness
+      artifact_prefix: kanbien-core-platform-entity-smoke-package-custody-
+      receipt_member: package-custody-receipt.json
+      source_ref: refs/heads/chat/2026-11-26-22-09-reducing-aws-bill
     delivery_access_contract: entity-smoke-package-custody.delivery-access.yml
     trigger: workflow_dispatch
     permitted_source_ref: refs/heads/main
+    additional_permitted_source_refs: [refs/heads/chat/2026-11-26-22-09-reducing-aws-bill]
     approval: github-environment:kanbien-core-platform
     provider_identity: github-kanbien-core-platform-entity-smoke-publisher
     package_destination: kanbien-core-platform/entity-smoke
@@ -80,9 +86,15 @@ pipelines:
     owner: persistence-platform
     state: active
     executable_workflow: .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    custody_acquisition:
+      source_repository: gordonrose/entity-builder-harness
+      artifact_prefix: kanbien-core-platform-persistence-package-custody-
+      receipt_member: package-custody-receipt.json
+      source_ref: refs/heads/chat/2026-11-26-22-09-reducing-aws-bill
     delivery_access_contract: core-server-persistence-package-custody.delivery-access.yml
     trigger: workflow_dispatch
     permitted_source_ref: refs/heads/main
+    additional_permitted_source_refs: [refs/heads/chat/2026-11-26-22-09-reducing-aws-bill]
     approval: github-environment:kanbien-core-platform
     provider_identity: github-kanbien-core-platform-delivery
     package_destination: kanbien-core-platform/core-server
@@ -110,4 +122,28 @@ pipelines:
     used_by_scopes: [core-server-persistence]
     receipt_contract: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
     required_proofs: [source-identity, minimal-source-build, configuration-startup, archive-integrity, delivery-access-coverage, vulnerability-scan, sbom, provenance-attestation, immutable-digest, custody-receipt]
+    deployment_boundary: target-bound-deploy-capability-not-this-pipeline
+  - id: environment-session-controller-package-custody
+    type: package-publication
+    owner: deployment-platform
+    state: candidate-not-live
+    executable_workflow: .github/workflows/publish-kanbien-core-platform-environment-session-controller.yml
+    custody_acquisition:
+      source_repository: gordonrose/entity-builder-harness
+      artifact_prefix: kanbien-core-platform-environment-session-controller-package-custody-
+      receipt_member: package-custody-receipt.json
+      source_ref: refs/heads/chat/2026-11-26-22-09-reducing-aws-bill
+    delivery_access_contract: environment-session-controller-package-custody.delivery-access.yml
+    trigger: workflow_dispatch
+    permitted_source_ref: refs/heads/main
+    additional_permitted_source_refs: [refs/heads/chat/2026-11-26-22-09-reducing-aws-bill]
+    approval: github-environment:kanbien-core-platform
+    provider_identity: github-kanbien-core-platform-session-publisher
+    package_destination: kanbien-core-platform/environment-session-controller
+    provider_region_alias: aws-eu-west-1
+    permitted_operations: [qualify-local-image, reserve-publication-before-push, publish-immutable-image-once, reconcile-without-push, vulnerability-scan, sbom, provenance-attestation, write-safe-package-custody-receipt]
+    outputs: [immutable-image-digest, package-custody-receipt]
+    used_by_scopes: [core-server-persistence, entity-smoke]
+    receipt_contract: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+    required_proofs: [local-image-qualification, delivery-access-coverage, vulnerability-scan, sbom, provenance-attestation, immutable-digest, custody-receipt]
     deployment_boundary: target-bound-deploy-capability-not-this-pipeline

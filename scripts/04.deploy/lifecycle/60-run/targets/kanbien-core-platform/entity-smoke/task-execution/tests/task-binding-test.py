@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-binding
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -21,6 +21,7 @@ import importlib.util
 import json
 from pathlib import Path
 from urllib.parse import quote
+from unittest.mock import patch
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_TASK_BINDING_ASSERTIONS_DISABLED")
 
@@ -56,31 +57,34 @@ def permission(row):
 
 
 class Provider:
-    def __init__(self, workload):
+    def __init__(self, workload, *, parameters=None, resources=None, snapshot=None):
+        parameters = PARAMETERS if parameters is None else parameters
+        resources = RESOURCES if resources is None else resources
+        snapshot = M.DEPLOY.source()[1] if snapshot is None else snapshot
         self.calls, self.workload = [], workload
-        self.task = M.expected_task(workload, PARAMETERS, RESOURCES)
-        self.task.update(taskDefinitionArn=RESOURCES[M.WORKLOADS[workload] + "TaskDefinition"]["physical_id"], revision=1, status="ACTIVE", compatibilities=["EC2", "FARGATE"], registeredBy="arn:aws:iam::337159794548:role/fixture")
+        self.task = M.expected_task(workload, parameters, resources, snapshot)
+        self.task.update(taskDefinitionArn=resources[M.WORKLOADS[workload] + "TaskDefinition"]["physical_id"], revision=1, status="ACTIVE", compatibilities=["EC2", "FARGATE"], registeredBy="arn:aws:iam::337159794548:role/fixture")
         self.task["volumes"] = []; self.task["placementConstraints"] = []; self.task["enableFaultInjection"] = False
         self.task["containerDefinitions"][0].update(cpu=0, mountPoints=[], volumesFrom=[])
         self.task["containerDefinitions"][0].update(copy.deepcopy(EMPTY_CONTAINER_DEFAULTS))
         self.task["containerDefinitions"][0]["linuxParameters"].update(devices=[], tmpfs=[])
         self.roles, self.policies, self.groups = {}, {}, {}
         self.attached, self.paginated, self.encoded = False, False, False
-        for logical, resource in M.DEPLOY.source()[1]["Resources"].items():
+        for logical, resource in snapshot["Resources"].items():
             if resource["Type"] == "AWS::IAM::Role":
-                properties = M.resolve(resource["Properties"], PARAMETERS, RESOURCES, workload)
-                name = RESOURCES[logical]["physical_id"]
+                properties = M.resolve(resource["Properties"], parameters, resources, workload)
+                name = resources[logical]["physical_id"]
                 self.roles[name] = {"RoleName": name, "Arn": "arn:aws:iam::337159794548:role/" + name, "Path": "/", "AssumeRolePolicyDocument": properties["AssumeRolePolicyDocument"]}
                 self.policies[name] = {entry["PolicyName"]: entry["PolicyDocument"] for entry in properties["Policies"]}
             if resource["Type"] == "AWS::EC2::SecurityGroup":
-                group = RESOURCES[logical]["physical_id"]
-                properties = M.resolve(resource["Properties"], PARAMETERS, RESOURCES, workload)
-                self.groups[group] = {"GroupId": group, "VpcId": PARAMETERS["VpcId"], "OwnerId": M.ACCOUNT, "IpPermissions": [], "IpPermissionsEgress": [permission(row) for row in properties["SecurityGroupEgress"]]}
-        for group in (PARAMETERS["EndpointSecurityGroupId"], PARAMETERS["DatabaseSecurityGroupId"]):
-            self.groups[group] = {"GroupId": group, "VpcId": PARAMETERS["VpcId"], "OwnerId": M.ACCOUNT, "IpPermissions": [], "IpPermissionsEgress": []}
-        for logical, resource in M.DEPLOY.source()[1]["Resources"].items():
+                group = resources[logical]["physical_id"]
+                properties = M.resolve(resource["Properties"], parameters, resources, workload)
+                self.groups[group] = {"GroupId": group, "VpcId": parameters["VpcId"], "OwnerId": M.ACCOUNT, "IpPermissions": [], "IpPermissionsEgress": [permission(row) for row in properties["SecurityGroupEgress"]]}
+        for group in (parameters["EndpointSecurityGroupId"], parameters["DatabaseSecurityGroupId"]):
+            self.groups[group] = {"GroupId": group, "VpcId": parameters["VpcId"], "OwnerId": M.ACCOUNT, "IpPermissions": [], "IpPermissionsEgress": []}
+        for logical, resource in snapshot["Resources"].items():
             if resource["Type"] == "AWS::EC2::SecurityGroupIngress":
-                row = M.resolve(resource["Properties"], PARAMETERS, RESOURCES, workload)
+                row = M.resolve(resource["Properties"], parameters, resources, workload)
                 self.groups[row["GroupId"]]["IpPermissions"].append(permission({"IpProtocol": row["IpProtocol"], "FromPort": row["FromPort"], "ToPort": row["ToPort"], "DestinationSecurityGroupId": row["SourceSecurityGroupId"]}))
 
     def __call__(self, service, operation, **parameters):
@@ -99,6 +103,41 @@ class Provider:
         return {"RoleName": name, "PolicyName": selected, "PolicyDocument": quote(json.dumps(document), safe="") if self.encoded else copy.deepcopy(document)}
 
 
+def runtime_fixture(workload="verifier", *, package=None):
+    """Controlled source/observation handoff shared by the actual consumer fixtures."""
+    snapshot, parameters, resources = copy.deepcopy(M.DEPLOY.source()[1]), copy.deepcopy(PARAMETERS), copy.deepcopy(RESOURCES)
+    parameters.update(ResourceNamePrefix="session-check", ClusterArn="arn:aws:ecs:eu-west-1:337159794548:cluster/session-check",
+                      LogGroupName="/aws/ecs/session-check")
+    if package is not None: parameters.update(ImageDigest=package["image_digest"], SourceRevision=package["source_revision"])
+    # Extra captured declarations demonstrate exact source closure, not persistent constants.
+    snapshot["Parameters"]["CapturedFixture"] = {"Type": "String"}
+    parameters["CapturedFixture"] = "checked"
+    snapshot["Resources"]["CapturedLog"] = {"Type": "AWS::Logs::LogGroup", "Properties": {"LogGroupName": "/fixture/captured"}}
+    resources["CapturedLog"] = {"type": "AWS::Logs::LogGroup", "physical_id": "/fixture/captured"}
+    for name, prefix in M.WORKLOADS.items():
+        definition = snapshot["Resources"][prefix + "TaskDefinition"]["Properties"]
+        definition["Family"] = "session-checked-" + name
+        container = definition["ContainerDefinitions"][0]
+        container["Name"] = "renamed-" + name
+        container["LogConfiguration"]["Options"]["awslogs-stream-prefix"] = "checked-" + name
+        resources[prefix + "TaskDefinition"]["physical_id"] = "arn:aws:ecs:eu-west-1:337159794548:task-definition/session-checked-" + name + ":1"
+    view = {"schema": "deploy/aws-session-runtime-view/v1", "binding": {"target": "kanbien-core-platform", "scope": "entity-smoke",
+                "session_id": "1" * 32, "source_inputs_sha256": "2" * 64, "starts_at": 1, "expires_at": 3601},
+            "source_plan_sha256": "3" * 64, "account": M.ACCOUNT, "region": M.REGION, "component": "entity-smoke",
+            "stack": "session-checked-entity", "stack_id": "arn:aws:cloudformation:eu-west-1:337159794548:stack/session-checked-entity/11111111-1111-1111-1111-111111111111",
+            "phase": "activation", "template_reference": "30-provider-realization/aws/cloudformation/entity-smoke.yml",
+            "template": snapshot, "parameters": parameters, "resources": resources, "outputs": {}, "observed_at": 100,
+            "custody": {name: "4" * 64 for name in ("creation_request_sha256", "change_set_id_sha256", "template_sha256", "parameters_sha256", "resources_sha256")}}
+    provider = Provider(workload, parameters=parameters, resources=resources, snapshot=snapshot)
+    return view, provider
+
+
+def bound_request(request):
+    view, provider = runtime_fixture(request["workload"], package=request)
+    checked = M.inspect(provider, request["workload"], view["parameters"], view["resources"], view["template"], runtime_view=view)
+    return {**copy.deepcopy(request), **{key: copy.deepcopy(checked[key]) for key in ("definition", "security_group", "subnets", "runtime")}}
+
+
 def fails(call, code, workload):
     try: call()
     except M.BindingFailure as failure:
@@ -111,6 +150,13 @@ def fails(call, code, workload):
 
 
 def main():
+    assert M.SHARED.resolve({"Fn::If": ["selected", {"Ref": "kept"}, {"Ref": "AWS::NoValue"}]}, {"selected": True}) == {"Ref": "kept"}
+    provider = Provider("migration")
+    with patch.object(M.SHARED, "runtime_task_definition", wraps=M.SHARED.runtime_task_definition) as shared_task, \
+            patch.object(M.SHARED, "runtime_role", wraps=M.SHARED.runtime_role) as shared_role, \
+            patch.object(M.SHARED, "runtime_network", wraps=M.SHARED.runtime_network) as shared_network:
+        M.inspect(provider, "migration", PARAMETERS, RESOURCES)
+        assert shared_task.call_count == 1 and shared_role.call_count == 2 and shared_network.call_count == 1
     observed = []
     value = {"revision": 1, "nested": {"value": 1}}
     def raw(service, operation, **parameters):
@@ -213,6 +259,38 @@ def main():
     assert provider.calls == []
     fails(lambda: M.resolve({"Fn::Join": [",", []]}, PARAMETERS, RESOURCES, "migration"), "task-binding-source-not-supported", "migration")
     fails(lambda: M.policy('{"Version":"2012-10-17","Statement":[],"Statement":[]}', "migration"), "task-binding-policy-not-confirmed", "migration")
+    for workload in M.WORKLOADS:
+        view, provider = runtime_fixture(workload)
+        result = M.inspect(provider, workload, view["parameters"], view["resources"], view["template"], runtime_view=view)
+        assert result["runtime"]["family"] == "session-checked-" + workload
+        assert result["runtime"]["container_name"] == "renamed-" + workload
+        assert result["runtime"]["log_group"] == "/aws/ecs/session-check"
+        assert result["runtime"]["log_stream_prefix"] == "checked-" + workload
+        assert result["runtime"]["binding_sha256"] == M.DEPLOY.fingerprint({key: view[key] for key in ("binding", "custody", "stack_id")})
+        view["observed_at"] += 1
+        repeated = M.inspect(provider, workload, view["parameters"], view["resources"], view["template"], runtime_view=view)
+        assert result == repeated, "observation time is not immutable task identity"
+        result["runtime"]["session_id"] = "0" * 32
+        assert view["binding"]["session_id"] == "1" * 32
+    for field, value in (("account", "000000000000"), ("region", "us-east-1"), ("component", "foundation"),
+                         ("observed_at", True), ("observed_at", -1), ("observed_at", "100"), ("custody", {"raw": CANARY}),
+                         ("stack_id", CANARY), ("outputs", {"Uncaptured": CANARY}), ("phase", "unknown"), ("unknown", CANARY)):
+        view, provider = runtime_fixture()
+        view[field] = value
+        fails(lambda: M.inspect(provider, "verifier", view["parameters"], view["resources"], view["template"], runtime_view=view), "runtime-binding-invalid", "verifier")
+        assert provider.calls == [], "malformed source handoff cannot trigger provider reads"
+    for field in ("parameters", "resources", "template"):
+        view, provider = runtime_fixture()
+        supplied = {name: copy.deepcopy(view[name]) for name in ("parameters", "resources", "template")}
+        supplied[field]["uncaptured"] = CANARY
+        fails(lambda: M.inspect(provider, "verifier", supplied["parameters"], supplied["resources"], supplied["template"], runtime_view=view), "runtime-binding-invalid", "verifier")
+        assert provider.calls == []
+    for field, key, reason in (("parameters", "CapturedFixture", "task-binding-parameters-not-confirmed"),
+                              ("resources", "CapturedLog", "task-binding-resources-not-confirmed")):
+        view, provider = runtime_fixture()
+        del view[field][key]
+        fails(lambda: M.inspect(provider, "verifier", view["parameters"], view["resources"], view["template"], runtime_view=view), reason, "verifier")
+        assert provider.calls == [], "equal but incomplete maps cannot hide missing captured declarations"
     print(json.dumps({"schema": "deploy/entity-smoke-task-binding-fixture/v1", "verdict": "passed", "provider_observation": False, "workloads": 5,
                       "checks": ["actual-source-template", "immutable-task-revision", "no-extra-command-or-credentials", "exact-role-trust-and-policies", "url-encoded-policy", "private-network-and-destination-ingress", "finite-context", "no-native-values"]}))
 

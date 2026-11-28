@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 5
+#   version: 7
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-11-19"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -16,8 +16,11 @@
 #   used_by:
 #   - id: deploy.command.acceptance-route
 #     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh
+#   - id: deploy.library.aws.preparation-inputs
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/preparation-inputs.py
 from __future__ import annotations
 import argparse
+from copy import deepcopy
 import importlib.util
 import json
 import os
@@ -65,6 +68,97 @@ def load_route(scope_contract: Path, root: Path = ROOT) -> tuple[dict, Path | No
     acceptance = contract.get('acceptance')
     route_path = reference(root, acceptance.get('route')) if isinstance(acceptance, dict) else None
     return (document(route_path), route_path) if route_path is not None else ({}, None)
+
+
+def initial_task_sources(route: dict) -> tuple[str, ...]:
+    """Fixed reader imports/native entries, not full runtime qualification."""
+    selection = route.get('initial_selection') if isinstance(route, dict) else None
+    if not isinstance(selection, dict) or set(selection) != {'kind'}:
+        raise ValueError('acceptance-route-initial-selection-invalid')
+    compiler = 'scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'
+    if selection['kind'] == 'ordered-commands/v1':
+        try:
+            steps, commands = route['initial_setup'], route['commands']
+            if not isinstance(steps, list) or not steps: raise ValueError()
+            entries = set()
+            for row in steps:
+                argv = commands[row['command']]['argv']
+                if not (isinstance(argv, list) and len(argv) >= 2 and argv[0] == 'bash'
+                        and isinstance(argv[1], str) and argv[1].endswith('/script.sh')
+                        and reference(ROOT, argv[1]) is not None): raise ValueError()
+                entries.update((argv[1], argv[1][:-3] + '.py'))
+            return (compiler, *sorted(entries))
+        except (KeyError, TypeError, ValueError):
+            raise ValueError('acceptance-route-initial-selection-invalid') from None
+    if selection['kind'] != 'entity-smoke-baseline/v1':
+        raise ValueError('acceptance-route-initial-selection-invalid')
+    entity = 'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/entity-smoke/'
+    return (compiler, entity + 'task-execution/implementation/task-steps.py',
+            entity + 'orchestration/implementation/feature-steps.py',
+            entity + 'recovery-and-replacement/source-transition/source-transition.py',
+            'scripts/04.deploy/lifecycle/60-run/release-succession/proof-policy.py',
+            entity + 'task-execution/implementation/task-route.py',
+            entity + 'task-execution/commands/task-execute.sh')
+
+
+def initial_tasks(route: dict, workload_binding: dict, *, root: Path = ROOT,
+                  proof_label: str | None = None) -> tuple[dict, ...]:
+    """Select a fixed native reader; declaration text never selects a callable."""
+    sources = initial_task_sources(route)
+    if route['initial_selection']['kind'] == 'ordered-commands/v1':
+        return _ordered_initial_tasks(route, workload_binding)
+    try:
+        path = reference(root, sources[1])
+        if path is None: raise ValueError()
+        spec = importlib.util.spec_from_file_location('acceptance_initial_entity_steps', path)
+        owner = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(owner)
+        return owner.initial_tasks(proof_label=proof_label, workload_binding=workload_binding)
+    except Exception:
+        raise ValueError('acceptance-route-initial-selection-invalid') from None
+
+
+def _ordered_initial_tasks(route: dict, workload_binding: dict) -> tuple[dict, ...]:
+    """Read source-selected candidate setup, not release proof or launch authority."""
+    reason = 'acceptance-route-initial-selection-invalid'
+    def require(condition):
+        if not condition: raise ValueError(reason)
+    try:
+        steps, commands = route['initial_setup'], route['commands']
+        workloads = workload_binding['workloads']
+        require(isinstance(steps, list) and 0 < len(steps) <= 128
+                and isinstance(commands, dict) and isinstance(workloads, list))
+        result, names, selected_commands, activated = [], set(), set(), False
+        for step in steps:
+            require(isinstance(step, dict) and set(step) == {'id', 'command', 'phase', 'workload', 'proof'})
+            for field in ('id', 'command', 'workload'):
+                require(isinstance(step[field], str) and re.fullmatch(r'[a-z][a-z0-9-]{0,63}', step[field]))
+            require(step['id'] not in names and step['command'] not in selected_commands
+                    and isinstance(commands.get(step['command']), dict))
+            names.add(step['id']); selected_commands.add(step['command'])
+            require(step['phase'] in ('before-activation', 'after-activation')
+                    and not (activated and step['phase'] == 'before-activation'))
+            activated = step['phase'] == 'after-activation'
+            matches = [row for row in workloads if isinstance(row, dict) and row.get('id') == step['workload']]
+            require(len(matches) == 1 and matches[0].get('runtime_class') == 'task'
+                    and matches[0].get('workload_type') == 'run-to-completion-task')
+            definition = matches[0].get('provider_reference')
+            require(isinstance(definition, str) and re.fullmatch(r'[A-Za-z][A-Za-z0-9]{0,254}', definition))
+            proof = step['proof']
+            if isinstance(proof, str):
+                proof = route.get('proofs', {}).get(proof)
+                require(isinstance(proof, dict) and proof.get('command') == step['command'])
+                proof = {key: value for key, value in proof.items() if key not in {'command', 'image_role'}}
+            require(isinstance(proof, dict) and set(proof) == {'proof_type', 'operation', 'result_code', 'family', 'deadline_workload'}
+                    and all(isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,254}', value) for value in proof.values()))
+            requirements = workload_binding.get('runtime_requirements')
+            require(isinstance(requirements, list))
+            requirements = [row for row in requirements if isinstance(row, dict) and row.get('workload') == step['workload']]
+            require(len(requirements) == 1 and requirements[0].get('declaration_workload') == proof['deadline_workload'])
+            result.append({**step, 'proof': deepcopy(proof), 'task_definition': definition})
+        return tuple(deepcopy(result))
+    except (KeyError, TypeError, AttributeError):
+        raise ValueError(reason) from None
 
 
 def command_metadata(path: Path) -> dict:
@@ -265,6 +359,16 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
         gap('acceptance-route-required-proofs-mismatch')
     for name, proof in proofs.items():
         if not isinstance(proof, dict) or not isinstance(proof.get('command'), str) or proof.get('command') not in commands or not all(isinstance(proof.get(field), str) and proof[field] for field in ('proof_type', 'operation', 'result_code', 'image_role')): gap('acceptance-route-proof-binding-invalid', name)
+    initial = ()
+    if 'initial_setup' in route or 'initial_selection' in route:
+        binding_reference = (scope_contract.parent.parent / '10-workload-binding/workload-binding.yml').resolve().relative_to(root.resolve()).as_posix()
+        binding_path = required_path(binding_reference, 'acceptance-route-initial-workload-binding-missing')
+        try:
+            initial = initial_tasks(route, document(binding_path) if binding_path else {}, root=root,
+                                    proof_label=values.get('proof_label'))
+            for source in initial_task_sources(route):
+                required_path(source, 'acceptance-route-initial-source-missing')
+        except ValueError: gap('acceptance-route-initial-selection-invalid')
     sequence = route.get('sequence')
     if not isinstance(sequence, list) or any(not isinstance(pair, list) or len(pair) != 2 or any(not isinstance(name, str) or name not in proofs for name in pair) for pair in sequence): gap('acceptance-route-sequence-invalid')
     stages = [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]
@@ -306,7 +410,9 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
                     gap('acceptance-route-runtime-input-command-mismatch', name)
                 if returncode or not isinstance(parsed, dict) or parsed.get('schema') != 'deploy/command-arguments-report/v1' or parsed.get('verdict') != 'valid': gap('acceptance-route-command-arguments-invalid', name)
             except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError): gap('acceptance-route-command-arguments-invalid', name)
-        for name, proof in proofs.items():
+        initial_proofs = ((row['id'], {'command': row['command'], **row['proof']}) for row in initial
+                          if route['initial_selection']['kind'] == 'ordered-commands/v1')
+        for name, proof in (*proofs.items(), *initial_proofs):
             command = commands[proof['command']]
             parsed = reports.get(tuple(resolve(command['argv'], values)), (None, {}))[1]
             expected = {key: value for key, value in proof.items() if key not in {'command', 'image_role'}}

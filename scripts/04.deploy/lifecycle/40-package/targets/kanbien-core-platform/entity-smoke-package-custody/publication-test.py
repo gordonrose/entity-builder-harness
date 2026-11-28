@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-15"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -17,12 +17,15 @@
 #   - id: deploy.plan.entity-smoke-core-platform
 #     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
 from dataclasses import replace
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
+import copy
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -30,14 +33,35 @@ from unittest.mock import patch
 SPEC = importlib.util.spec_from_file_location("entity_smoke_publication", Path(__file__).with_name("publication.py"))
 CONTROL = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CONTROL)
-from ecr_publication import PublicationFailure, Publisher
+from ecr_publication import PublicationFailure, Publisher, source_policy
 FEATURE = CONTROL.PUBLISHER
 BASELINE_SPEC = importlib.util.spec_from_file_location("persistence_publication", Path(__file__).parents[1] / "core-server-persistence-package-custody/publication.py")
 BASELINE = importlib.util.module_from_spec(BASELINE_SPEC)
 BASELINE_SPEC.loader.exec_module(BASELINE)
+SESSION_SPEC = importlib.util.spec_from_file_location("session_controller_publication", Path(__file__).parents[1] / "environment-session-controller-package-custody/publication.py")
+SESSION = importlib.util.module_from_spec(SESSION_SPEC)
+SESSION_SPEC.loader.exec_module(SESSION)
 if not __debug__: raise SystemExit("ENTITY_SMOKE_PUBLICATION_ASSERTIONS_DISABLED")
 CANARY = "credential-row-provider-canary"
 SOURCE, IMAGE, DIGEST = "a" * 40, "sha256:" + "b" * 64, "sha256:" + "c" * 64
+TASK = "refs/heads/chat/2026-11-26-22-09-reducing-aws-bill"
+
+
+def catalogue(binding):
+    return {"schema": "deploy/pipeline-index/v1", "target": binding.target, "pipelines": [{
+        "id": binding.pipeline, "type": "package-publication", "trigger": "workflow_dispatch",
+        "executable_workflow": ".github/workflows/" + binding.workflow,
+        "provider_identity": binding.role, "package_destination": binding.repository,
+        "provider_region_alias": "aws-" + binding.region, "approval": "github-environment:" + binding.target,
+        "permitted_source_ref": "refs/heads/main", "additional_permitted_source_refs": [TASK],
+        "custody_acquisition": {"source_repository": binding.source_repository, "source_ref": TASK}}]}
+
+
+def write_catalogue(root, binding, value):
+    path = root / "infra/04.deploy/03.product/targets" / binding.target / "40-package-custody/github-actions/pipeline-index.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value))
+    return path
 
 
 def fails(call, code):
@@ -48,12 +72,14 @@ def fails(call, code):
     else: raise AssertionError("expected closed publication rejection")
 
 
-def exercise(CONTROL, lost):
+def exercise(CONTROL, lost, ref):
     with tempfile.TemporaryDirectory(prefix="entity-smoke-publication-") as directory:
         root = Path(directory)
+        CONTROL = Publisher(root, CONTROL.binding)
+        write_catalogue(root, CONTROL.binding, catalogue(CONTROL.binding))
         output = root / "github-output"; output.touch()
-        env = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": CONTROL.binding.source_repository, "GITHUB_REF": "refs/heads/main",
-               "GITHUB_WORKFLOW_REF": CONTROL.binding.source_repository + "/.github/workflows/" + CONTROL.binding.workflow + "@refs/heads/main",
+        env = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": CONTROL.binding.source_repository, "GITHUB_REF": ref,
+               "GITHUB_WORKFLOW_REF": CONTROL.binding.source_repository + "/.github/workflows/" + CONTROL.binding.workflow + "@" + ref,
                "GITHUB_SHA": SOURCE, "GITHUB_RUN_ID": "123456", "RUNNER_TEMP": str(root), "GITHUB_OUTPUT": str(output),
                "ECR_REPOSITORY": CONTROL.binding.repository, "ECR_URI": CONTROL.binding.uri, "AWS_REGION": CONTROL.binding.region}
         tag = CONTROL.binding.tag_prefix + "-" + SOURCE[:12] + "-run123456"
@@ -135,14 +161,80 @@ def exercise(CONTROL, lost):
         assert output.read_text() == before
         assert sum(call[:2] == ("docker", "push") for call in calls) == 1
 
-for publisher in (FEATURE, BASELINE.PUBLISHER, Publisher(FEATURE.root, replace(FEATURE.binding,
-        source_repository="fixture/project", workflow="publish-renamed.yml", target="fixture-target", scope="renamed-workload",
+for publisher in (FEATURE, BASELINE.PUBLISHER, SESSION.PUBLISHER, Publisher(FEATURE.root, replace(FEATURE.binding,
+        source_repository="fixture/project", workflow="publish-renamed.yml", pipeline="renamed-custody", target="fixture-target", scope="renamed-workload",
         account="123456789012", region="us-east-1", repository="fixture/renamed", role="renamed-publisher",
         local_image="fixture-renamed:qualification", tag_prefix="renamed", artifact_stem="renamed", error_prefix="RENAMED"))):
     for lost in (False, True):
-        exercise(publisher, lost)
+        for ref in ("refs/heads/main", TASK):
+            exercise(publisher, lost, ref)
 
-for field, value in [("workflow", "../escape.yml"), ("account", CANARY), ("configuration", []),
+for binding in (FEATURE.binding, BASELINE.PUBLISHER.binding, SESSION.PUBLISHER.binding):
+    assert Publisher(FEATURE.root, binding).source_selection() == {"default": "refs/heads/main", "allowed": ("refs/heads/main", TASK), "acquisition": TASK}
+    with tempfile.TemporaryDirectory() as directory:
+        # Actual fixed CLI, without any executable provider on PATH or a place
+        # to reserve publication. -B is part of the guarded workflow contract.
+        for ref in ("refs/heads/main", TASK):
+            env = {"PATH": directory, "GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": binding.source_repository,
+                   "GITHUB_REF": ref, "GITHUB_WORKFLOW_REF": binding.source_repository + "/.github/workflows/" + binding.workflow + "@" + ref,
+                   "GITHUB_SHA": SOURCE, "GITHUB_RUN_ID": "123456"}
+            command = FEATURE.root / "scripts/04.deploy/lifecycle/40-package/targets" / binding.target / binding.pipeline / "publication.py"
+            result = subprocess.run([sys.executable, "-B", str(command), "--operation", "validate-source"],
+                                    cwd=FEATURE.root, env=env, capture_output=True, text=True, timeout=10)
+            assert result.returncode == 0 and result.stderr == "", result.stderr
+            assert json.loads(result.stdout)["publication_performed"] is False
+            assert list(Path(directory).iterdir()) == []
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        value = catalogue(binding)
+        path = write_catalogue(root, binding, value)
+        publisher = Publisher(root, binding)
+        env = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": binding.source_repository, "GITHUB_REF": TASK,
+               "GITHUB_WORKFLOW_REF": binding.source_repository + "/.github/workflows/" + binding.workflow + "@" + TASK,
+               "GITHUB_SHA": SOURCE, "GITHUB_RUN_ID": "123456"}
+        # The real CLI dispatcher and reporter, not a successful context stub.
+        publisher.report_directory, publisher.report_run_id, publisher.publication_effect = root, "old", "unknown"
+        for changes, condition in (({}, None), ({"GITHUB_REF": "refs/heads/unlisted"}, "publication-source-route-invalid"),
+                                   ({"GITHUB_WORKFLOW_REF": binding.source_repository + "/.github/workflows/" + binding.workflow + "@refs/heads/main"}, "publication-source-route-invalid"),
+                                   ({"GITHUB_SHA": CANARY}, "publication-source-identity-invalid")):
+            before = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+            out, err = io.StringIO(), io.StringIO()
+            with patch.dict(os.environ, {**env, **changes}, clear=True), patch.object(sys, "argv", ["publication.py", "--operation", "validate-source"]), \
+                    patch("ecr_publication.subprocess.run", side_effect=AssertionError("provider-or-diagnostic-started")), \
+                    patch.object(publisher, "publish", side_effect=AssertionError("publication-started")), redirect_stdout(out), redirect_stderr(err):
+                assert publisher.execute() == (1 if condition else 0)
+            report = json.loads(err.getvalue() if condition else out.getvalue())
+            assert CANARY not in out.getvalue() + err.getvalue()
+            if condition:
+                assert report["condition"] == condition and report["effect"] == "not-started"
+                assert report["diagnostic_collection"] == "not-started"
+                assert report["next_action"] == "inspect-approved-publication-source"
+            else:
+                assert report["verdict"] == "passed" and report["publication_performed"] is False and report["qualification_evidence"] is False
+            assert before == {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+        for field, bad in (("id", "different"), ("executable_workflow", ".github/workflows/foreign.yml"),
+                           ("provider_identity", "wrong-role"), ("package_destination", "wrong/repository"),
+                           ("approval", "none"), ("provider_region_alias", "aws-us-east-1")):
+            changed = copy.deepcopy(value); changed["pipelines"][0][field] = bad; path.write_text(json.dumps(changed))
+            with patch.object(publisher, "aws", side_effect=AssertionError("provider-started")):
+                fails(lambda: publisher.publish("reserve", env), "publication-source-binding-mismatch")
+        path.write_text('{"pipelines":[],"pipelines":[]}')
+        fails(lambda: publisher.source_context(env), "publication-source-catalogue-invalid")
+        path.unlink()
+        fails(lambda: publisher.source_context(env), "publication-source-catalogue-unavailable")
+
+policy = {"permitted_source_ref": "refs/heads/main"}
+assert source_policy(policy) == {"default": "refs/heads/main", "allowed": ("refs/heads/main",), "acquisition": "refs/heads/main"}
+for bad in (None, True, "", "main", "refs/tags/v1", "refs/heads/*", "refs/heads/task..other", "refs/heads/task//other", "refs/heads/.hidden", "refs/heads/task.lock", "refs/heads/task/", "refs/heads/task.", "refs/heads/" + "a" * 250):
+    fails(lambda: source_policy({**policy, "additional_permitted_source_refs": [bad]}), "publication-source-policy-invalid")
+for extra in (None, {}, "refs/heads/task", [TASK, TASK], ["refs/heads/main"]):
+    fails(lambda: source_policy({**policy, "additional_permitted_source_refs": extra}), "publication-source-policy-invalid")
+fails(lambda: source_policy({**policy, "custody_acquisition": {"source_ref": TASK}}), "publication-source-policy-invalid")
+with patch("ecr_publication.source_policy", side_effect=PublicationFailure("publication-source-policy-invalid")) as checked:
+    fails(lambda: FEATURE.source_selection(), "publication-source-policy-invalid")
+    assert checked.call_count == 1
+
+for field, value in [("workflow", "../escape.yml"), ("pipeline", "../escape"), ("account", CANARY), ("configuration", []),
                      ("configuration", (("../outside.py", "infra/04.deploy/example.yml", "*"),)), ("role", CANARY + "/bad")]:
     fails(lambda field=field, value=value: Publisher(FEATURE.root, replace(FEATURE.binding, **{field: value})), "publication-binding-invalid")
 
@@ -201,5 +293,5 @@ for binding in (FEATURE.binding, BASELINE.PUBLISHER.binding):
         assert report["original_failure"] == {"code": binding.error_prefix + "_PUBLICATION_NOT_CONFIRMED", "exit_status": 1}
         assert CANARY not in report_path.read_text()
 
-print(json.dumps({"schema": "deploy/entity-smoke-publication-fixture/v1", "verdict": "passed", "provider_observation": False, "workload_bindings": 3,
+print(json.dumps({"schema": "deploy/entity-smoke-publication-fixture/v1", "verdict": "passed", "provider_observation": False, "workload_bindings": 3, "controller_bindings": 1,
                   "cases": ["source-and-destination", "wrong-publisher", "scan-enabled-repository", "reserve-before-push", "immutable-reservation", "changed-qualified-image", "lost-push-response", "no-second-push", "read-only-reconciliation", "typed-remote-digest"]}))

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.entity-smoke.feature-steps
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-11"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -18,7 +18,16 @@
 #     path: .agentic/04.deploy/plans/implementation/entity-smoke-core-platform.md
 from types import SimpleNamespace
 
-SUPPORTED = {("verifier", operation) for operation in ("create", "observe-create", "lifecycle", "read")} | {("database-proof", "collision")}
+# Initial acceptance selections, not every operation supported by a runner.
+# observe-create is a conditional observer of the original terminal create.
+INITIAL_TASKS = (
+    ("original-record", "verifier", ("create", "observe-create"), "VerifierTaskDefinition"),
+    ("lifecycle", "verifier", ("lifecycle",), "VerifierTaskDefinition"),
+    ("collision", "database-proof", ("collision",), "DatabaseProofTaskDefinition"),
+    ("baseline-read", "verifier", ("read",), "VerifierTaskDefinition"),
+)
+CONDITIONAL_OBSERVERS = {("verifier", "observe-create"): "original-create-terminal-observation"}
+SUPPORTED = {(workload, operation) for _, workload, operations, _ in INITIAL_TASKS for operation in operations}
 
 
 class FeatureStepFailure(Exception):

@@ -58,8 +58,8 @@ class SessionBinding:
     source_inputs_sha256: str
 
 
-def read(document, *, target, scope, now, approved_max_duration_seconds):
-    """Accept only a narrow explicit lifecycle overlay, never supplied hashes."""
+def _read_context(document, *, target, scope, now, approved_max_duration_seconds):
+    """Check the original lifetime and real clock without granting admission."""
     require(isinstance(document, dict), "document-type-invalid")
     fields = {"schema", "target", "scope", "session_id", "starts_at", "expires_at", "environment_lifecycle"}
     require(set(document) == fields, "document-fields-invalid")
@@ -77,7 +77,11 @@ def read(document, *, target, scope, now, approved_max_duration_seconds):
     start, end = document["starts_at"], document["expires_at"]
     require(end > start, "expiry-order-invalid")
     require(start <= now, "start-in-future")
-    require(now < end, "expired")
+    return target, scope, identity, start, end
+
+
+def _intent(document, context, approved_max_duration_seconds):
+    start, end = context[-2:]
     try:
         lifecycle = POLICY.read({"environment_lifecycle": document["environment_lifecycle"]})
     except POLICY.PolicyFailure as failure:
@@ -85,7 +89,22 @@ def read(document, *, target, scope, now, approved_max_duration_seconds):
     require(lifecycle.explicit and lifecycle.mode == "temporary", "temporary-policy-required")
     require(end - start <= lifecycle.max_duration_seconds, "policy-duration-exceeded")
     require(end - start <= approved_max_duration_seconds, "approved-duration-exceeded")
-    return SessionIntent(target, scope, identity, start, end, lifecycle)
+    return SessionIntent(*context, lifecycle)
+
+
+def read(document, *, target, scope, now, approved_max_duration_seconds):
+    """Accept a new unexpired lifecycle overlay, never supplied hashes."""
+    context = _read_context(document, target=target, scope=scope, now=now,
+                            approved_max_duration_seconds=approved_max_duration_seconds)
+    require(now < context[-1], "expired")
+    return _intent(document, context, approved_max_duration_seconds)
+
+
+def read_existing(document, *, target, scope, now, approved_max_duration_seconds):
+    """Recheck an original lifetime after expiry; never reopen admission."""
+    context = _read_context(document, target=target, scope=scope, now=now,
+                            approved_max_duration_seconds=approved_max_duration_seconds)
+    return _intent(document, context, approved_max_duration_seconds)
 
 
 def bind_sources(intent, source_inputs, scopes):

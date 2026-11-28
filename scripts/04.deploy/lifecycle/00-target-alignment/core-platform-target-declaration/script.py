@@ -5,7 +5,7 @@
 #   version: 13
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -41,6 +41,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[5]
 PROFILE_READERS_READY = False
+PUBLICATION = None
 try:
     _lifecycle_spec = importlib.util.spec_from_file_location("target_environment_lifecycle", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/capabilities/environment-lifecycle/policy/implementation.py")
     LIFECYCLE = importlib.util.module_from_spec(_lifecycle_spec)
@@ -48,6 +49,9 @@ try:
     _template_spec = importlib.util.spec_from_file_location("target_profile_document", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py")
     PROFILE_DOCUMENT = importlib.util.module_from_spec(_template_spec)
     _template_spec.loader.exec_module(PROFILE_DOCUMENT)
+    _publication_spec = importlib.util.spec_from_file_location("target_publication_sources", ROOT / "scripts/04.deploy/shared/provider-adapters/aws/ecr_publication.py")
+    PUBLICATION = importlib.util.module_from_spec(_publication_spec)
+    _publication_spec.loader.exec_module(PUBLICATION)
     PROFILE_READERS_READY = True
 except Exception:
     # Only dependency loading is bounded here; native details never become a report.
@@ -514,33 +518,44 @@ def check_accepted_release(root: Path, *, record_path: Path | None = None, recor
 
 
 def check_pipeline(root: Path) -> None:
+    if PUBLICATION is None:
+        raise DeclarationFailure("pipeline-source-policy-unavailable")
     catalogue = mapping(root / "40-package-custody" / "github-actions" / "pipeline-index.yml", "pipeline-index-unreadable")
     if catalogue.get("schema") != "deploy/pipeline-index/v1" or catalogue.get("target") != TARGET:
         raise DeclarationFailure("pipeline-index-invalid")
     pipelines = catalogue.get("pipelines")
-    if not isinstance(pipelines, list) or len(pipelines) != 4 or not all(isinstance(pipeline, dict) for pipeline in pipelines):
+    if not isinstance(pipelines, list) or not all(isinstance(pipeline, dict) for pipeline in pipelines):
         raise DeclarationFailure("pipeline-record-missing")
     expected = {
+        "environment-session-controller-package-custody": (".github/workflows/publish-kanbien-core-platform-environment-session-controller.yml", "environment-session-controller-package-custody.delivery-access.yml", "environment-sessions", ["qualify-local-image", "reserve-publication-before-push", "publish-immutable-image-once", "reconcile-without-push", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
         "entity-smoke-package-custody": (".github/workflows/publish-kanbien-core-platform-entity-smoke.yml", "entity-smoke-package-custody.delivery-access.yml", "entity-smoke", ["qualify-local-image", "reserve-publication-before-push", "publish-immutable-image-once", "reconcile-without-push", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
         "core-server-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server.yml", "core-server-package-custody.delivery-access.yml", "bootstrap-runtime", ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
         "core-server-persistence-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence", ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
         "core-server-persistence-observability-collector-package-custody": (".github/workflows/publish-kanbien-core-platform-observability-collector.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence", ["build-minimal-pinned-collector", "qualify-non-secret-startup", "scan-qualified-archive", "publish-private-immutable-image", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "minimal-source-build"),
     }
     indexed = {pipeline.get("id"): pipeline for pipeline in pipelines}
-    if set(indexed) != set(expected):
+    if len(pipelines) != len(expected) or set(indexed) != set(expected):
         raise DeclarationFailure("pipeline-record-missing")
     for pipeline_id, (workflow, access_contract, scope, operations, primary_proof) in expected.items():
         pipeline = indexed[pipeline_id]
         feature = scope == "entity-smoke"
-        states = {"candidate-not-live", "active"} if feature else {"active"}
-        actor = "github-kanbien-core-platform-entity-smoke-publisher" if feature else "github-kanbien-core-platform-delivery"
-        destination = "kanbien-core-platform/entity-smoke" if feature else "kanbien-core-platform/core-server"
+        controller = scope == "environment-sessions"
+        states = {"candidate-not-live", "active"} if feature or controller else {"active"}
+        actor = "github-kanbien-core-platform-session-publisher" if controller else "github-kanbien-core-platform-entity-smoke-publisher" if feature else "github-kanbien-core-platform-delivery"
+        destination = "kanbien-core-platform/environment-session-controller" if controller else "kanbien-core-platform/entity-smoke" if feature else "kanbien-core-platform/core-server"
         state = pipeline.get("state")
+        try:
+            PUBLICATION.source_policy(pipeline)
+        except PUBLICATION.PublicationFailure:
+            raise DeclarationFailure("pipeline-record-invalid") from None
+        if pipeline_id not in {"entity-smoke-package-custody", "core-server-persistence-package-custody", "environment-session-controller-package-custody"} and "additional_permitted_source_refs" in pipeline:
+            raise DeclarationFailure("pipeline-record-invalid")
         if pipeline.get("type") != "package-publication" or not isinstance(state, str) or state not in states or pipeline.get("executable_workflow") != workflow or pipeline.get("delivery_access_contract") != access_contract or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != actor or pipeline.get("package_destination") != destination or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml":
             raise DeclarationFailure("pipeline-record-invalid")
         if not non_empty(pipeline.get("owner")):
             raise DeclarationFailure("pipeline-unowned")
-        if pipeline.get("permitted_operations") != operations or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != [scope] or primary_proof not in pipeline.get("required_proofs", []) or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
+        scopes = ["core-server-persistence", "entity-smoke"] if controller else [scope]
+        if pipeline.get("permitted_operations") != operations or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != scopes or primary_proof not in pipeline.get("required_proofs", []) or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
             raise DeclarationFailure("pipeline-authority-invalid")
         if feature and pipeline.get("required_proofs") != ["local-image-qualification", "delivery-access-coverage", "vulnerability-scan", "sbom", "provenance-attestation", "immutable-digest", "custody-receipt"]:
             raise DeclarationFailure("pipeline-authority-invalid")

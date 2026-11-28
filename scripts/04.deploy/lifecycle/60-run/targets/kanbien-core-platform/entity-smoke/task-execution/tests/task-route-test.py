@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 5
+#   version: 8
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-26"
+#   updated_on: "2026-11-27"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -30,6 +30,7 @@ import subprocess
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
+import yaml
 
 if not __debug__: raise SystemExit("ENTITY_SMOKE_TASK_ROUTE_ASSERTIONS_DISABLED")
 
@@ -1154,7 +1155,180 @@ def transport_read_protocols():
     print("ENTITY_SMOKE_TASK_READ_TRANSPORT_PROTOCOLS_PASSED")
 
 
+def initial_selection_protocols():
+    binding_path = REAL_ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/entity-smoke/10-workload-binding/workload-binding.yml"
+    binding = yaml.safe_load(binding_path.read_text())
+    original = copy.deepcopy(binding)
+    label = F.BINDING["proof_label"]
+    def select(value=binding, proof_label=label):
+        return M.STEPS.initial_tasks(proof_label=proof_label, workload_binding=value)
+    with patch.object(M, "Provider", side_effect=AssertionError("selection has no provider")), \
+         patch.object(Path, "write_text", side_effect=AssertionError("selection has no writes")), \
+         patch.object(Path, "write_bytes", side_effect=AssertionError("selection has no writes")), \
+         patch.object(subprocess, "run", side_effect=AssertionError("selection has no subprocess")):
+        rows = select()
+        assert isinstance(rows, tuple) and len(rows) == 18 and binding == original
+        fields = {"proof", "workload", "workload_id", "task_definition_ref", "operation", "stage", "phase", "activation", "key", "label", "condition"}
+        assert all(set(row) == fields for row in rows)
+        assert len({row["key"] for row in rows}) == 18
+        normal = [row for row in rows if row["phase"] == "operation" and row["condition"] == "always"]
+        assert [(row["proof"], row["workload"], row["operation"]) for row in normal] == [
+            ("bootstrap", "administration", "bootstrap"), ("migration", "migration", "apply"),
+            ("grant-runtime", "administration", "grant-runtime"), ("baseline-permissions", "database-proof", "permissions"),
+            ("original-record", "verifier", "create"), ("lifecycle", "verifier", "lifecycle"),
+            ("collision", "database-proof", "collision"), ("baseline-read", "verifier", "read")]
+        assert [row["activation"] for row in normal] == ["before-activation"] * 4 + ["after-activation"] * 4
+        conditional = [row for row in rows if row["condition"] != "always"]
+        assert [(row["phase"], row["operation"], row["condition"]) for row in conditional] == [
+            (phase, "observe-create", "original-create-terminal-observation") for phase in ("preflight", "operation")]
+        for row in rows:
+            args = SimpleNamespace(proof_label=label, workload=row["workload"], operation=row["operation"], phase=row["phase"], proof_stage="baseline")
+            assert row["key"] == M.STEPS.key(args) and row["stage"] == M.STEPS.stage(args)
+            expected = "entity-smoke-" + hashlib.sha256((label + ":" + row["workload"] + ":" + row["operation"] + ":preflight").encode()).hexdigest()[:24]
+            assert row["label"] == (expected if row["phase"] == "preflight" else label)
+            declared = next(item for item in binding["workloads"] if item["id"] == row["workload_id"])
+            assert declared["provider_reference"] == row["task_definition_ref"]
+        assert set(M.STEPS.baseline_tasks()) == {row["proof"] for row in normal}
+        assert not {"cleanup", "ready", "unready", "restore-read", "revoke-runtime"}.intersection(row["operation"] for row in rows)
+        rows[0]["label"] = "changed"
+        assert select()[0]["label"] != "changed" and binding == original
+        for malformed in (None, [], {"workloads": None}, {"workloads": [None]}, {"workloads": []}):
+            fails(lambda: select(malformed), "initial-task-selection-invalid")
+        for invalid_label in (None, "PRIVATE_SELECTION_CANARY", "entity-smoke-" + "a" * 32, "entity-smoke-" + "A" * 24):
+            fails(lambda: select(proof_label=invalid_label), "initial-task-selection-invalid")
+        for change in (
+            lambda rows: rows.append(copy.deepcopy(next(row for row in rows if row["id"] == "entity-smoke-verifier-task"))),
+            lambda rows: next(row for row in rows if row["id"] == "entity-smoke-verifier-task").update(id="foreign-task"),
+            lambda rows: next(row for row in rows if row["id"] == "entity-smoke-verifier-task").update(provider_reference="AdministrationTaskDefinition"),
+            lambda rows: next(row for row in rows if row["id"] == "entity-smoke-verifier-task").update(workload_type="long-running-server"),
+            lambda rows: next(row for row in rows if row["id"] == "entity-smoke-verifier-task").update(runtime_class="service"),
+            lambda rows: next(row for row in rows if row["id"] == "entity-smoke-verifier-task").update(provider_template="foreign.yml"),
+        ):
+            malformed = copy.deepcopy(binding); change(malformed["workloads"])
+            fails(lambda: select(malformed), "initial-task-selection-invalid")
+    artifact = "sha256:" + "c" * 64
+    assert M.STEPS.preflight_label(label, "database-proof", "permissions", stage="activation", activation_generation=artifact) == \
+        "entity-smoke-" + hashlib.sha256((label + ":database-proof:permissions:preflight:activation:" + artifact).encode()).hexdigest()[:24]
+    print("ENTITY_SMOKE_INITIAL_SELECTION_PROTOCOLS_PASSED")
+
+
+def runtime_request_fixture():
+    view, provider = BF.runtime_fixture()
+    checked = M.BINDING.inspect(provider, "verifier", view["parameters"], view["resources"], view["template"], runtime_view=view)
+    args = SimpleNamespace(workload="verifier", operation="create", phase="preflight", proof_stage="baseline",
+                           proof_label=F.BINDING["proof_label"], expected_digest=None)
+    context = {"binding": copy.deepcopy(F.BINDING), "checked": checked, "completion_deadlines": {"verifier": 180},
+               "report": {"plan": {"preflight_label": "entity-smoke-" + "7" * 24}}}
+    return checked, args, context
+
+
+def runtime_request_protocols():
+    checked, args, context = runtime_request_fixture()
+    request = M.STEPS.request(M.dependencies(), context, args)
+    assert request["runtime"] == checked["runtime"] and request["definition"] == checked["definition"]
+    assert request["environment"]["ENTITY_SMOKE_VERIFICATION_OPERATION"] == "ready"
+    assert request["proof_label"] == context["report"]["plan"]["preflight_label"]
+    request["runtime"]["session_id"] = "8" * 32
+    assert checked["runtime"]["session_id"] == "1" * 32
+    for malformed in ({"native": CANARY}, None, [], CANARY):
+        context["checked"] = {**checked, "runtime": malformed}
+        fails(lambda: M.STEPS.request(M.dependencies(), context, args), "runtime-binding-invalid")
+    legacy = {**context, "checked": {key: value for key, value in checked.items() if key != "runtime"}}
+    legacy["checked"]["definition"] = BF.RESOURCES["VerifierTaskDefinition"]["physical_id"]
+    assert "runtime" not in M.STEPS.request(M.dependencies(), legacy, args)
+    legacy["binding"] = {**legacy["binding"], "runtime": checked["runtime"]}
+    fails(lambda: M.STEPS.request(M.dependencies(), legacy, args), "runtime-binding-invalid")
+    print("ENTITY_SMOKE_RUNTIME_REQUEST_PROTOCOLS_PASSED")
+
+
+def runtime_submission_protocols():
+    """Exercise native submission and IAM context, not temporary route authority."""
+    checked, args, context = runtime_request_fixture()
+    temporary = M.STEPS.request(M.dependencies(), context, args)
+    legacy_context = {**context, "checked": {key: value for key, value in checked.items() if key != "runtime"}}
+    legacy_context["checked"]["definition"] = BF.RESOURCES["VerifierTaskDefinition"]["physical_id"]
+    legacy = M.STEPS.request(M.dependencies(), legacy_context, args)
+    temporary_cluster = checked["runtime"]["cluster_arn"]
+    legacy_cluster = "arn:aws:ecs:" + M.C.ALIGN.REGION + ":" + M.C.ALIGN.ACCOUNT + ":cluster/" + M.C.RESOURCE.CLUSTER
+    roles = ["arn:aws:iam::" + M.C.ALIGN.ACCOUNT + ":role/CheckedExecutionRole"]
+    with tempfile.TemporaryDirectory() as directory:
+        for name, request, cluster in (("temporary", temporary, temporary_cluster), ("legacy", legacy, M.C.RESOURCE.CLUSTER)):
+            store = M.RUNNER.CONTROL.AttemptStore(Path(directory) / name)
+            reserved, fresh = store.reserve("submission", request)
+            assert fresh
+            payload = {"cluster": cluster, "taskDefinition": request["definition"], "launchType": "FARGATE", "count": 1,
+                       "networkConfiguration": {"awsvpcConfiguration": {"subnets": request["subnets"], "securityGroups": [request["security_group"]], "assignPublicIp": "DISABLED"}},
+                       "overrides": M.RUNNER.CONTROL.overrides(request), "startedBy": reserved["operation_id"], "clientToken": reserved["operation_id"]}
+            attempts, guards = [], []
+            native = M.Provider(); native._invoke = lambda *call: attempts.append(copy.deepcopy(call))
+            native.enable_task(request, store, "submission", lambda: guards.append("checked"))
+            wrong_clusters = (M.C.RESOURCE.CLUSTER, legacy_cluster, temporary_cluster + "-foreign") if name == "temporary" else (temporary_cluster,)
+            for wrong in wrong_clusters:
+                fails(lambda: native("ecs", "run-task", **{**payload, "cluster": wrong}), "task-submission-does-not-match-plan")
+            assert attempts == guards == [] and native.effect == "not-started"
+            native("ecs", "run-task", **payload)
+            assert attempts == [("ecs", "run-task", payload)] and guards == ["checked"]
+            assert payload["overrides"]["containerOverrides"][0]["name"] == (checked["runtime"]["container_name"] if name == "temporary" else "entity-smoke-verifier")
+            fails(lambda: native("ecs", "run-task", **payload), "task-provider-operation-prohibited")
+            fails(lambda: native.enable_task(request, store, "submission", lambda: None), "task-capability-already-used")
+            assert len(attempts) == 1 and native.effect == "unknown-reconcile-only"
+            denied = M.Provider(); denied._invoke = lambda *call: attempts.append(call)
+            def deny(): raise M.BINDING.BindingFailure("task-binding-policy-not-confirmed", "verifier", "roles", "execution-role")
+            denied.enable_task(request, store, "submission", deny)
+            failure = fails(lambda: denied("ecs", "run-task", **payload), "task-binding-policy-not-confirmed")
+            assert (failure.workload, failure.field, failure.item) == ("verifier", "roles", "execution-role")
+            assert len(attempts) == 1 and denied.effect == "not-started"
+            lost = M.Provider()
+            def lose(*call):
+                attempts.append(copy.deepcopy(call))
+                raise OSError(CANARY)
+            lost._invoke = lose
+            lost.enable_task(request, store, "submission", lambda: None)
+            try: lost("ecs", "run-task", **payload)
+            except OSError: pass
+            else: raise AssertionError("expected controlled transport loss")
+            fails(lambda: lost("ecs", "run-task", **payload), "task-provider-operation-prohibited")
+            assert len(attempts) == 2 and lost.effect == "unknown-reconcile-only"
+        for malformed in (None, {}, [], CANARY, {**checked["runtime"], "cluster_arn": temporary_cluster.replace(M.C.ALIGN.ACCOUNT, "000000000000")}):
+            native = M.Provider(); attempts = []; native._invoke = lambda *call: attempts.append(call)
+            failure = fails(lambda: native.enable_task({**temporary, "runtime": malformed}, store, "submission", lambda: None), "runtime-binding-invalid")
+            assert attempts == [] and native.task_capability is None and native.effect == "not-started" and CANARY not in str(failure)
+        native = M.Provider()
+        fails(lambda: native.enable_task({**temporary, "definition": legacy["definition"]}, store, "submission", lambda: None), "task-request-invalid")
+        assert native.task_capability is None and native.effect == "not-started"
+    for request, cluster in ((temporary, temporary_cluster), (legacy, legacy_cluster)):
+        provider = Provider()
+        actor = M.operator(provider, request["definition"], roles, **({"runtime": request["runtime"]} if "runtime" in request else {}))
+        assert actor == M.C.DEPLOY.fingerprint({"account": M.C.ALIGN.ACCOUNT, "role": "arn:aws:iam::" + M.C.ALIGN.ACCOUNT + ":role/ApprovedOperator"})
+        simulations = [parameters for service, operation, parameters in provider.observed if (service, operation) == ("iam", "simulate-principal-policy")]
+        assert [(row["ActionNames"], row["ResourceArns"]) for row in simulations] == [(["ecs:RunTask"], [request["definition"]]), (["iam:PassRole"], roles)]
+        assert all(row["ContextEntries"] == [
+            {"ContextKeyName": "ecs:cluster", "ContextKeyValues": [cluster], "ContextKeyType": "string"},
+            {"ContextKeyName": "iam:PassedToService", "ContextKeyValues": ["ecs-tasks.amazonaws.com"], "ContextKeyType": "string"}] for row in simulations)
+    for malformed in (None, {}, [], CANARY, {**checked["runtime"], "cluster_arn": temporary_cluster.replace(M.C.ALIGN.ACCOUNT, "000000000000")}):
+        provider = Provider()
+        failure = fails(lambda: M.operator(provider, temporary["definition"], roles, runtime=malformed), "runtime-binding-invalid")
+        assert provider.observed == [] and CANARY not in str(failure)
+    for definition in (None, legacy["definition"], temporary["definition"].replace(M.C.ALIGN.ACCOUNT, "000000000000")):
+        provider = Provider()
+        fails(lambda: M.operator(provider, definition, roles, runtime=checked["runtime"]), "runtime-binding-invalid")
+        assert provider.observed == []
+    provider = Provider()
+    def denied_operator(service, operation, **parameters):
+        result = provider(service, operation, **parameters)
+        if operation == "simulate-principal-policy":
+            for row in result["EvaluationResults"]: row["EvalDecision"] = "explicitDeny"
+        return result
+    fails(lambda: M.operator(denied_operator, temporary["definition"], roles, runtime=checked["runtime"]), "task-operator-policy-preflight-not-confirmed")
+    assert provider.observed[-1][2]["ContextEntries"][0]["ContextKeyValues"] == [temporary_cluster]
+    assert not any(operation == "run-task" for _, operation, _ in provider.observed)
+    print("ENTITY_SMOKE_RUNTIME_SUBMISSION_PROTOCOLS_PASSED")
+
+
 if __name__ == "__main__":
+    initial_selection_protocols()
+    runtime_request_protocols()
+    runtime_submission_protocols()
     successor_task_protocols()
     successor_task_protocols(requalify=True)
     successor_task_protocols(requalify=True, failed_recovery="revoke-runtime")

@@ -1,0 +1,131 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: github.workflow.publish-kanbien-core-platform-environment-session-controller
+#   version: 1
+#   status: draft
+#   created_on: "2026-11-28"
+#   updated_on: "2026-11-28"
+#   layer: 04.deploy
+#   domain: deployment.environment-session-controller
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Hosted Docker qualification, scanning, and immutable publication of the fixed cleanup controller without deployment.
+#   portability: { class: internal, targets: [] }
+#   effects: [network]
+#   used_by:
+#   - id: infra.image.environment-session-controller.contract
+#     path: infra/04.deploy/03.product/image/environment-session-controller/image-contract.yml
+name: Publish Kanbien Core Platform Environment Session Controller
+on: { workflow_dispatch: {} }
+permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+concurrency: { group: kanbien-core-platform-environment-session-controller-publication, cancel-in-progress: false }
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-session-publisher
+  ECR_REPOSITORY: kanbien-core-platform/environment-session-controller
+  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/environment-session-controller
+jobs:
+  qualify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: kanbien-core-platform
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.3
+      - name: Enforce approved source
+        run: python3 -B scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py --operation validate-source
+      - name: Enforce controller package contract
+        run: python3 -B scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/verify-workflow.py --json
+      - name: Qualify declarations and actual candidate payload
+        id: qualification
+        run: bash scripts/04.deploy/lifecycle/40-package/build-environment-session-controller-image/script.sh --tag kanbien-environment-session-controller:qualification --receipt "$RUNNER_TEMP/qualified-image.json"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
+      - name: Prove fixed delivery read access
+        id: access
+        run: |
+          python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py --operation reserve
+      - name: Retain pre-publication identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-environment-session-controller-reservation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/environment-session-controller-publication-reservation.json
+            ${{ runner.temp }}/qualified-image.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish immutable image
+        id: image
+        run: python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/environment-session-controller-package-custody/publication.py --operation publish
+      - name: Require clean ECR scan
+        id: scan
+        run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
+      - name: Generate SBOM
+        id: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ runner.temp }}/environment-session-controller.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Attest image provenance
+        id: provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+      - name: Attest image SBOM
+        id: sbom-attestation
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/environment-session-controller.sbom.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+      - name: Write and validate safe package-custody receipt
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          QUALIFICATION_OUTCOME: ${{ steps.qualification.outcome }}
+          ACCESS_OUTCOME: ${{ steps.access.outcome }}
+          PUBLICATION_OUTCOME: ${{ steps.image.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
+        run: |
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class temporary-session-controller --provider-region-alias aws-eu-west-1 --candidate environment-session-cleanup-controller --package-contract environment-session-controller-image --program environment-session-controller --scan-check ecr_scan --sbom "$RUNNER_TEMP/environment-session-controller.sbom.spdx.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate environment-session-cleanup-controller --expected-package-contract environment-session-controller-image --expected-program environment-session-controller --json
+      - name: Upload safe package-custody evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-environment-session-controller-package-custody-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/package-custody-receipt.json
+            ${{ runner.temp }}/environment-session-controller.sbom.spdx.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/ecr-scan.json
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 30
+      - name: Retain safe failed-operation evidence
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-environment-session-controller-failed-operation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/environment-session-controller-publication-reservation.json
+            ${{ runner.temp }}/environment-session-controller-publication-invoked.json
+            ${{ runner.temp }}/environment-session-controller-publication-operation.json
+          if-no-files-found: ignore
+          overwrite: false
+          retention-days: 30
