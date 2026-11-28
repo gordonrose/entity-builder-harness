@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform.update-delivery-observation-access
-version: 1
+version: 2
 status: active
 created_on: "2026-11-27"
-updated_on: "2026-11-27"
+updated_on: "2026-11-28"
 layer: 04.deploy
 domain: deployment.foundation-access
 disciplines: [security, sre]
@@ -65,3 +65,28 @@ change, rollback or uncertain response stops dependent publication. Investigate
 read-only through the original operation. Any repair or inverse requires its
 own governed decision after the original attempt is reconciled; this route
 does not mint replacement attempts.
+
+## Resume after a checked controller correction
+
+The user approved this bounded continuation on 2026-11-28. A corrected clean,
+committed descendant may review and resume the same retained attempt after
+affected checks and source review pass. The controller reconstructs the original
+committed source and verifies the original prepare reservation. Between that
+source and the corrected revision, allow only this workflow, the foundation
+controller and its smoke test, the existing diagnostic review ledger and normal
+session records. Require tracked regular files; template, account, configuration,
+shared helper, permission and binding changes are not admitted by this route.
+
+Keep the original intent bytes, plan hash, prepare reservation and change set.
+Record the corrected controller revision separately; never restamp the original
+source or create another prepare attempt. Continue with `review`, then the exact
+previously approved plan's `execute`, and `observe`; an existing execution selects
+observation only. Repeat live template, policy, parameter and resource checks
+before execution. All original approval and nonreplacement requirements remain.
+
+`ChangeSetType=UPDATE` is required in the original submission, not in the
+`DescribeChangeSet` response: [AWS does not return that response field](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeChangeSet.html).
+Review instead verifies the original stack, change-set name and operation-token
+description, exact successor template and parameters, and sole nonreplacing
+Policies modification. Other mismatches remain blocked; this correction does not
+permit broader recovery or establish live scheduler acceptance.

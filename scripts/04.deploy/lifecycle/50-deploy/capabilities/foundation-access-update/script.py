@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.capability.foundation-access-update
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.foundation-access
 #   disciplines: [security, sre]
@@ -136,10 +136,13 @@ def git(*args, binary=False):
         raise Failure("source-observation-unavailable") from None
 
 
-def sources(selected, predecessor):
+def sources(selected, predecessor, revision=None):
     require(isinstance(predecessor, str) and re.fullmatch(r"[a-f0-9]{40}", predecessor), "predecessor-invalid")
-    revision = git("rev-parse", "HEAD")
-    require(re.fullmatch(r"[a-f0-9]{40}", revision) and not git("status", "--porcelain"), "source-not-clean-committed")
+    head = git("rev-parse", "HEAD")
+    require(re.fullmatch(r"[a-f0-9]{40}", head) and not git("status", "--porcelain"), "source-not-clean-committed")
+    revision = head if revision is None else revision
+    require(isinstance(revision, str) and re.fullmatch(r"[a-f0-9]{40}", revision), "retained-intent-mismatch")
+    git("merge-base", "--is-ancestor", revision, head)
     git("merge-base", "--is-ancestor", predecessor, revision)
     before, after = source_delta(git("show", predecessor + ":" + selected["template"]),
                                 git("show", revision + ":" + selected["template"]), selected)
@@ -278,13 +281,31 @@ def make_intent(provider, selected, source, before, after):
             "role_before_sha256": digest(role), "role_after_sha256": digest(successor)}
 
 
-def validate_intent(intent, selected, source):
+def validate_intent(intent, selected, source, store=None):
     keys = {"schema", "target", "binding_sha256", "source", "stack_id", "change_set", "parameters_sha256", "resources_sha256", "role_before_sha256", "role_after_sha256"}
     require(isinstance(intent, dict) and set(intent) == keys and intent["schema"] == "deploy/foundation-access-intent/v1"
-            and intent["target"] == selected["target"] and intent["binding_sha256"] == digest(selected) and intent["source"] == source,
+            and intent["target"] == selected["target"] and intent["binding_sha256"] == digest(selected),
             "retained-intent-mismatch")
     require(all(isinstance(intent[key], str) and re.fullmatch(r"[a-f0-9]{64}", intent[key]) for key in keys if key.endswith("sha256")), "retained-intent-invalid")
     require(intent["change_set"] == "delivery-repository-observation", "retained-operation-mismatch")
+    if intent["source"] != source:
+        original = intent["source"]
+        require(isinstance(original, dict) and isinstance(original.get("revision"), str)
+                and re.fullmatch(r"[a-f0-9]{40}", original["revision"])
+                and original.get("predecessor") == source["predecessor"] and store is not None,
+                "retained-intent-mismatch")
+        reconstructed, _, _ = sources(selected, source["predecessor"], revision=original["revision"])
+        require(original == reconstructed, "retained-intent-mismatch")
+        allowed = {selected["controller"], selected["workflow"],
+                   str(Path(selected["controller"]).with_name("smoke-test.py")),
+                   "scripts/repo/diagnostic-coverage/reviews.v1.json"}
+        changed = git("diff", "--name-only", "--no-renames", original["revision"], source["revision"], "--").splitlines()
+        require(bool(changed) and all(path in allowed or path.startswith("commitLogs/") for path in changed),
+                "retained-intent-mismatch")
+        for path in changed:
+            row = git("ls-tree", source["revision"], "--", path)
+            require(re.fullmatch(r"100(?:644|755) blob [a-f0-9]{40}\t" + re.escape(path), row), "retained-intent-mismatch")
+        require(store.read("prepare", {"intent_sha256": digest(intent)}) is not None, "retained-intent-mismatch")
     return intent
 
 
@@ -314,7 +335,7 @@ def unchanged(provider, selected, intent, document, *, successor=False):
 def review(provider, selected, intent, prepared, after):
     value = provider("cloudformation", "describe-change-set", StackName=intent["stack_id"], ChangeSetName=intent["change_set"])
     require(value.get("StackId") == intent["stack_id"] and value.get("ChangeSetName") == intent["change_set"]
-            and value.get("Description") == prepared["operation_id"] and value.get("ChangeSetType") == "UPDATE", "change-set-lineage-mismatch")
+            and value.get("Description") == prepared["operation_id"], "change-set-lineage-mismatch")
     if value.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
         return {"verdict": "pending", "code": "change-set-pending"}
     require(value.get("Status") == "CREATE_COMPLETE" and value.get("ExecutionStatus") == "AVAILABLE", "change-set-not-reviewable")
@@ -421,7 +442,7 @@ def main(argv=None):
         store, intent_path = Store(private), private / "intent.json"
         if intent_path.exists():
             RESERVATIONS.no_symlinks(intent_path)
-            intent = validate_intent(read(intent_path), selected, source)
+            intent = validate_intent(read(intent_path), selected, source, store)
         else:
             require(args.operation == "plan", "retained-plan-required")
             intent = make_intent(Provider(selected), selected, source, before, after)
@@ -431,6 +452,7 @@ def main(argv=None):
         else:
             result = control(Provider(selected), store, selected, intent, before, after, args.operation, args.approved_plan_sha256)
             result["plan_sha256"] = digest(intent)
+        result["controller_revision"] = source["revision"]
     except (Failure, CHANGES.ChangeSetFailure, RESERVATIONS.ReservationFailure) as failure:
         result = failure_report(failure)
     except (OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError):

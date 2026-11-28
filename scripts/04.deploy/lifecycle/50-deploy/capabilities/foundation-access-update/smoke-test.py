@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.foundation-access-update
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.foundation-access
 #   disciplines: [security, sre]
@@ -94,8 +94,9 @@ class Provider:
             assert "****" not in json.dumps(arguments)
             assert set(arguments) == {"StackName", "ChangeSetName", "ChangeSetType", "TemplateBody", "Parameters", "Capabilities", "ClientToken", "Description"}
             assert arguments["ClientToken"] == arguments["Description"]
+            assert arguments["ChangeSetType"] == "UPDATE"
             self.change = {"StackId": self.stack_id, "ChangeSetName": arguments["ChangeSetName"], "Description": arguments["Description"],
-                "ChangeSetType": "UPDATE", "Status": "CREATE_COMPLETE", "ExecutionStatus": "AVAILABLE", "Capabilities": arguments["Capabilities"],
+                "Status": "CREATE_COMPLETE", "ExecutionStatus": "AVAILABLE", "Capabilities": arguments["Capabilities"],
                 "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in self.parameters.items()],
                 "Changes": [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "DeliveryRole", "ResourceType": "AWS::IAM::Role",
                     "PhysicalResourceId": self.role["RoleName"],
@@ -196,6 +197,7 @@ def test_connected_and_uncertain():
 def test_review_and_readback():
     changes = (
         (lambda change: change.update(StackId="another-stack"), "change-set-lineage-mismatch"),
+        (lambda change: change.update(ChangeSetName="another-change"), "change-set-lineage-mismatch"),
         (lambda change: change.update(Description="another-token"), "change-set-lineage-mismatch"),
         (lambda change: change["Parameters"].append(copy.deepcopy(change["Parameters"][0])), "change-set-parameters-mismatch"),
         (lambda change: change["Parameters"][0].update(ParameterValue="changed"), "change-set-parameters-mismatch"),
@@ -303,6 +305,18 @@ def test_main_handoff():
     selected, before, after, source = fixture()
     provider = Provider(selected, before, after)
     with tempfile.TemporaryDirectory() as directory:
+        current_source = [source]
+        def snapshot(_selected, _predecessor, revision=None):
+            assert revision in (None, source["revision"])
+            return (source if revision else current_source[0]), before, after
+        def git(*arguments, **_kwargs):
+            if arguments == ("rev-parse", "--absolute-git-dir"):
+                return directory
+            if arguments[:3] == ("diff", "--name-only", "--no-renames"):
+                assert arguments[3:] == (source["revision"], current_source[0]["revision"], "--")
+                return selected["controller"] + "\n" + selected["workflow"]
+            assert arguments[:2] == ("ls-tree", current_source[0]["revision"])
+            return "100644 blob " + "c" * 40 + "\t" + arguments[-1]
         def invoke(operation, approved=None):
             output = io.StringIO()
             arguments = ["--operation", operation, "--predecessor", source["predecessor"], "--json"]
@@ -311,7 +325,7 @@ def test_main_handoff():
             with contextlib.redirect_stdout(output):
                 code = M.main(arguments)
             return code, json.loads(output.getvalue())
-        with patch.object(M, "sources", return_value=(source, before, after)), patch.object(M, "git", return_value=directory), patch.object(M, "Provider", return_value=provider):
+        with patch.object(M, "sources", side_effect=snapshot), patch.object(M, "git", side_effect=git), patch.object(M, "Provider", return_value=provider):
             code, plan = invoke("plan")
             assert code == 0 and plan["verdict"] == "planned" and not provider.writes()
             intent_path = Path(directory) / "foundation-access-update/intent.json"
@@ -320,14 +334,54 @@ def test_main_handoff():
             assert invoke("plan") == (code, plan) and intent_path.read_bytes() == original
             assert invoke("prepare")[1]["code"] == "approved-plan-mismatch" and not provider.writes()
             assert invoke("prepare", plan["plan_sha256"])[1]["verdict"] == "reviewed"
-            assert invoke("review")[1]["verdict"] == "reviewed"
+            prepare_path = intent_path.with_name("prepare.json")
+            original_prepare = prepare_path.read_bytes()
+            assert "ChangeSetType" not in provider.change, "DescribeChangeSet must match the real AWS response"
+            current_source[0] = {**source, "revision": "d" * 40}
+            code, reviewed = invoke("review")
+            assert code == 0 and reviewed["verdict"] == "reviewed"
+            assert reviewed["plan_sha256"] == plan["plan_sha256"] and reviewed["controller_revision"] == "d" * 40
+            assert len(provider.writes()) == 1 and prepare_path.read_bytes() == original_prepare
             assert invoke("execute", plan["plan_sha256"])[1]["verdict"] == "completed"
             assert invoke("observe")[1]["verdict"] == "completed" and len(provider.writes()) == 2
             assert intent_path.read_bytes() == original
 
 
+def test_controller_correction_guards():
+    with tempfile.TemporaryDirectory() as directory:
+        values = setup(directory); run(values, "prepare")
+        provider, store, selected, intent, before, after = values
+        original = intent["source"]
+        current = {**original, "revision": "d" * 40}
+        paths = [selected["controller"], selected["workflow"], str(Path(selected["controller"]).with_name("smoke-test.py")),
+                 "scripts/repo/diagnostic-coverage/reviews.v1.json", "commitLogs/session/README.md"]
+        mode = ["100644"]
+        def git(*arguments, **_kwargs):
+            if arguments[:3] == ("diff", "--name-only", "--no-renames"):
+                assert arguments[3:] == (original["revision"], current["revision"], "--")
+                return "\n".join(paths)
+            assert arguments[:3] == ("ls-tree", current["revision"], "--")
+            return mode[0] + " blob " + "e" * 40 + "\t" + arguments[-1]
+        with patch.object(M, "sources", return_value=(original, before, after)) as snapshots, patch.object(M, "git", side_effect=git):
+            assert M.validate_intent(intent, selected, current, store) is intent
+            snapshots.assert_called_with(selected, current["predecessor"], revision=original["revision"])
+            for forbidden in (selected["template"], M.ACCESS, M.PROFILE, M.RULE, M.BASE + "change_sets.py", "apps/entity-smoke/changed.ts"):
+                paths.append(forbidden)
+                rejected(lambda: M.validate_intent(intent, selected, current, store), "retained-intent-mismatch")
+                paths.pop()
+            mode[0] = "120000"
+            rejected(lambda: M.validate_intent(intent, selected, current, store), "retained-intent-mismatch")
+            mode[0] = "100644"
+            wrong = copy.deepcopy(intent); wrong["source"]["after_sha256"] = "0" * 64
+            rejected(lambda: M.validate_intent(wrong, selected, current, store), "retained-intent-mismatch")
+            rejected(lambda: M.validate_intent(intent, selected, {**current, "predecessor": "f" * 40}, store), "retained-intent-mismatch")
+            with tempfile.TemporaryDirectory() as missing:
+                rejected(lambda: M.validate_intent(intent, selected, current, M.Store(Path(missing))), "retained-intent-mismatch")
+            assert len(provider.writes()) == 1
+
+
 if __name__ == "__main__":
     started = time.monotonic()
-    for test in (test_source_and_declaration, test_connected_and_uncertain, test_review_and_readback, test_original_intent_and_provider, test_safe_boundary, test_main_handoff):
+    for test in (test_source_and_declaration, test_connected_and_uncertain, test_review_and_readback, test_original_intent_and_provider, test_safe_boundary, test_main_handoff, test_controller_correction_guards):
         test()
-    print(json.dumps({"verdict": "passed", "groups": 6, "elapsed_seconds": round(time.monotonic() - started, 3), "provider": "controlled-only"}, sort_keys=True))
+    print(json.dumps({"verdict": "passed", "groups": 7, "elapsed_seconds": round(time.monotonic() - started, 3), "provider": "controlled-only"}, sort_keys=True))
