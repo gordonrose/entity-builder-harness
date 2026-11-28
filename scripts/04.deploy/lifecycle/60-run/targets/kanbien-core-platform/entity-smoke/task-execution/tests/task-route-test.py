@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.entity-smoke.task-route
-#   version: 6
+#   version: 7
 #   status: draft
 #   created_on: "2026-11-08"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.entity-smoke
 #   disciplines: [security, sre]
@@ -1139,7 +1139,9 @@ def scheduling_state_continuation_cases(provider, root, binding, live, original_
         intent = {"schema": "deploy/scheduling-phase-intent/v1", "target": "kanbien-core-platform", "scope": "entity-smoke", "phase": phase,
             "stack": selected["stack"], "mode": "CREATE" if before is None else "UPDATE", "created_at": now(), "template": template,
             "parameters": parameters, "parameter_inputs": [{"ParameterKey": key, "ParameterValue": value} for key, value in sorted(parameters.items())] if before is None else owner.CHANGES.update_parameter_inputs(before["parameters"], {key: value for key, value in controls.items() if before["parameters"][key] != value}),
-            "before": before, "predecessor_sha256": "a" * 64, "source_revision": binding["source_revision"], "network_before": None}
+            "before": before, "predecessor_sha256": "a" * 64, "source_revision": binding["source_revision"], "network_before": None,
+            "maintenance_selection": owner.scope_maintenance_selection(selected, {"receipt_path": str(args.receipt),
+                "proof_label": args.proof_label, "expected_predecessor": args.expected_predecessor})}
         request = owner.phase_request(intent)
         prepare, _ = store.reserve("prepare", request)
         execute, _ = store.reserve("execute", request)
@@ -1163,6 +1165,11 @@ def scheduling_state_continuation_cases(provider, root, binding, live, original_
         changed = copy.deepcopy(retained[args.scheduling_control_phase])
         changed["intent"]["source_revision"] = "f" * 40
         with patch.object(owner, "read_disabled_phase", return_value=changed):
+            fails(lambda: M.plan(args, live()), "task-scheduling-control-phase-not-confirmed")
+        assert launches() == before
+        stripped = copy.deepcopy(retained[args.scheduling_control_phase])
+        stripped["intent"].pop("maintenance_selection")
+        with patch.object(owner, "read_disabled_phase", return_value=stripped):
             fails(lambda: M.plan(args, live()), "task-scheduling-control-phase-not-confirmed")
         assert launches() == before
         args.phase = "preflight"
