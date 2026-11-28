@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T11:53:21Z
-latest_commit_sha: 3963fb6f
-chat_duration: 135836s (01:13:43:56)
+latest_commit_at_utc: 2026-11-28T12:17:58Z
+latest_commit_sha: 574d7259
+chat_duration: 137313s (01:14:08:33)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -102,6 +102,9 @@ reducing aws bill
 ## Activity Log
 
 ### 2026-11-28 - Hosted workflow registration correction
+
+- Completed checkpoint `574d72594f4e5bacfdc86cd9a38b3eaf28a5100d` after the staged gate passed; ten exact staged/worktree byte comparisons matched. Normal task-branch push fast-forwarded only3963fb6f→574d7259. GitHub registered workflowID433680613. Native push run46143969199 completed `skipped` on exact SHA574d72594f4e5bacfdc86cd9a38b3eaf28a5100d; no manual publication was dispatched. This is actual hosted registration proof, not image qualification. Main and protected-environment reviewers remain untouched.
+- Handoff boundary: no source task process remains running; no AWS mutation, billable test environment, image publication, existing-resource retirement or savings occurred. All source fixes are checkpointed; only this canonical session bookkeeping remains for its existing narrow checkpoint helper. Two user decisions remain pending: add/connect the missing setup realization contract under the repo's existing deployment gate (no bypass or scope expansion), and isolated checksum-verified official GitHub CLI support for required attestation verification. The permitted next step after those answers is the governed registry/publisher setup and protected hosted build, then the bounded live session rehearsal. Preserve original operation records; do not restart the goal, create a chat/worktree, repeat unchanged tests or infer full integration success.
 
 - Final registered inventory regression passed61.155828s, runner67.837s wall, no findings. Retain unchanged passing controller/baseline/collector package results from the preceding prepared batch; the entity publisher also passed. The corrected missing-engine caller passed79.935s and both CI-mutation cases passed7.652s. The earlier full package aggregate is NOT represented as passing: its identified failure is corrected/proved at the actual caller; the combined aggregate and broader session integration remain pending. No actual container build, image publication or live acceptance is established.
 - Final normal preparation passed with nine selected obligations/no findings (selector7.05706s). Parent inspected date-only preparation changes and the complete final diffs, confirmed zero changed diagnostic-review hash mismatches, source-backed README reading/link review and zero container-boundary findings. Final reviewed SHA256 identities: controller workflow43ada75bc3d0991831f66509ce6bdde57061f666f8827b4b969677f36c961bd8; shared guard66cc7f35e11d81640ce77b95fba97db9e9aca03cfe480873d72e071c5c523973; controller verifier5fdfa39033acdd2e290837689b1dd7ec945c35b347694235c10346059eda20ab; controller fixture492d3e5e2ec0634ed78f4c92970e68aa61e1d98c5900137c987dc47d2dcc0f3b; inventory readeraa3e1444e70048a4ab2418c4f11e87e265cd4a2f74911939314fd6ccfb149c3e; inventory fixture287e222e79ad09bc02fe4cc0e129155c869447b08b50c185bcf33c0ace33a377. Compare staged bytes before commit; do not repeat unchanged admission review.
@@ -1943,6 +1946,17 @@ Summary: Checkpoint connected start/test/cleanup, isolated controller image cust
 
 ADR impact: Existing ADR 0044 retained; implementation follows production-preserving temporary deployment machinery.
 
+
+### 2026-11-28T12:17:58Z - Commit recorded
+
+Commit: `574d7259`
+
+Message: fix(deploy): register controller workflow and complete package boundaries
+
+Summary: Controller push-only registration stays non-publishing; corrected declared evidence-template lineage, CI fixture parser, image guide and ignore protections. Focused package consumers and inventory pass; full aggregate, hosted artifact/live/retirement proof remain pending.
+
+ADR impact: ADR 0044 unchanged; production-preserving deployment and temporary cleanup architecture retained.
+
 ## Sub-Agent Activity
 
 - `/root/production_profile_review` reviewed the supplied revised design (no independent source/provider access). Incorporated its production-parity, upgrade-fixture, protected-cleanup and post-expiry retry safeguards; retained explicit residual-cost limits. Parent owns final source/document review.
@@ -1965,6 +1979,13 @@ ADR impact: Existing ADR 0044 retained; implementation follows production-preser
   Summary: Checkpoint connected start/test/cleanup, isolated controller image custody and original-session recovery; focused registered checks pass, package/live/retirement proof pending.
   ADR impact: Existing ADR 0044 retained; implementation follows production-preserving temporary deployment machinery.
 
+
+- Commit: `574d7259`
+  Time UTC: 2026-11-28T12:17:58Z
+  Message: fix(deploy): register controller workflow and complete package boundaries
+  Summary: Controller push-only registration stays non-publishing; corrected declared evidence-template lineage, CI fixture parser, image guide and ignore protections. Focused package consumers and inventory pass; full aggregate, hosted artifact/live/retirement proof remain pending.
+  ADR impact: ADR 0044 unchanged; production-preserving deployment and temporary cleanup architecture retained.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1978,9 +1999,9 @@ Reason: Extend profile-driven deployment with isolated temporary instances, reta
 ## Session Metrics
 
 Raised at UTC: 2026-11-26T22:09:25Z
-Latest commit at UTC: 2026-11-28T11:53:21Z
-Latest commit SHA: 3963fb6f
-Chat duration: 135836s (01:13:43:56)
+Latest commit at UTC: 2026-11-28T12:17:58Z
+Latest commit SHA: 574d7259
+Chat duration: 137313s (01:14:08:33)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
