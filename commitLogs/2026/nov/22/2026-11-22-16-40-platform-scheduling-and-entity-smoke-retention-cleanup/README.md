@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T05:44:35Z
-latest_commit_sha: 311a7bf966b298312c3bdf382e1dd1f1289dd6d0
-chat_duration: 479043s (05:13:04:03)
+latest_commit_at_utc: 2026-11-28T06:06:32Z
+latest_commit_sha: fe95ff6c
+chat_duration: 480360s (05:13:26:00)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -715,6 +715,17 @@ Summary: Approved foundation correction verified; preserve original operation
 
 Durable evidence: Registered final report .cache/test-runs/20261128T060450Z-99e5fef8da624db196a11912c71d7eb9/report.json passed2 checks, foundation executed and diagnostic readers reused, zero findings,35.526s total/0.648s execution. Prepared source bc8d46cbeaba832cdd9d2653ee72b7be4a367c5c66db61a94dc092a8fa415227 unchanged. Exact5 paths only; no scripts/checks added/removed/moved, no new review obligation or AGENTS edits; existing partial diagnostics remain honest. User approved narrow correction/resume. Original intent2597aba9 and prepare foundation-access-3da6f64c98f5459783949aba84f100ea remain untouched and unexecuted. Commit and session checkpoint next, then full cached integration and original native review; preserve all source/operation evidence. Existing ADR0044 sufficient; this is an API-shape/controller-recovery correction, not a new architecture.
 
+
+### 2026-11-28T06:06:32Z - Commit recorded
+
+Commit: `fe95ff6c`
+
+Message: fix(deploy): resume original foundation change after controller correction
+
+Summary: Approved existing-controller/API-shape correction and original-attempt resume; five paths, no new scripts/checks/permissions/AGENTS edits. Seven direct groups passed1.296s; registered report20261128T060450Z passed2 checks35.526s, diagnostic readers reused; staged gate20261128T060617Z passed. Controllerbc8d46cb unchanged. Original intent2597aba9/prepare foundation-access-3da6f64c98f5459783949aba84f100ea remain untouched/unexecuted. Full cached integration and original native review next; live scheduler proof remains incomplete.
+
+ADR impact: Existing ADR0044 sufficient; controller-only correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -757,6 +768,13 @@ Durable evidence: Registered final report .cache/test-runs/20261128T060450Z-99e5
   Summary: Corrected the single stale Entity test packet using the existing maintenance-selection owner; preserved production validation and added actual-caller rejection of stripped metadata before launch. Final affected run20261128T054223Z passed17 checks,10 executed7 reused, with20 explicitly deferred and zero findings. Total2586.257seconds exceeds the30minute advisory; credential739.789seconds and task789.755seconds passed. Exact two-path preparation and staged gate20261128T054410Z passed, reviewed sourcef92af029 unchanged. User approved fast-forward routing exception; AWS authentication renewed and account337159794548 confirmed; GitHub can_push true. Full cached integration and protected publication/live AWS proof remain next. No runtime source, AGENTS or cloud/shared-database mutations.
   ADR impact: Existing ADR0044 remains sufficient; fixture-only correction.
 
+
+- Commit: `fe95ff6c`
+  Time UTC: 2026-11-28T06:06:32Z
+  Message: fix(deploy): resume original foundation change after controller correction
+  Summary: Approved existing-controller/API-shape correction and original-attempt resume; five paths, no new scripts/checks/permissions/AGENTS edits. Seven direct groups passed1.296s; registered report20261128T060450Z passed2 checks35.526s, diagnostic readers reused; staged gate20261128T060617Z passed. Controllerbc8d46cb unchanged. Original intent2597aba9/prepare foundation-access-3da6f64c98f5459783949aba84f100ea remain untouched/unexecuted. Full cached integration and original native review next; live scheduler proof remains incomplete.
+  ADR impact: Existing ADR0044 sufficient; controller-only correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -770,9 +788,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T05:44:35Z
-Latest commit SHA: 311a7bf966b298312c3bdf382e1dd1f1289dd6d0
-Chat duration: 479043s (05:13:04:03)
+Latest commit at UTC: 2026-11-28T06:06:32Z
+Latest commit SHA: fe95ff6c
+Chat duration: 480360s (05:13:26:00)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
