@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-proof-receipts
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -190,8 +190,18 @@ def authenticated_maintenance_checks():
         reject(get, source=lambda *_args, **_kwargs: SimpleNamespace(stdout="d" * 40))
         assert not get.calls, "wrong checkout must fail before provider reads"
         get = archive_provider()
-        reject(get, source=lambda argv, **kwargs: SimpleNamespace(stdout=" M platform/PRIVATE_AUTH_CANARY.ts\n") if "status" in argv else git(argv, **kwargs))
+        reject(get, source=lambda argv, **kwargs: SimpleNamespace(stdout=" M platform/PRIVATE_AUTH_CANARY.ts\0") if "status" in argv else git(argv, **kwargs))
         assert not get.calls, "dirty executable inputs must fail before provider reads"
+        generated = next((ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts").glob("administration-*.json")).relative_to(ROOT).as_posix()
+        def generated_receipt(argv, **kwargs):
+            return SimpleNamespace(stdout="?? " + generated + "\0") if "status" in argv else git(argv, **kwargs)
+        get = archive_provider()
+        with patch.object(module.subprocess, "run", side_effect=generated_receipt):
+            assert module.qualified_maintenance(selected, get=get) == receipt
+        assert len(get.calls) == 3, "new native receipts do not waive actual package authentication"
+        get = archive_provider()
+        reject(get, source=lambda argv, **kwargs: SimpleNamespace(stdout="?? PRIVATE_AUTH_CANARY") if "status" in argv else git(argv, **kwargs))
+        assert not get.calls, "unavailable or malformed source observation cannot authenticate maintenance"
         selected.write_text(json.dumps({**receipt, "program_id": "kanbien-entity-smoke"}))
         get = archive_provider(); reject(get)
         assert not get.calls, "foreign package must fail before provider reads"

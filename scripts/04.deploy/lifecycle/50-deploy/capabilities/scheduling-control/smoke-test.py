@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.scheduling-control
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.scheduling
 #   disciplines: [security, sre]
@@ -124,7 +124,7 @@ class FakeProvider:
         if operation == "describe-change-set":
             if self.preparation is None:
                 raise M.Failure("aws-resource-missing", "unknown")
-            return self.mutate({"Description": self.preparation, "ChangeSetType": "CREATE", "Status": "CREATE_COMPLETE",
+            return self.mutate({"Description": self.preparation, "Status": "CREATE_COMPLETE",
                 "ExecutionStatus": "EXECUTE_COMPLETE" if self.execution else "AVAILABLE",
                 "Parameters": [{"ParameterKey": key, "ParameterValue": value} for key, value in self.parameters.items()],
                 "Changes": [{"ResourceChange": {"LogicalResourceId": key, "ResourceType": value["Type"], "Action": "Add", "Replacement": "False"}} for key, value in self.template["Resources"].items()]})
@@ -225,7 +225,7 @@ def test_phase_engine():
                 if change is None:
                     raise M.Failure("aws-resource-missing")
                 allowed = set(change["template"]["Resources"]) if change["ChangeSetType"] == "CREATE" else {"QueueTransportPolicy"} if args["ChangeSetName"] in {"scheduling-fault-on", "scheduling-fault-off"} else {"FixedTick", "WorkerMapping", "DispatchSilenceAlarm"}
-                return {**change, "Changes": [{"ResourceChange": {"LogicalResourceId": key, "ResourceType": value["Type"],
+                return {**{key: value for key, value in change.items() if key not in {"ChangeSetType", "template"}}, "Changes": [{"ResourceChange": {"LogicalResourceId": key, "ResourceType": value["Type"],
                     "Action": "Add" if change["ChangeSetType"] == "CREATE" else "Modify", "Replacement": "False",
                     **({"Details": [{"Target": {"Attribute": "Properties", "Name": "ActionsEnabled", "RequiresRecreation": "Never"}}]} if key == "DispatchSilenceAlarm" else {})}} for key, value in change["template"]["Resources"].items() if key in allowed]}
             if operation == "describe-stacks":
@@ -354,7 +354,8 @@ def test_cost_reservation_boundary():
             return record, True
         def calculate(_provider, _intent, _rows, **_kwargs):
             return projection, lambda _actual, _resources=None: projection
-        with patch.object(M.subprocess, "run", side_effect=lambda argv, **_kwargs: SimpleNamespace(stdout="" if "status" in argv else revision)), \
+        source_status = [""]
+        with patch.object(M.subprocess, "run", side_effect=lambda argv, **_kwargs: SimpleNamespace(stdout=source_status[0] if "status" in argv else revision)), \
                 patch.object(M, "cost_native_census", side_effect=lambda _intent, _store: copy.deepcopy(native)), \
                 patch.object(M, "recovery_native_census", return_value=[]), \
                 patch.object(M, "cost_resource_census", return_value=[]), patch.object(M, "cost_projection", side_effect=calculate):
@@ -366,6 +367,14 @@ def test_cost_reservation_boundary():
             # An uncertain native reservation is not another paid submission.
             existing, new = M.reserve_cost_original(None, store, binding, request=request, reserve=lambda: (record, False), task_definition_arn=definition)
             assert existing == record and not new and len(calls) == 1
+            generated = next((M.ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts").glob("administration-*.json")).relative_to(M.ROOT).as_posix()
+            source_status[0] = "?? " + generated + "\0"
+            existing, new = M.reserve_cost_original(None, store, binding, request=request, reserve=lambda: (record, False), task_definition_arn=definition)
+            assert existing == record and not new and len(calls) == 1
+            source_status[0] = " M platform/private-canary.ts\0"
+            rejects(lambda: M.reserve_cost_original(None, store, binding, request=request, reserve=reserve, task_definition_arn=definition), "cost-source-uncommitted")
+            assert len(calls) == 1
+            source_status[0] = ""
             # Ordinary cost rejection precedes native reservation.
             expensive = {**projection, "costs_usd": {"endpoint": "11.000000"}, "projected_usd": "11.000000"}
             with patch.object(M, "cost_projection", return_value=(expensive, lambda _rows: expensive)):
@@ -1027,9 +1036,11 @@ def test_version_transition():
     assert not M.version_configuration_replacement(provider, request, changed, changes, replacement, "UPDATE")
     def reviewed(_service, operation, **args):
         if operation == "describe-change-set":
-            return {"Description": "reserved", "ChangeSetType": "UPDATE", "Status": "CREATE_COMPLETE", "ExecutionStatus": "AVAILABLE", "Parameters": [], "Changes": changes}
+            return {"Description": "reserved", "Status": "CREATE_COMPLETE", "ExecutionStatus": "AVAILABLE", "Parameters": [], "Changes": changes}
         return {"TemplateBody": desired if "ChangeSetName" in args else prior}
     assert M.review(reviewed, request, {"operation_id": "reserved"}, desired, {}, "UPDATE")["verdict"] == "reviewed"
+    rejects(lambda: M.review(reviewed, request, {"operation_id": "foreign"}, desired, {}, "UPDATE"), "change-set-lineage-mismatch")
+    rejects(lambda: M.review(reviewed, request, {"operation_id": "reserved"}, desired, {}, "DELETE"), "change-set-lineage-mismatch")
 
 
 def test_qualified_source_binding():
@@ -1058,10 +1069,23 @@ def test_qualified_source_binding():
     with patch.object(M, "read_json", side_effect=receipt), patch.object(M.subprocess, "run", side_effect=stale):
         rejects(lambda: M.qualified_pair(binding, {purpose: purpose for purpose in ("dispatch", "worker")}), "package-configuration-source-changed")
     def dirty(argv, **options):
-        return SimpleNamespace(stdout=" M platform/private-canary.ts\n") if "status" in argv else source(argv, **options)
+        return SimpleNamespace(stdout=" M platform/private-canary.ts\0") if "status" in argv else source(argv, **options)
     with patch.object(M, "read_json", side_effect=receipt), patch.object(M.subprocess, "run", side_effect=dirty), patch.object(M.ARTIFACT, "documents") as remote:
         rejects(lambda: M.qualified_pair(binding, {purpose: purpose for purpose in ("dispatch", "worker")}), "package-checkout-uncommitted-inputs")
         remote.assert_not_called()
+    generated = next((M.ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts").glob("administration-*.json")).relative_to(M.ROOT).as_posix()
+    def generated_receipt(argv, **options):
+        return SimpleNamespace(stdout="?? " + generated + "\0") if "status" in argv else source(argv, **options)
+    with patch.object(M, "read_json", side_effect=receipt), patch.object(M.subprocess, "run", side_effect=generated_receipt), patch.object(M.ARTIFACT, "api", side_effect=get):
+        assert M.qualified_pair(binding, {purpose: purpose for purpose in ("dispatch", "worker")})["dispatch"]["source_revision"] == revision
+    def malformed(argv, **options):
+        return SimpleNamespace(stdout="?? private-canary-no-terminator") if "status" in argv else source(argv, **options)
+    stream = io.StringIO()
+    with patch.object(M, "read_json", side_effect=receipt), patch.object(M.subprocess, "run", side_effect=malformed), patch.object(M.ARTIFACT, "documents") as remote, redirect_stdout(stream):
+        assert M.main(["--target", binding["target"], "--scope", binding["scope"], "--operation", "inspect-disabled",
+            "--dispatch-receipt", "dispatch", "--worker-receipt", "worker"]) == 1
+    assert json.loads(stream.getvalue())["code"] == "control-input-or-observation-invalid" and "private-canary" not in stream.getvalue()
+    remote.assert_not_called()
     for key, bad, code in [
         ("program_id", binding["programs"]["worker"], "publication-runtime-proof-mismatch"),
         ("source_revision", "f" * 40, "publication-runtime-proof-mismatch"),

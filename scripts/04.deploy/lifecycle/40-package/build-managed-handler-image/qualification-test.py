@@ -21,6 +21,7 @@ import copy
 import importlib.util
 import io
 import json
+import subprocess
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -35,6 +36,7 @@ def load(name, path):
 owner = load("managed_image_qualification", Path(__file__).with_name("qualification.py"))
 publication = load("managed_publication", Path(__file__).with_name("publication.py"))
 projection = load("managed_configuration", ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py")
+source_binding = load("package_source_binding", ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py")
 PROGRAMS = ["kanbien-" + scope + "-scheduling-" + purpose for scope in ("core-server-persistence", "entity-smoke") for purpose in ("dispatch", "worker")]
 
 def inspected(program):
@@ -61,6 +63,43 @@ class DockerFixture:
         raise AssertionError("unexpected command")
 
 class QualificationTests(unittest.TestCase):
+    def test_real_git_distinguishes_new_receipts_from_runtime_or_tracked_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.run(["git", "-C", str(root), "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
+                    "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], check=True, capture_output=True, text=True)
+            git("init", "--quiet")
+            code = root / "platform/runtime.ts"; code.parent.mkdir(); code.write_text("export {};\n")
+            git("add", "platform/runtime.ts"); git("commit", "--quiet", "-m", "fixture")
+            self.assertTrue(source_binding.runtime_sources_clean(root))
+            receipt = root / "infra/04.deploy/03.product/targets/example/20-scopes/application/30-release-evidence/proof-receipts/administration-observe-example.json"
+            receipt.parent.mkdir(parents=True); receipt.write_text("{}")
+            # This is classification only: empty JSON is NOT authenticated proof.
+            self.assertTrue(source_binding.runtime_sources_clean(root))
+            for relative in ("platform/new.ts", "infra/other.json", "infra/04.deploy/03.product/targets/example/20-scopes/application/30-release-evidence/accepted.json"):
+                candidate = root / relative; candidate.parent.mkdir(parents=True, exist_ok=True); candidate.write_text("{}")
+                self.assertFalse(source_binding.runtime_sources_clean(root)); candidate.unlink()
+            code.write_text("export const changed = true;\n")
+            self.assertFalse(source_binding.runtime_sources_clean(root)); code.write_text("export {};\n")
+            link = receipt.with_name("administration-linked.json"); link.symlink_to(code)
+            self.assertFalse(source_binding.runtime_sources_clean(root)); link.unlink()
+            git("add", str(receipt.relative_to(root)))
+            self.assertFalse(source_binding.runtime_sources_clean(root), "staged evidence is a tracked change")
+            git("commit", "--quiet", "-m", "retained proof fixture")
+            self.assertTrue(source_binding.runtime_sources_clean(root)); receipt.write_text('{"changed":true}')
+            self.assertFalse(source_binding.runtime_sources_clean(root), "existing retained evidence cannot be edited")
+
+    def test_source_observation_failure_and_malformed_records_are_not_clean(self):
+        for output in ("?? missing-terminator", "\0", "?? ../outside.json\0", "?? platform/private-canary.ts\0"):
+            with patch.object(source_binding.subprocess, "run", return_value=SimpleNamespace(stdout=output)):
+                if output and not output.endswith("\0"):
+                    with self.assertRaises(ValueError): source_binding.runtime_sources_clean(ROOT)
+                else:
+                    self.assertFalse(source_binding.runtime_sources_clean(ROOT))
+        with patch.object(source_binding.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["git"], stderr="private-canary")):
+            with self.assertRaises(subprocess.CalledProcessError): source_binding.runtime_sources_clean(ROOT)
+
     def test_all_declared_programs_use_real_runtime_command_and_owned_cleanup(self):
         for program in PROGRAMS:
             with self.subTest(program=program):

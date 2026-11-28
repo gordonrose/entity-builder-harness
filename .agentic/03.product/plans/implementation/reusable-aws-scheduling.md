@@ -32,6 +32,11 @@ factory diagnosis found that a digit-leading UUID forms an invalid lease-owner
 segment. Current increment: join that UUID to the letter-leading purpose with a
 hyphen, test both purposes with digit/letter prefixes in the existing fixture,
 then requalify the managed-handler images through existing protected workflows.
+The lease-owner correction is committed and locally verified. Before publication,
+the same lean route review found the scheduler's duplicate nonexistent AWS
+response-field check and a source guard that rejects its own new native proof
+JSON outputs. Correct these existing owners, preserving tracked-source checks and
+independent evidence authentication, before reserving any scheduler operation.
 Use the existing native
 owners to establish the first automatic harmless baseline. The approved narrow
 foundation repository-read permission update completed through its original

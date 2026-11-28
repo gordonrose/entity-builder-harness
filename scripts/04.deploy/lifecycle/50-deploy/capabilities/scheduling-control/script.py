@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.capability.scheduling-control
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-11-27"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.scheduling
 #   disciplines: [security, sre]
@@ -53,6 +53,7 @@ JOURNAL = module("scheduling_cost_lock", BASE + "task_journal.py")
 CHANGES = module("scheduling_changes", BASE + "change_sets.py")
 FOUNDATION = module("scheduling_foundation", BASE + "foundation-checks.py")
 CUSTODY = module("scheduling_custody", "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py")
+SOURCE = module("scheduling_source", "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py")
 ARTIFACT = module("scheduling_artifact", "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py")
 PUBLICATION = module("scheduling_publication", "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py")
 QUALIFICATION = module("scheduling_qualification", "scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py")
@@ -277,9 +278,7 @@ def qualified_pair(binding, paths):
     revision = receipts["dispatch"]["source_revision"]
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], check=True, capture_output=True, text=True, timeout=10).stdout.strip()
     require(head == revision, "package-checkout-source-mismatch")
-    changed = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=normal", "--",
-        "apps", "packages", "platform", "infra", "scripts", ".github"], check=True, capture_output=True, text=True, timeout=10).stdout
-    require(not changed.strip(), "package-checkout-uncommitted-inputs")
+    require(SOURCE.runtime_sources_clean(ROOT), "package-checkout-uncommitted-inputs")
     # Plans/session notes may change, but executable/deployment input bytes must
     # be the published commit before downloading its source-owned proof.
     selected = [binding_path(binding["target"], binding["scope"]).relative_to(ROOT).as_posix(),
@@ -839,7 +838,7 @@ def version_configuration_replacement(provider, request, template, changes, entr
 
 def review(provider, request, reservation, template, parameters, mode):
     change = provider("cloudformation", "describe-change-set", StackName=request["stack"], ChangeSetName=request["change_set"])
-    require(change.get("Description") == reservation["operation_id"] and change.get("ChangeSetType") == mode, "change-set-lineage-mismatch")
+    require(mode in {"CREATE", "UPDATE"} and change.get("Description") == reservation["operation_id"], "change-set-lineage-mismatch")
     if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
         return {"verdict": "pending", "code": "change-set-pending"}
     require(change.get("Status") == "CREATE_COMPLETE", "change-set-not-reviewable")
@@ -1568,9 +1567,7 @@ def reserve_cost_original(provider, store, binding, *, request, reserve, task_de
     # current checkout, not executable code selected by the receipt location.
     head = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], check=True, text=True, capture_output=True, timeout=10).stdout.strip()
     require(head == intent["source_revision"], "cost-source-changed")
-    changed = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=normal", "--",
-        "apps", "packages", "platform", "infra", "scripts", ".github"], check=True, text=True, capture_output=True, timeout=10).stdout
-    require(not changed.strip(), "cost-source-uncommitted")
+    require(SOURCE.runtime_sources_clean(ROOT), "cost-source-uncommitted")
     for selected in intent["scopes"].values():
         require(all(hashlib.sha256(Path(path).read_bytes()).hexdigest() == checksum for path, checksum in selected["receipt_files"].items()), "cost-receipt-changed")
     native = cost_native_census(intent, store)

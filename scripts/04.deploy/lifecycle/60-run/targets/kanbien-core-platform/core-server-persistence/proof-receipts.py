@@ -8,10 +8,10 @@ state, the exact task definition/image and the safe application result.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.kanbien-core-platform.persistence-proof-receipts
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -96,9 +96,7 @@ def qualified_maintenance(path, *, get=None):
         artifact = owner("core_maintenance_artifact", package + "github-artifact.py")
         revision = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], check=True, capture_output=True, text=True, timeout=10).stdout.strip()
         if revision != receipt["source_revision"]: raise ValueError()
-        changed = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=normal", "--",
-            "apps", "packages", "platform", "infra", "scripts", ".github"], check=True, capture_output=True, text=True, timeout=10).stdout
-        if changed.strip(): raise ValueError()
+        if not owner("core_maintenance_source", package + "qualification.py").runtime_sources_clean(ROOT): raise ValueError()
         run = receipt["receipt_reference"].split(":", 1)[1]
         documents = artifact.documents(repository=publisher.source_repository, workflow=publisher.workflow,
             source_revision=revision, run_id=run, artifact_name="kanbien-core-platform-persistence-package-custody-" + run,

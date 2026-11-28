@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 48
+#   version: 49
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-11-28"
@@ -2226,6 +2226,7 @@ checks:
     feedback: {development: true, expected_seconds: 5, isolation: disposable-fixture, rationale: Reject incorrect image/source/runtime declarations and failed runtime protocol proof with controlled command responses only.}
     inputs: &managed_handler_image_inputs
     - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
     - scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
     - scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
     - infra/04.deploy/03.product/image/scheduling-lambda
@@ -2243,7 +2244,7 @@ checks:
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/scheduling.yml
     - .github/workflows/publish-kanbien-core-platform-scheduling.yml
     runtime:
-      tools: [python3]
+      tools: [python3, git]
       environment: [PATH, LANG, LC_ALL, TMPDIR, PYTHONPATH, PYTHONHOME, PYTHONHASHSEED]
       config_inputs: [.python-version, pyproject.toml, requirements.txt]
   foundation-access-update-contracts:
@@ -2323,6 +2324,7 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py
     - scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py
+    - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py
     - scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/publication.py
     - scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control

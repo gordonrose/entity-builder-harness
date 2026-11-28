@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.validation.package-qualification-binding
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-10-26"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.delivery-chain
 #   disciplines: [architecture, security, sre]
@@ -16,6 +16,10 @@
 #   used_by:
 #   - id: deploy.validation.package-qualification-workflow
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py
+#   - id: deploy.capability.scheduling-control
+#     path: scripts/04.deploy/lifecycle/50-deploy/capabilities/scheduling-control/script.py
+#   - id: deploy.library.kanbien-core-platform.persistence-proof-receipts
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
 """Bind local qualification to the exact image ID and selected non-secret inputs."""
 import argparse
 import hashlib
@@ -24,6 +28,29 @@ import json
 import re
 import subprocess
 from pathlib import Path
+
+
+def runtime_sources_clean(root):
+    """Native proof outputs are data, never permission to change runtime source.
+
+    Only new regular JSON receipts in the established output layout are omitted.
+    Their native consumers still authenticate content, journals and live identity.
+    All tracked changes and every other untracked input remain disqualifying.
+    """
+    root = Path(root).resolve(strict=True)
+    output = subprocess.run(["git", "-C", str(root), "status", "--porcelain=v1", "-z", "--untracked-files=all", "--",
+        "apps", "packages", "platform", "infra", "scripts", ".github"], check=True, capture_output=True, text=True, timeout=10).stdout
+    if not isinstance(output, str) or output and not output.endswith("\0"):
+        raise ValueError("qualification-source-observation-invalid")
+    for record in output.split("\0")[:-1]:
+        if not record.startswith("?? "): return False
+        relative = record[3:]
+        if re.fullmatch(r"infra/04\.deploy/03\.product/targets/[a-z][a-z0-9-]*/20-scopes/[a-z][a-z0-9-]*/30-release-evidence/proof-receipts/[a-z][a-z0-9-]*\.json", relative) is None:
+            return False
+        path = root / relative
+        if not path.is_file() or any(item.is_symlink() for item in (path, *path.parents)) or not path.resolve().is_relative_to(root):
+            return False
+    return True
 
 
 def image_id(reference):
