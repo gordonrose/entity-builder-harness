@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T06:46:55Z
-latest_commit_sha: 5d6e3f2c
-chat_duration: 482783s (05:14:06:23)
+latest_commit_at_utc: 2026-11-28T07:43:35Z
+latest_commit_sha: cc52c356
+chat_duration: 486183s (05:15:03:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -759,6 +759,17 @@ Summary: Actual hosted qualification identified a random UUID lease-owner startu
 
 Durable evidence: Retain publication46119731585 and cancelled failed matrix46119736031; source6dac0332, original foundation operation completed. Five bounded paths only; final diagnostic review was updated after initial reader run, so prepare and rerun affected identities before commit. No scheduler activation or live proof yet.
 
+
+### 2026-11-28T07:43:35Z - Commit recorded
+
+Commit: `cc52c356`
+
+Message: fix(scheduling): accept digit-leading generated lease identities
+
+Summary: Five existing paths only: one owner separator, eight actual-factory digit/letter/purpose cases, existing diagnostic review and progress records. Regression failed on original compiled payload. Initial run20261128T073318Z executed both checks successfully but correctly rejected changed review input before completion; not accepted as evidence. Frozen final20261128T074137Z passed2/zero findings, command270.864920s and planning/runtime/fingerprint overhead90.431731s; staged gate20261128T074320Z passed. Correction plus repeated preparation exceeded15minute advisory; no scope expansion and no claim that limit was met. Core custody46119731585 is qualified on6dac but requires republishing for new source. Cancelled failed matrix46119736031 retained. Existing UUID/lease validation, schema, jobs, diagnostics and resource policies preserved; no new scripts/checks/permissions/AGENTS edits. Full cached promotion, actual hosted qualification and first automatic AWS proof remain next.
+
+ADR impact: Existing ADR0044 sufficient; internal naming correction, no architecture change.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -815,6 +826,13 @@ Durable evidence: Retain publication46119731585 and cancelled failed matrix46119
   Summary: Twelve existing paths: reconcile old shared-role contracts with fourth read probe, pinned-release rpm update, safe closed qualification-case preservation and original caller/cleanup tests. Final registered20261128T064402Z passed4/zero findings in28.635s, three reused; prior initial4 passed444.473s; staged20261128T064636Z passed. No added/removed/moved scripts, new checks/reviews/permissions, AGENTS edits or runtime feature assertions weakened. Foundation permission done; main96f7434c. Failed original core/matrix runs preserved and terminal, dispatcher immutable/unqualified. Actual worker cause and patched image scan/runtime remain unproved. Proceed cached integration/promotion and new qualified packages under existing authority, never replay old operations.
   ADR impact: Existing ADR0044 sufficient; bounded package correction.
 
+
+- Commit: `cc52c356`
+  Time UTC: 2026-11-28T07:43:35Z
+  Message: fix(scheduling): accept digit-leading generated lease identities
+  Summary: Five existing paths only: one owner separator, eight actual-factory digit/letter/purpose cases, existing diagnostic review and progress records. Regression failed on original compiled payload. Initial run20261128T073318Z executed both checks successfully but correctly rejected changed review input before completion; not accepted as evidence. Frozen final20261128T074137Z passed2/zero findings, command270.864920s and planning/runtime/fingerprint overhead90.431731s; staged gate20261128T074320Z passed. Correction plus repeated preparation exceeded15minute advisory; no scope expansion and no claim that limit was met. Core custody46119731585 is qualified on6dac but requires republishing for new source. Cancelled failed matrix46119736031 retained. Existing UUID/lease validation, schema, jobs, diagnostics and resource policies preserved; no new scripts/checks/permissions/AGENTS edits. Full cached promotion, actual hosted qualification and first automatic AWS proof remain next.
+  ADR impact: Existing ADR0044 sufficient; internal naming correction, no architecture change.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -828,9 +846,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T06:46:55Z
-Latest commit SHA: 5d6e3f2c
-Chat duration: 482783s (05:14:06:23)
+Latest commit at UTC: 2026-11-28T07:43:35Z
+Latest commit SHA: cc52c356
+Chat duration: 486183s (05:15:03:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
