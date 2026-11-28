@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T08:48:49Z
-latest_commit_sha: 4e70195b
-chat_duration: 490097s (05:16:08:17)
+latest_commit_at_utc: 2026-11-28T09:32:27Z
+latest_commit_sha: 2be6defb
+chat_duration: 492715s (05:16:51:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -825,6 +825,17 @@ Summary: Manifest-format fix is frozen: --provenance=false only in managed build
 
 Durable evidence: All5fd packages succeeded, but actual ECR parent037a2835 is an OCI index with BuildKit attestation, incompatible with AWS documented Lambda image build requirements. Preserve those immutable images/receipts and all original operations. No AWS scheduler/network/database mutation or deployment occurred. Existing separate GitHub signatures/security gates remain. Six bounded source/test/catalog/review/plan/log paths; stage/gate/commit and republish exact new source, then verify actual manifest and native route. No AGENTS/new files/framework/permissions.
 
+
+### 2026-11-28T09:32:27Z - Commit recorded
+
+Commit: `2be6defb`
+
+Message: fix(scheduling): build Lambda-compatible image manifests
+
+Summary: Six existing paths only: one managed-build flag, actual shell-to-Docker argv test for4 programs, two consumed helper edges/Bash identity in existing check, partial reviewba697d13 and current plan/log. Regression fails original command0.389s,13 direct tests pass1.129s. Registered091856Z passed2/zero findings,0.649995s commands and diagnostic reuse; staged092131Z passed. All5fd workflows succeeded but actual dispatcher ECR037a2835 is OCI index plus BuildKit attestation; AWS Lambda docs require --provenance=false. Preserve images/receipts unchanged and do not deploy incompatible index. Separate required GitHub provenance/SBOM signatures, security/runtime/program checks and all runtime/app/database logic unchanged. No new files/checks/framework/permissions/AGENTS edits or scheduler/network/database mutation. Full cached promotion and new protected publication/actual manifest proof remain before native AWS route.
+
+ADR impact: Existing ADR0044 sufficient; Lambda packaging compatibility only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -902,6 +913,13 @@ Durable evidence: All5fd packages succeeded, but actual ECR parent037a2835 is an
   Summary: Four existing paths only: one copied helper dependency, existing provider-check input edge and catalog metadata, existing partial review73283ec1 and session evidence. All six direct CLI tests pass8.392s; registered084722Z passed2/zero findings, provider52.733583s, diagnostic readers reused. Staged gate084835Z passed. Production source1282017a/7c7e25ef/1891927a unchanged; no assertions weakened, files/checks/framework/permissions/AGENTS additions, AWS operations or data deletion. Previous source integration084105Z retained26passed22deferred1failed; repair matches its original provider failure. Proceed full matching integration then approved clean promotion and protected publication. First actual automatic scheduler proof remains absent.
   ADR impact: Existing ADR0044 sufficient; fixture payload/input declaration only.
 
+
+- Commit: `2be6defb`
+  Time UTC: 2026-11-28T09:32:27Z
+  Message: fix(scheduling): build Lambda-compatible image manifests
+  Summary: Six existing paths only: one managed-build flag, actual shell-to-Docker argv test for4 programs, two consumed helper edges/Bash identity in existing check, partial reviewba697d13 and current plan/log. Regression fails original command0.389s,13 direct tests pass1.129s. Registered091856Z passed2/zero findings,0.649995s commands and diagnostic reuse; staged092131Z passed. All5fd workflows succeeded but actual dispatcher ECR037a2835 is OCI index plus BuildKit attestation; AWS Lambda docs require --provenance=false. Preserve images/receipts unchanged and do not deploy incompatible index. Separate required GitHub provenance/SBOM signatures, security/runtime/program checks and all runtime/app/database logic unchanged. No new files/checks/framework/permissions/AGENTS edits or scheduler/network/database mutation. Full cached promotion and new protected publication/actual manifest proof remain before native AWS route.
+  ADR impact: Existing ADR0044 sufficient; Lambda packaging compatibility only.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -915,9 +933,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T08:48:49Z
-Latest commit SHA: 4e70195b
-Chat duration: 490097s (05:16:08:17)
+Latest commit at UTC: 2026-11-28T09:32:27Z
+Latest commit SHA: 2be6defb
+Chat duration: 492715s (05:16:51:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
