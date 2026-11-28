@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-28T06:06:32Z
-latest_commit_sha: fe95ff6c
-chat_duration: 480360s (05:13:26:00)
+latest_commit_at_utc: 2026-11-28T06:46:55Z
+latest_commit_sha: 5d6e3f2c
+chat_duration: 482783s (05:14:06:23)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -737,6 +737,17 @@ Summary: Package correction frozen and verified; preserve original failed runs
 
 Durable evidence: Final registered report .cache/test-runs/20261128T064402Z-73c041ff99d047c9acab9aea02d25729/report.json passed4 checks/zero findings in28.635s: managed-image executed0.508s, three unchanged checks reused from444.473s initial pass. Prepared source hashes8e2d2ed7/ec09bf52/88d188a3 unchanged. Twelve existing paths only; zero scripts added/removed/moved or new checks/reviews; one additional existing ECR permission read and four actual-role contract assertions are bounded recurring growth. Existing ADR0044 sufficient. Source96f7434c is already accepted on remote main; foundation permission update completed under original plan2597aba9/token9b980808. Original core publication46115891798 failed before push, matrix46115895513 is terminal after its two pending siblings were cancelled; failed dispatcher index8c2cce01/amd64child5899232e remains immutable/unqualified. Targeted AL2023 rpm update and safe case propagation need actual hosted image/scan proof; worker cause remains unknown, no handler assertion or severity gate weakened. Native automatic baseline and both canonical acceptances remain unproved. Stage exact12 paths, gated commit/log checkpoint, cached integration/promotion, fresh protected image qualification; no original attempt replay or unrelated work.
 
+
+### 2026-11-28T06:46:55Z - Commit recorded
+
+Commit: `5d6e3f2c`
+
+Message: fix(scheduling): repair package access and qualification failures
+
+Summary: Twelve existing paths: reconcile old shared-role contracts with fourth read probe, pinned-release rpm update, safe closed qualification-case preservation and original caller/cleanup tests. Final registered20261128T064402Z passed4/zero findings in28.635s, three reused; prior initial4 passed444.473s; staged20261128T064636Z passed. No added/removed/moved scripts, new checks/reviews/permissions, AGENTS edits or runtime feature assertions weakened. Foundation permission done; main96f7434c. Failed original core/matrix runs preserved and terminal, dispatcher immutable/unqualified. Actual worker cause and patched image scan/runtime remain unproved. Proceed cached integration/promotion and new qualified packages under existing authority, never replay old operations.
+
+ADR impact: Existing ADR0044 sufficient; bounded package correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -786,6 +797,13 @@ Durable evidence: Final registered report .cache/test-runs/20261128T064402Z-73c0
   Summary: Approved existing-controller/API-shape correction and original-attempt resume; five paths, no new scripts/checks/permissions/AGENTS edits. Seven direct groups passed1.296s; registered report20261128T060450Z passed2 checks35.526s, diagnostic readers reused; staged gate20261128T060617Z passed. Controllerbc8d46cb unchanged. Original intent2597aba9/prepare foundation-access-3da6f64c98f5459783949aba84f100ea remain untouched/unexecuted. Full cached integration and original native review next; live scheduler proof remains incomplete.
   ADR impact: Existing ADR0044 sufficient; controller-only correction.
 
+
+- Commit: `5d6e3f2c`
+  Time UTC: 2026-11-28T06:46:55Z
+  Message: fix(scheduling): repair package access and qualification failures
+  Summary: Twelve existing paths: reconcile old shared-role contracts with fourth read probe, pinned-release rpm update, safe closed qualification-case preservation and original caller/cleanup tests. Final registered20261128T064402Z passed4/zero findings in28.635s, three reused; prior initial4 passed444.473s; staged20261128T064636Z passed. No added/removed/moved scripts, new checks/reviews/permissions, AGENTS edits or runtime feature assertions weakened. Foundation permission done; main96f7434c. Failed original core/matrix runs preserved and terminal, dispatcher immutable/unqualified. Actual worker cause and patched image scan/runtime remain unproved. Proceed cached integration/promotion and new qualified packages under existing authority, never replay old operations.
+  ADR impact: Existing ADR0044 sufficient; bounded package correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -799,9 +817,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-28T06:06:32Z
-Latest commit SHA: fe95ff6c
-Chat duration: 480360s (05:13:26:00)
+Latest commit at UTC: 2026-11-28T06:46:55Z
+Latest commit SHA: 5d6e3f2c
+Chat duration: 482783s (05:14:06:23)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
