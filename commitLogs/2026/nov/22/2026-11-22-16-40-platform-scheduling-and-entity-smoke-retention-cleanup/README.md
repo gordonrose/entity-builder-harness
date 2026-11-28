@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-11-27T21:03:03Z
-latest_commit_sha: ab8d1690
-chat_duration: 447751s (05:04:22:31)
+latest_commit_at_utc: 2026-11-28T05:44:35Z
+latest_commit_sha: 311a7bf966b298312c3bdf382e1dd1f1289dd6d0
+chat_duration: 479043s (05:13:04:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -693,6 +693,17 @@ Summary: Fixture repair verified; prepare exact two-path checkpoint and governed
 
 Durable evidence: Final affected-source run passed with zero findings: .cache/test-runs/20261128T054223Z-a991a6ec57414015945fc0e34f1528e0/report.json. Task route789.755seconds, credential route739.789seconds and restart199.255seconds all passed; actual elapsed will be retained from the report, not presented within the missed30minute advisory. The candidate remains exactly task-route-test.py plus current session log; fixture SHA256f92af0295247a56d001136f4ee919d04b07696ad9a88d0c03bc0b108d7cf6ae5 still matches preparation. Existing helper populates the required maintenance selection; actual planning rejects stripped field and wrong source before task launch, with uncertainty/no-replay assertions retained. Only verification plumbing changed; no runtime diagnostic producer, source-review hash or architecture decision changes. No new scripts/check IDs, admission timing, permission or AGENTS edits. AWS account337159794548 authentication restored; GitHub repo can_push true. Next stage only these2 paths, run required staged gate, commit, record/checkpoint log, then revalidate complete affected integration with unchanged successful receipts and delivery census. Explicit one-off remote fast-forward route approved despite clean root; no force or history rewrite. No process remains from the focused run; no main push, AWS mutation, image publication or shared-database write occurred.
 
+
+### 2026-11-28T05:44:35Z - Commit recorded
+
+Commit: `311a7bf966b298312c3bdf382e1dd1f1289dd6d0`
+
+Message: test(scheduling): align Entity phase fixture with package custody
+
+Summary: Corrected the single stale Entity test packet using the existing maintenance-selection owner; preserved production validation and added actual-caller rejection of stripped metadata before launch. Final affected run20261128T054223Z passed17 checks,10 executed7 reused, with20 explicitly deferred and zero findings. Total2586.257seconds exceeds the30minute advisory; credential739.789seconds and task789.755seconds passed. Exact two-path preparation and staged gate20261128T054410Z passed, reviewed sourcef92af029 unchanged. User approved fast-forward routing exception; AWS authentication renewed and account337159794548 confirmed; GitHub can_push true. Full cached integration and protected publication/live AWS proof remain next. No runtime source, AGENTS or cloud/shared-database mutations.
+
+ADR impact: Existing ADR0044 remains sufficient; fixture-only correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -728,6 +739,13 @@ Durable evidence: Final affected-source run passed with zero findings: .cache/te
   Summary: Checkpointed36 approved paths after whole-task preparation and staged gate passed. Preserved four focused scheduler checks from final report20261127T204958Z; removed duplicate benchmark support, retained scope package identity independently of upfront spend admission, and applied user-approved lean-first pointer plus one explanatory teaching marker only. No runtime instructions changed. Full affected integration and protected image publication remain; no live proof, AWS/shared-data effect or push claimed.
   ADR impact: Existing ADR0044 remains sufficient; no new architecture decision.
 
+
+- Commit: `311a7bf966b298312c3bdf382e1dd1f1289dd6d0`
+  Time UTC: 2026-11-28T05:44:35Z
+  Message: test(scheduling): align Entity phase fixture with package custody
+  Summary: Corrected the single stale Entity test packet using the existing maintenance-selection owner; preserved production validation and added actual-caller rejection of stripped metadata before launch. Final affected run20261128T054223Z passed17 checks,10 executed7 reused, with20 explicitly deferred and zero findings. Total2586.257seconds exceeds the30minute advisory; credential739.789seconds and task789.755seconds passed. Exact two-path preparation and staged gate20261128T054410Z passed, reviewed sourcef92af029 unchanged. User approved fast-forward routing exception; AWS authentication renewed and account337159794548 confirmed; GitHub can_push true. Full cached integration and protected publication/live AWS proof remain next. No runtime source, AGENTS or cloud/shared-database mutations.
+  ADR impact: Existing ADR0044 remains sufficient; fixture-only correction.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -741,9 +759,9 @@ Reason: A2 selects durable database reminders with bounded short-lived job execu
 ## Session Metrics
 
 Raised at UTC: 2026-11-22T16:40:32Z
-Latest commit at UTC: 2026-11-27T21:03:03Z
-Latest commit SHA: ab8d1690
-Chat duration: 447751s (05:04:22:31)
+Latest commit at UTC: 2026-11-28T05:44:35Z
+Latest commit SHA: 311a7bf966b298312c3bdf382e1dd1f1289dd6d0
+Chat duration: 479043s (05:13:04:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
