@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.workflows.execute-approved-aws-change
-  version: 7
+  version: 8
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-11-27"
+  updated_on: "2026-11-28"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -59,6 +59,50 @@ permits cleanup of newly reserved disposable copies and snapshots. It does not
 permit deleting existing backups or the source database. Follow the native
 identity, terminal-dependency, retained-evidence and single-submission checks;
 the cost horizon is not a deletion instruction or automatic expiry.
+
+## Bounded operator quota request
+
+Use only for an explicitly approved account/region, service, quota code and
+desired value recorded in the existing session/change record. This is an
+operator use of the existing AWS CLI, not a runtime adapter or an unattended
+quota-management capability. Scheduler deployment approval alone does not
+authorize changing an account-wide quota.
+
+1. Read `sts get-caller-identity`, `service-quotas get-service-quota` and
+   `list-requested-service-quota-change-history-by-quota` using the explicit
+   profile/region. Match the approved identity and adjustable regional quota.
+   If effective capacity already suffices, do not submit. Observe an existing
+   matching request rather than creating another; an incompatible pending
+   request or failed observation requires a decision before submission.
+2. Before the one submission, retain the exact approved request, account,
+   region, source revision and approval reference in the worktree's private
+   Git directory using the existing
+   [exclusive evidence writer](../../../scripts/04.deploy/shared/provider-adapters/aws/resource_reservation.py).
+   An existing intent selects observation only. Never overwrite or delete it
+   to obtain another attempt. Retain the actual request ID/status separately.
+3. Invoke `service-quotas request-service-quota-increase` once with those exact
+   arguments and automatic CLI retries disabled (`AWS_MAX_ATTEMPTS=1`). A
+   timeout, missing result or failed evidence retention is uncertain submission,
+   not permission to retry. Reconcile quota request history and the original
+   request ID. Access denial does not authorize IAM changes or attaching
+   `ServiceQuotasFullAccess`; stop if additional permissions are required.
+4. Observe the original ID with `get-requested-service-quota-change` and read
+   the consuming service's effective capacity before resuming its deployment.
+   Submission, a support case or approval without effective capacity is not
+   readiness. Denied/partial outcomes retain their original evidence; a further
+   request needs a new decision. Do not assume cancellation or automatic quota
+   reduction is available as rollback: recovery is observation or an explicit
+   AWS Support decision, with dependent activation still blocked.
+
+For Lambda, use `lambda get-account-settings` to establish available capacity
+for the declared reservations plus AWS's required unreserved pool. Raising the
+regional quota does not change function reservations, enable processing or
+authorize provisioned concurrency. Existing workload caps and activation gates
+remain mandatory. Record status and the effective readback in the existing
+plan/session record. AWS approval timing is outside the deployment controller.
+Reviewed against [AWS quota requests](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)
+and [Lambda reservations](https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html)
+on 2026-11-28.
 
 ## Bounded ordinary-release approval
 

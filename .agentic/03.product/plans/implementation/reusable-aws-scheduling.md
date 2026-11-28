@@ -24,20 +24,55 @@ directed detailed cost checks to follow that bounded proof. Scope/image identity
 is now independent of upfront cost admission; final measured acceptance remains.
 The approved AGENTS marker and stale Entity test-fixture correction are complete.
 Complete affected local integration passed, and the verified source was normally
-fast-forwarded to remote main, most recently at `5fd130b328c3a5b116472055a77d1bbbbbf4fc5b`.
+fast-forwarded to remote main, most recently at `18dcffa41a678e2f78c6fca93deaa549adb0b86d`.
 
-The lease-owner, real AWS response and generated-proof classification corrections
-are committed and verified. Both protected publications passed on that source:
-maintenance `46128392054` and four managed images `46128394666`. Actual runtime
-container qualification and scans passed, but read-only ECR inspection found the
-Lambda package is an OCI index with extra BuildKit attestation metadata, not the
-direct image required by [AWS's Lambda image guide](https://docs.aws.amazon.com/lambda/latest/dg/nodejs-image.html).
-Current increment: add `--provenance=false` to the existing managed builder and
-prove its actual shell-to-Docker arguments for all four programs in the existing
-test. Keep separate signed GitHub provenance/SBOM records and every security gate.
-Rebuild through protected publication, verify the actual manifest, then use the
-existing native owners for the first automatic harmless baseline. Do not deploy
-the incompatible index, rewrite receipts or replace original operations.
+The lease-owner, real AWS response, generated-proof classification and Lambda
+manifest corrections are committed and verified. Both protected publications
+passed on that source: maintenance `46132085826` and all four managed images
+`46132087632`, including actual runtime container qualification, clean scans,
+SBOMs and separate signed build records. Actual ECR observations show four direct
+Docker schema-2 image manifests; qualified/runtime image identities match their
+published digests. The existing native readers authenticated both scoped handler
+pairs and the maintenance package. This is package evidence, not live execution.
+
+Published package source is `18dcffa4`. Current artifacts are in the existing ignored
+`.cache/scheduler-live-proof/` directory: `core-maintenance-46132085826`,
+`core-dispatch-46132087632`, `core-worker-46132087632`,
+`entity-dispatch-46132087632` and `entity-worker-46132087632`. Each contains its
+actual `package-custody-receipt.json`; these paths satisfy the native owner's
+within-worktree requirement. Old incompatible index receipts remain untouched.
+After the capacity prerequisite below is approved, use the existing native
+owners for the first automatic harmless baseline; do not rebuild unchanged
+packages, rewrite receipts or replace original operations merely to resume.
+Read-only AWS capacity inspection on 2026-11-28 found regional Lambda concurrency
+10 and unreserved concurrency 10. AWS requires 100 to remain unreserved, so the
+configured reservations (one dispatcher plus two workers per scope, six total)
+cannot fit. The user subsequently approved proceeding with the quota request:
+1,000 Lambda concurrent executions in account `337159794548`, `eu-west-1`,
+quota `L-B99A9384`, using profile `kanbien-dev`. The existing
+[AWS execution workflow](../../../aws/workflows/execute-approved-aws-change.md#bounded-operator-quota-request)
+now owns the bounded operator submission, original-intent retention and effective
+capacity readback. The single request was submitted successfully on 2026-11-28:
+`0d3c0b9f5a274cf3ab9e48b8fe347c4felyfOLFC`, desired value 1,000, observed
+initial status `PENDING`. Subsequent observation returned `CASE_OPENED`, support
+case `179586121500820`; this is not approval. The original intent and returned
+identity are retained under the active worktree Git directory's
+`service-quota-increase/`; never resubmit this operation. A separate read of
+that exact request confirmed `CASE_OPENED`; effective Lambda capacity remains
+10/unreserved 10. Request submission alone is not AWS approval or readiness.
+The first runtime deployment remains blocked until capacity is effective.
+The approved execution-workflow edit and existing plan/session notes must finish
+normal commit preparation. Resolve source-cleanliness and exact-source package
+admission through their existing owners before deployment; a documentation-only
+successor still cannot use a receipt whose source revision does not match.
+Do not claim the earlier package read admits a subsequently changed tree.
+Do not remove the
+function caps, create resources knowing this prerequisite fails, or build later
+acceptance layers as a substitute for the missing first proof. Package
+qualification and manifest observation are now complete; preserve the exact
+source while awaiting quota approval, then re-observe capacity before continuing
+the native first-baseline route. Later Entity compatibility/recovery, genuine
+human alarm receipt and measured cost/final acceptance remain unfinished below.
 The approved narrow
 foundation repository-read permission update completed through its original
 operation after a bounded controller/API-response correction; no attempt or
