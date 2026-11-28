@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.provider-cli-boundaries
-#   version: 6
+#   version: 7
 #   status: active
 #   created_on: "2026-10-26"
-#   updated_on: "2026-11-27"
+#   updated_on: "2026-11-28"
 #   layer: 04.deploy
 #   domain: deployment.provider-outcomes
 #   disciplines: [security, sre]
@@ -90,6 +90,7 @@ class ProviderCliRegression(unittest.TestCase):
                                  'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/publication.py',
                                  'scripts/04.deploy/lifecycle/40-package/build-managed-handler-image/qualification.py',
                                  'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py',
+                                 'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py',
                                  'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/github-artifact.py',
                                  'scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/lambda-runtime-configuration.py',
                                  'scripts/04.deploy/operational-realization-gate/script.py',
